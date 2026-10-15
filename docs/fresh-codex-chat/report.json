@@ -1,0 +1,26 @@
+{
+  "native_version": "codex-cli 0.162.1",
+  "agent": "codex",
+  "status": "idle",
+  "has_agent_session": false,
+  "http": 200,
+  "source": "scrollback",
+  "turns": 0,
+  "browser": {
+    "unavailable": true,
+    "greeting": false,
+    "turns": 0
+  },
+  "web_launch_control": {
+    "agent_started": true,
+    "source": "codex-transcript",
+    "turns": 0,
+    "browser": {
+      "unavailable": false,
+      "greeting": true,
+      "turns": 0
+    }
+  },
+  "messages_sent": 0,
+  "model_calls": 0
+}

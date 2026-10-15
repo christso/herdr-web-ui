@@ -1,0 +1,48 @@
+{
+  "app_root": "/tmp/herdr-omp-clipped/baseline",
+  "app_revision": "aa624cb56f550f9a7dd8bf4d59ed99ffc3921741",
+  "app_version": "0.4.10",
+  "parser_sha256": "a883609bf56d7e342579450e5887dd7ec715a59652b4833580818760a3e7ed08",
+  "omp_version": "18.0.0",
+  "omp_executable_version": "omp/18.0.0",
+  "herdr_version": "herdr 0.9.5",
+  "term": "xterm-256color",
+  "native_initial_viewport": [
+    1280,
+    800
+  ],
+  "native_resize_viewport": [
+    300,
+    1400
+  ],
+  "cases": [],
+  "native_clipped_pty": {
+    "attached_columns": 43,
+    "attached_rows": 65,
+    "browser_viewport": [
+      300,
+      1400
+    ],
+    "footer": "Enter select · n note · ↑/↓ move · Esc…"
+  },
+  "native_initial_pty": {
+    "columns": 43,
+    "rows": 65
+  },
+  "red_terminal_api_prompt": null,
+  "red_phone_state": {
+    "api_prompt": null,
+    "prompt_cards": 0,
+    "question": null,
+    "url": "http://127.0.0.1:38985/?ws=w2-omp-question-compatibili&pane=w2%3Ap1&view=chat",
+    "consecutive_clean_reads": 3
+  },
+  "red_desktop_state": {
+    "api_prompt": null,
+    "prompt_cards": 0,
+    "question": null,
+    "url": "http://127.0.0.1:38985/?ws=w2-omp-question-compatibili&pane=w2%3Ap1&view=chat",
+    "consecutive_clean_reads": 3
+  },
+  "status": "passed"
+}

@@ -1,0 +1,58 @@
+
+╭─── omp v18.0.0 ───────────────────────╮
+│             │ Tips                    │
+│Welcome back!│ # for prompt actions    │
+│             │ / for commands          │
+│▀██████████▀ │ ! to run bash           │
+│ ╘██    ██   │ $ to run python         │
+│  ██    ██   │ ─────────────────────── │
+│  ██    ██   │ LSP Servers             │
+│ ▄██▄  ▄██▄  │ No LSP servers          │
+│             │                         │
+│Native quest…│                         │
+│ omp-compat  │                         │
+│             │ ─────────────────────── │
+│             │ Recent sessions         │
+│             │ No recent sessions      │
+│             │                         │
+│             │                         │
+│             │                         │
+│             │                         │
+╰─────────────┴─────────────────────────╯
+ Tip: `/copy code` grabs the last code
+      block to your clipboard — `/copy
+      cmd` grabs the last shell/python
+      command
+
+
+ Please run the synthetic native question
+ compatibility scenario.
+
+
+╭─── Ask 1 questions ─────────────────────╮
+├─── [route] · options:2 ─────────────────┤
+│  Which route?                           │
+│  ○ Local socket                         │
+│  ○ Remote relay                         │
+╰─────────────────────────────────────────╯
+
+───────────────────────────────────────────
+ Update Available
+ New version 18.11.1 is available. Run:
+ omp update
+───────────────────────────────────────────
+
+ ⠙ Working… ⟦esc⟧
+
+╭─ Ask ───────────────────────────────────╮
+│ Which route?                            │
+├─────────────────────────────────────────┤
+│ ❯ ○ Local socket                        │
+│   ○ Remote relay                        │
+│   ○ Other (type your own)               │
+│                                         │
+│                                         │
+│                                         │
+├─────────────────────────────────────────┤
+│ Enter select · n note · ↑/↓ move · Esc… │
+╰─────────────────────────────────────────╯

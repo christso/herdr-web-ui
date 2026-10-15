@@ -1,0 +1,22 @@
+{
+  "case": "native-ask-roundtrip",
+  "ok": true,
+  "expected": [
+    {
+      "id": "route",
+      "selectedOptions": [
+        "Remote relay"
+      ]
+    }
+  ],
+  "actual": [
+    {
+      "id": "route",
+      "selectedOptions": [
+        "Remote relay"
+      ]
+    }
+  ],
+  "tool_result": "User selected: Remote relay",
+  "observed_at": "2026-10-15T22:58:49.772Z"
+}

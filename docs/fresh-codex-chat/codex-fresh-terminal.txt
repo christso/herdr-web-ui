@@ -1,0 +1,10 @@
+
+  >_ OpenAI Codex (v0.162.1)
+     /tmp/codex-fresh-chat-QjZN7B/fictional-project
+
+  Tip: Maximize usage with GPT-6.1 Sol. Try it on complex work for near-Astra performance at a lower cost.
+
+
+› Ask Codex to do anything
+
+  GPT-6.1-Sol default · /tmp/codex-fresh-chat-QjZN7B/fictional-project · ← for agents

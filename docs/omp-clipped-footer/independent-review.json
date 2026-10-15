@@ -1,0 +1,43 @@
+{
+  "verdict": "no-retained-actionable-findings",
+  "closed_findings": [
+    "P2 false choices from wrapped rows"
+  ],
+  "base": "aa624cb56f550f9a7dd8bf4d59ed99ffc3921741",
+  "start_sha256": {
+    "server/prompt.ts": "a0383e4debb4c940218e45b755a0b53c1f771c583ea59dd32caba472e8b89edf",
+    "server/prompt.test.ts": "72cb1b883f9e54b2fb8916f7ec9ba1bc16ff647f4c3456be242f9646c26b9fd5"
+  },
+  "end_sha256": {
+    "server/prompt.ts": "a0383e4debb4c940218e45b755a0b53c1f771c583ea59dd32caba472e8b89edf",
+    "server/prompt.test.ts": "72cb1b883f9e54b2fb8916f7ec9ba1bc16ff647f4c3456be242f9646c26b9fd5"
+  },
+  "focused_tests": {
+    "passed": 55,
+    "failed": 0,
+    "assertions": 265
+  },
+  "pure_controls_passed": 25,
+  "original_test_lines_removed_or_changed": 0,
+  "standalone_actual_57_capture": "null as required",
+  "actual_43_baseline": "null",
+  "actual_43_fixed": "exact two options, Down Enter for Remote relay",
+  "modern_composition": "exact full question/one wrapped label/description, Enter answer; scratch only",
+  "modern_source_sha256": "d0ff23727d000bd9a8eecb391d8cd9ad140beadbea920ab0df6207316c05e531",
+  "native_artifact_readback": {
+    "red": "red-clean-main/report.json",
+    "green": "green/report.json",
+    "exact_structured_result": [
+      {
+        "id": "route",
+        "selectedOptions": [
+          "Remote relay"
+        ]
+      }
+    ],
+    "green_parser_matches_frozen_source": true,
+    "reviewer_executed_native": false
+  },
+  "findings": [],
+  "reviewed_at": "2026-10-15T23:15:28.573391+00:00"
+}
