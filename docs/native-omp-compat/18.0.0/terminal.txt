@@ -1,0 +1,65 @@
+│                  │                                  │
+│                  │                                  │
+│                  │                                  │
+╰──────────────────┴──────────────────────────────────╯
+ Tip: Say `workflowz` in your message to drive the task
+      with parallel subagents in eval — watch it glow
+      as you type
+
+
+ Please run the synthetic native question compatibility
+ scenario.
+
+
+╭─── Ask 4 questions ───────────────────────────────────╮
+├─── [route] · options:2 ───────────────────────────────┤
+│  Which route should carry the fictional session?      │
+│  ○ Local socket                                       │
+│    ↳ Keeps the session on this PC.                    │
+│  ○ Remote relay                                       │
+│    ↳ Uses the fictional remote endpoint.              │
+├─── [targets] · multi · options:3 ─────────────────────┤
+│  Which synthetic targets should be checked?           │
+│  ☐ Desktop                                            │
+│    ↳ Wide terminal layout.                            │
+│  ☐ Phone                                              │
+│    ↳ Narrow terminal layout.                          │
+│  ☐ Tablet                                             │
+│    ↳ Medium terminal layout.                          │
+├─── [note] · options:2 ────────────────────────────────┤
+│  Add a fictional note for the report.                 │
+│  ○ Use the suggested note                             │
+│    ↳ Keeps the synthetic report brief.                │
+│  ○ Use the fallback note                              │
+│    ↳ Keeps a different synthetic report brief.        │
+├─── [wrap] · options:1 ────────────────────────────────┤
+│  Which fictional answer should remain readable when   │
+│  this question wraps across a narrow terminal?        │
+│  ○ A fictional answer that wraps across the narrow    │
+│ native terminal                                       │
+│    ↳ A synthetic description that also wraps at       │
+│ narrow terminal widths.                               │
+╰───────────────────────────────────────────────────────╯
+
+─────────────────────────────────────────────────────────
+ Update Available
+ New version 18.11.1 is available. Run: omp update
+─────────────────────────────────────────────────────────
+
+ ⠹ Working… ⟦esc⟧
+
+╭─ Ask ─────────────────────────────────────────────────╮
+│  Transport    Targets    Notes    Narrow view         │
+│  Submit                                               │
+│ Which fictional answer should remain readable when    │
+│ this question wraps across a narrow terminal?         │
+├───────────────────────────────────────────────────────┤
+│ ❯ ○ A fictional answer that wraps across the narrow   │
+│     native terminal                                   │
+│       A synthetic description that also wraps at      │
+│       narrow terminal widths.                         │
+│   ○ Other (type your own)                             │
+│                                                       │
+├───────────────────────────────────────────────────────┤
+│ Enter select · n note · ↑/↓ move · Tab/←/→ · Esc can… │
+╰───────────────────────────────────────────────────────╯

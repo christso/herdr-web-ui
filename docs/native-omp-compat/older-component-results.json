@@ -1,0 +1,157 @@
+[
+  {
+    "version": "17.2.12",
+    "multi": false,
+    "question": "Which fictional target?",
+    "options": [
+      {
+        "label": "First",
+        "description": "First target."
+      },
+      {
+        "label": "Second",
+        "description": "Second target."
+      }
+    ],
+    "parsed": true,
+    "keys": [
+      {
+        "keys": [
+          "down"
+        ]
+      },
+      {
+        "keys": [
+          "enter"
+        ]
+      }
+    ],
+    "selected": [
+      "Second"
+    ],
+    "ok": true
+  },
+  {
+    "version": "17.2.12",
+    "multi": true,
+    "question": "Which fictional target?",
+    "options": [
+      {
+        "label": "First",
+        "description": "First target."
+      },
+      {
+        "label": "Second",
+        "description": "Second target."
+      }
+    ],
+    "parsed": true,
+    "keys": [
+      {
+        "keys": [
+          "space"
+        ]
+      },
+      {
+        "keys": [
+          "down"
+        ]
+      },
+      {
+        "keys": [
+          "space"
+        ]
+      },
+      {
+        "keys": [
+          "tab"
+        ]
+      },
+      {
+        "keys": [
+          "enter"
+        ]
+      }
+    ],
+    "selected": [
+      "First",
+      "Second"
+    ],
+    "ok": true
+  },
+  {
+    "version": "18.0.0",
+    "multi": false,
+    "question": "Which fictional target?",
+    "options": [
+      {
+        "label": "First",
+        "description": "First target."
+      },
+      {
+        "label": "Second",
+        "description": "Second target."
+      }
+    ],
+    "parsed": true,
+    "keys": [
+      {
+        "keys": [
+          "down"
+        ]
+      },
+      {
+        "keys": [
+          "enter"
+        ]
+      }
+    ],
+    "selected": [
+      "Second"
+    ],
+    "ok": true
+  },
+  {
+    "version": "18.0.0",
+    "multi": true,
+    "question": "Which fictional target?",
+    "options": [
+      {
+        "label": "First",
+        "description": "First target."
+      },
+      {
+        "label": "Second",
+        "description": "Second target."
+      }
+    ],
+    "parsed": true,
+    "keys": [
+      {
+        "keys": [
+          "space"
+        ]
+      },
+      {
+        "keys": [
+          "down"
+        ]
+      },
+      {
+        "keys": [
+          "space"
+        ]
+      },
+      {
+        "keys": [
+          "enter"
+        ]
+      }
+    ],
+    "selected": [
+      "First",
+      "Second"
+    ],
+    "ok": true
+  }
+]

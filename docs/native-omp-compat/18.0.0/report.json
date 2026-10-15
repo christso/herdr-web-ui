@@ -1,0 +1,92 @@
+{
+  "app_root": "/home/christso/projects/christso/herdr-web-ui",
+  "app_revision": "5aa897f253881603ef0e920b9cf20171c531a90d",
+  "app_version": "0.4.8",
+  "parser_sha256": "c9ef150211202de507bcabb9357e544651a829d07094321088ef864a6e10dfeb",
+  "omp_version": "18.0.0",
+  "omp_executable_version": "omp/18.0.0",
+  "herdr_version": "herdr 0.9.5",
+  "term": "xterm-256color",
+  "native_initial_viewport": [
+    1280,
+    800
+  ],
+  "native_resize_viewport": [
+    390,
+    1400
+  ],
+  "cases": [
+    {
+      "name": "route",
+      "question": "Which route should carry the fictional session?",
+      "options": [
+        {
+          "label": "Local socket",
+          "description": "Keeps the session on this PC."
+        },
+        {
+          "label": "Remote relay",
+          "description": "Uses the fictional remote endpoint."
+        }
+      ],
+      "viewport": [
+        1280,
+        800
+      ]
+    },
+    {
+      "name": "targets",
+      "question": "Which synthetic targets should be checked?",
+      "options": [
+        {
+          "label": "Desktop",
+          "description": "Wide terminal layout."
+        },
+        {
+          "label": "Phone",
+          "description": "Narrow terminal layout."
+        },
+        {
+          "label": "Tablet",
+          "description": "Medium terminal layout."
+        }
+      ],
+      "viewport": [
+        1280,
+        800
+      ]
+    },
+    {
+      "name": "note",
+      "question": "Add a fictional note for the report.",
+      "options": [
+        {
+          "label": "Use the suggested note",
+          "description": "Keeps the synthetic report brief."
+        },
+        {
+          "label": "Use the fallback note",
+          "description": "Keeps a different synthetic report brief."
+        }
+      ],
+      "viewport": [
+        1280,
+        800
+      ]
+    }
+  ],
+  "native_initial_pty": {
+    "columns": 145,
+    "rows": 37
+  },
+  "native_wrap_pty": {
+    "attached_columns": 57,
+    "attached_rows": 65,
+    "browser_viewport": [
+      390,
+      1400
+    ]
+  },
+  "status": "failed",
+  "error": "Error: OMP did not expose a parsed question before timeout. Last terminal output:\n│                  │                                  │\n│                  │                                  │\n│                  │                                  │\n╰──────────────────┴──────────────────────────────────╯\n Tip: Say `workflowz` in your message to drive the task\n      with parallel subagents in eval — watch it glow\n      as you type\n\n\n Please run the synthetic native question compatibility\n scenario.\n\n\n╭─── Ask 4 questions ───────────────────────────────────╮\n├─── [route] · options:2 ───────────────────────────────┤\n│  Which route should carry the fictional session?      │\n│  ○ Local socket                                       │\n│    ↳ Keeps the session on this PC.                    │\n│  ○ Remote relay                                       │\n│    ↳ Uses the fictional remote endpoint.              │\n├─── [targets] · multi · options:3 ─────────────────────┤\n│  Which synthetic targets should be checked?           │\n│  ☐ Desktop                                            │\n│    ↳ Wide terminal layout.                            │\n│  ☐ Phone                                              │\n│    ↳ Narrow terminal layout.                          │\n│  ☐ Tablet                                             │\n│    ↳ Medium terminal layout.                          │\n├─── [note] · options:2 ────────────────────────────────┤\n│  Add a fictional note for the report.                 │\n│  ○ Use the suggested note                             │\n│    ↳ Keeps the synthetic report brief.                │\n│  ○ Use the fallback note                              │\n│    ↳ Keeps a different synthetic report brief.        │\n├─── [wrap] · options:1 ────────────────────────────────┤\n│  Which fictional answer should remain readable when   │\n│  this question wraps across a narrow terminal?        │\n│  ○ A fictional answer that wraps across the narrow    │\n│ native terminal                                       │\n│    ↳ A synthetic description that also wraps at       │\n│ narrow terminal widths.                               │\n╰───────────────────────────────────────────────────────╯\n\n─────────────────────────────────────────────────────────\n Update Available\n New version 18.11.1 is available. Run: omp update\n─────────────────────────────────────────────────────────\n\n ⠼ Working… ⟦esc⟧\n\n╭─ Ask ─────────────────────────────────────────────────╮\n│  Transport    Targets    Notes    Narrow view         │\n│  Submit                                               │\n│ Which fictional answer should remain readable when    │\n│ this question wraps across a narrow terminal?         │\n├───────────────────────────────────────────────────────┤\n│ ❯ ○ A fictional answer that wraps across the narrow   │\n│     native terminal                                   │\n│       A synthetic description that also wraps at      │\n│       narrow terminal widths.                         │\n│   ○ Other (type your own)                             │\n│                                                       │\n├───────────────────────────────────────────────────────┤\n│ Enter select · n note · ↑/↓ move · Tab/←/→ · Esc can… │\n╰───────────────────────────────────────────────────────╯\n\n    at waitForPrompt (/home/christso/projects/christso/herdr-web-ui/scripts/omp-question-compat.ts:295:13)"
+}
