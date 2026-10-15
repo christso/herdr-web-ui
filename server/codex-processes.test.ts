@@ -14,7 +14,7 @@ let root: string;
 let home: string;
 let path: string;
 let screen: string;
-let peerScreens: Map<string, string>;
+let peerScreens: Map<string, string | Error>;
 let foreground: { pid: number; name?: string; argv?: string[] }[];
 let listener: ReturnType<typeof Bun.listen>;
 let socketBefore: string | undefined;
@@ -47,9 +47,14 @@ beforeEach(() => {
         socket.data.buffer += chunk.toString();
         if (!socket.data.buffer.includes("\n")) return;
         const request = JSON.parse(socket.data.buffer) as { id: string; method: string; params?: { pane_id?: string } };
+        const peerScreen = peerScreens.get(request.params?.pane_id ?? "");
+        if (request.method === "pane.read" && peerScreen instanceof Error) {
+          socket.end(`${JSON.stringify({ id: request.id, error: { code: "pane_not_found", message: peerScreen.message } })}\n`);
+          return;
+        }
         const result = request.method === "agent.get" ? { agent: {} }
           : request.method === "pane.process_info" ? { process_info: { foreground_processes: foreground } }
-          : request.method === "pane.read" ? { read: { text: peerScreens.get(request.params?.pane_id ?? "") ?? screen } }
+          : request.method === "pane.read" ? { read: { text: peerScreen ?? screen } }
           : null;
         if (result === null) throw new Error(`unexpected RPC ${request.method}`);
         socket.end(`${JSON.stringify({ id: request.id, result })}\n`);
@@ -245,6 +250,32 @@ shortIt("resolves its exact first exchange beside a different same-directory con
   expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("peer")])).toBe(path);
 });
 
+shortIt("rejects unknown or matching peer screens when a header has scrolled away", async () => {
+  await shortSession();
+  for (const peer of [shortScreen.replace("OpenAI Codex (v1.0)\n", ""), "", "Working…", new Error("fixture pane disappeared")]) {
+    peerScreens.set("peer", peer);
+    expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("peer")])).toBeNull();
+  }
+});
+
+shortIt("accepts a headerless peer only with a substantial match to a different conversation", async () => {
+  const created = await shortSession();
+  const other = join(home, "sessions", "other.jsonl");
+  shortRollout(other, "Other fixture", answer);
+  addShortThread("other", other, created - 60_000, "Other fixture");
+  peerScreens.set("peer", `› Other fixture\n• ${answer}\n› `);
+  expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("peer")])).toBe(path);
+  // A recognizable answer must not override an overlapping short exchange.
+  for (const mixed of [
+    `${shortScreen}\n• ${answer}`,
+    `${shortScreen.replace("OpenAI Codex (v1.0)\n", "")}\n• ${answer}`,
+    `• ${answer}\n${shortScreen.replace("OpenAI Codex (v1.0)\n", "")}`,
+  ]) {
+    peerScreens.set("peer", mixed);
+    expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("peer")])).toBeNull();
+  }
+});
+
 shortIt("resolves a seconds-only schema when creation is provably after process start", async () => {
   await shortSession(false);
   expect(await resolve()).toBe(path);
@@ -326,6 +357,18 @@ shortIt("checks every exchange in a tool-heavy older thread instead of rejecting
     { type: "event_msg", payload: { type: "user_message", message: shortPrompt } },
     { type: "event_msg", payload: { type: "agent_message", message: shortAnswer } },
   ].map((entry) => JSON.stringify(entry)).join("\n") + "\n");
+  expect(await resolve()).toBeNull();
+});
+
+shortIt("rejects cumulative retained messages over the short matching limit", async () => {
+  const created = await shortSession();
+  const other = join(home, "sessions", "other.jsonl");
+  shortRollout(other, "Other fixture", "A different short reply.");
+  addShortThread("other", other, created - 60_000, "Other fixture");
+  const message = JSON.stringify({ type: "event_msg", payload: { type: "agent_message", message: "x".repeat(64 * 1024) } }) + "\n";
+  appendFileSync(other, message.repeat(15));
+  expect(await resolve()).toBe(path);
+  appendFileSync(other, message.repeat(2));
   expect(await resolve()).toBeNull();
 });
 
