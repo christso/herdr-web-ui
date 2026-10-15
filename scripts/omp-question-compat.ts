@@ -42,7 +42,7 @@ const identity = {
   omp_executable_version: run(omp, ["--version"]).split("\n")[0]?.trim(),
   herdr_version: run(herdr, ["--version"]).split("\n")[0]?.trim(),
   term: "xterm-256color",
-  native_initial_pty: [120, 80],
+  native_initial_viewport: [1280, 800],
   native_resize_viewport: [390, 1400],
 };
 assert.match(identity.omp_executable_version ?? "", new RegExp(`(?:^|/)${escapeRegExp(ompVersion)}(?:$|\\s)`),
@@ -141,10 +141,9 @@ try {
   const childEnv = [`PATH=${childPath}`, `HOME=${ompHome}`, `XDG_CONFIG_HOME=${config}`, `XDG_DATA_HOME=${data}`, `XDG_CACHE_HOME=${cache}`,
     `PI_CODING_AGENT_DIR=${join(ompHome, ".omp", "agent")}`, "PI_NO_TITLE=1", "OMP_SKIP_SETUP=1", "TERM=xterm-256color", "COLORTERM=truecolor",
     `OMP_COMPAT_RESULT=${nativeResultPath}`];
-  const command = `/bin/stty cols 120 rows 80 && exec ${["env", "-i", ...childEnv, omp, "--no-rules", "--no-skills", "--no-extensions", "--extension", join(work, "provider.mjs"),
+  const command = ["env", "-i", ...childEnv, omp, "--no-rules", "--no-skills", "--no-extensions", "--extension", join(work, "provider.mjs"),
     "--model", "omp-compat/native-questions", "--no-title", "--cwd", cwd,
-    "Please run the synthetic native question compatibility scenario."].map(shellQuote).join(" ")}`;
-  await runAsync(herdr, ["--session", TEST_SESSION, "pane", "run", paneId, command], 15_000);
+    "Please run the synthetic native question compatibility scenario."].map(shellQuote).join(" ");
 
   const readyPath = join(work, "app-ready.json");
   const hostScript = join(work, "app-host.ts");
@@ -178,12 +177,19 @@ process.on("SIGTERM", () => { app.stop(); process.exit(0); });
   browserEnv.AGENT_BROWSER_EXECUTABLE_PATH = browserPath;
   browserCli = cli;
   browserEnvForCleanup = browserEnv;
-  await browser(cli, browserEnv, ["open", origin]);
   const cases: Array<{ viewport: [number, number]; name: string }> = [
     { viewport: [1280, 800], name: "desktop" }, { viewport: [390, 844], name: "phone" },
   ];
   await browser(cli, browserEnv, ["set", "viewport", String(cases[0]!.viewport[0]), String(cases[0]!.viewport[1])]);
+  await browser(cli, browserEnv, ["open", origin.replace("view=chat", "view=terminal")]);
+  const initialRows = await waitForTerminalRows(cli, browserEnv, 15_000);
+  await runAsync(herdr, ["--session", TEST_SESSION, "pane", "run", paneId, command], 15_000);
   let question = await waitForPrompt(origin, paneId, questions[0]!.question, 30_000);
+  const initialScreen = await safeReadPane(herdr, TEST_SESSION, paneId);
+  const initialBorder = initialScreen.split("\n").filter((line) => line.includes("╭─ Ask")).at(-1);
+  assert.ok(initialBorder, "the native OMP Ask dialog must be visible after browser sizing");
+  evidence.native_initial_pty = { columns: [...initialBorder].length, rows: initialRows };
+  await browser(cli, browserEnv, ["click", ".view-switch button:nth-child(1)"]);
   for (let index = 0; index < questions.length; index += 1) {
     const fixture = questions[index]!;
     assert.equal(question.question, fixture.question, `OMP question ${index + 1} is parsed in order`);
