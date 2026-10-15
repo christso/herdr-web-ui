@@ -202,7 +202,7 @@ process.on("SIGTERM", () => { app.stop(); process.exit(0); });
       const nativeRows = await waitForTerminalRows(cli, browserEnv, 30_000);
       assert.ok(nativeRows > 24, `tall native terminal should expose more than 24 rows (got ${nativeRows})`);
       const nativeLayout = await waitForNativeLayout(herdr!, TEST_SESSION, paneId, 76, fixture.question, [...fixture.options.map((option) => option.label), "Other (type your own)"], 30_000);
-      evidence.native_wrap_pty = { initial_columns: 120, initial_rows: 80, attached_columns: nativeLayout.columns, attached_rows: nativeRows, browser_viewport: [390, 1400] };
+      evidence.native_wrap_pty = { attached_columns: nativeLayout.columns, attached_rows: nativeRows, browser_viewport: [390, 1400] };
       await browser(cli, browserEnv, ["click", ".view-switch button:nth-child(1)"]);
       await browser(cli, browserEnv, ["set", "viewport", String(cases[1]!.viewport[0]), String(cases[1]!.viewport[1])]);
       const drawerOpen = JSON.parse(await browser(cli, browserEnv, ["eval", "document.querySelector('.drawer-toggle')?.getAttribute('aria-expanded') === 'true'"])) as boolean;
