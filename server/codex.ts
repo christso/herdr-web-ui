@@ -1302,7 +1302,17 @@ async function shortThreadFromProcess(
     const peerScreens = await Promise.all(codexPeersIn(peers, paneId, cwd).map((peer) =>
       paneRead({ paneId: peer.pane_id, source: "recent", lines: 400, stripAnsi: true })));
     const own = candidates.filter((candidate) => candidate.path === path);
-    if (peerScreens.some((peer) => matchingCodexExchanges(peer.text, own, 1).length > 0)) return null;
+    for (const peer of peerScreens) {
+      // Headerless exchanges can disprove ownership, but never establish it.
+      const screens = peer.text.includes("OpenAI Codex (v") ? [peer.text]
+        : peer.text.split(/(?=^›[ \t]+)/m).map((text) => `OpenAI Codex (v\n${text}`);
+      if (screens.some((text) => matchingCodexExchanges(text, own, 1).length > 0)) return null;
+      // A missing header is unknown, not evidence of a different conversation.
+      if (displayedFirstExchange(peer.text) === null) {
+        const matched = matchCodexTranscript(peer.text, candidates);
+        if (matched === null || matched === path) return null;
+      }
+    }
     return path;
   } catch { return null; }
   finally { db?.close(); }
