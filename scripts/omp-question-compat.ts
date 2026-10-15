@@ -211,6 +211,8 @@ process.on("SIGTERM", () => { app.stop(); process.exit(0); });
       assert.equal(question.question, fixture.question, "narrow terminal resize preserves the exact wrapped question");
       await assertVisiblePrompt(cli, browserEnv, fixture.question, fixture.options);
       await browser(cli, browserEnv, ["close"]);
+      // The closed daemon can still be exiting; a new session must not reuse its socket.
+      browserEnv.AGENT_BROWSER_SESSION = `${browserSession}-phone`;
       await browser(cli, browserEnv, ["set", "viewport", String(cases[1]!.viewport[0]), String(cases[1]!.viewport[1])]);
       await browser(cli, browserEnv, ["open", origin]);
       question = await waitForPrompt(origin, paneId, fixture.question, 30_000);
