@@ -1,0 +1,40 @@
+
+ Please run the synthetic native question compatibility scenario.
+
+
+╭─── ✔ Ask 4 questions ────────────────────────────────────────────────────────────────────────────────────────────────╮
+├─── [route] ──────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│  Which route should carry the fictional session?                                                                     │
+│  ○ Local socket                                                                                                      │
+│  ◉ Remote relay                                                                                                      │
+├─── [targets] ────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│  Which synthetic targets should be checked?                                                                          │
+│  ☑ Desktop                                                                                                           │
+│  ☑ Phone                                                                                                             │
+│  ☐ Tablet                                                                                                            │
+├─── [note] ───────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│  Add a fictional note for the report.                                                                                │
+│  ○ Use the suggested note                                                                                            │
+│  ○ Use the fallback note                                                                                             │
+│  ✔ fictional compatibility note                                                                                      │
+├─── [wrap] ───────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│  Which fictional answer should remain readable when this question wraps across a narrow terminal?                    │
+│  ◉ A fictional answer that wraps across the narrow native terminal                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+ Native question compatibility answers verified.
+
+
+
+
+
+
+
+
+
+
+
+
+
+ π > ⬢ Native question fixture > 🗑 omp-question-compat-XQ9vgV/cwd ▶───6%───────────────────────────────╎────┃──────131K─
+╰─

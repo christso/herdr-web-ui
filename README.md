@@ -31,3 +31,7 @@ The source fix was independently reviewed. Fast checks passed (3,832 tests, 8 sk
 suite passed 285 tests, including seven new OMP regressions that fail with the baseline parser.
 The full integration/browser run was not green; the upstream PR records its failures and limits.
 The separate native compatibility canary will keep its evidence here after validation.
+
+## Native OMP verification
+
+The final native check passed OMP 18.10.4 and 18.11.1 using the real built-in ask tool, a fake provider and agent-browser. See [exact commands, red/green screenshots and limits](docs/native-omp-question-compatibility.md). The selected artifacts contain fictional content only.
