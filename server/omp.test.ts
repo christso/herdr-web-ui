@@ -64,7 +64,7 @@ describe("an omp pane's chat", () => {
   let home = "";
   let savedHome: string | undefined;
   let agentSession: unknown;
-  let processes: { pid: number; argv: string[] }[] = [];
+  let processes: { pid: number; name?: string; argv?: string[] }[] = [];
   let pane: HerdrPane;
   const restores: Array<() => void> = [];
   const transcript = (cwd: string) => [
@@ -122,8 +122,8 @@ describe("an omp pane's chat", () => {
     await expect(paneConversation(pane.pane_id)).rejects.toThrow("no_session_path");
   });
 
-  it.skipIf(process.platform !== "linux")("reads the transcript the pane's omp process holds open when herdr names none", async () => {
-    const store = join(home, ".omp/agent/sessions/-project");
+  for (const includeArgv of [true, false]) it.skipIf(process.platform !== "linux")(`reads the open profiled omp transcript when herdr ${includeArgv ? "supplies" : "omits"} argv`, async () => {
+    const store = join(home, ".omp/profiles/personal/agent/sessions/-project");
     mkdirSync(store, { recursive: true });
     const path = join(store, "2026-10-01_s1.jsonl");
     writeFileSync(path, transcript(pane.cwd!));
@@ -131,7 +131,8 @@ describe("an omp pane's chat", () => {
     mkdirSync(bin);
     const script = join(bin, "omp.js");
     writeFileSync(script, `require("node:fs").openSync(${JSON.stringify(path)}, "a"); console.log("ready"); setInterval(() => {}, 1000);`);
-    const child = Bun.spawn([process.execPath, script], { stdout: "pipe", stderr: "ignore", stdin: "ignore" });
+    const argv = [process.execPath, script, "--profile", "personal"];
+    const child = Bun.spawn(argv, { stdout: "pipe", stderr: "ignore", stdin: "ignore" });
     try {
       const reader = child.stdout.getReader();
       const first = await Promise.race([
@@ -139,7 +140,7 @@ describe("an omp pane's chat", () => {
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error("omp stand-in did not start")), 5000)),
       ]);
       expect(new TextDecoder().decode(first.value)).toContain("ready");
-      processes = [{ pid: child.pid, argv: [process.execPath, script] }];
+      processes = [{ pid: child.pid, name: "omp", ...(includeArgv ? { argv } : {}) }];
       for (const session of [undefined, { agent: "claude", kind: "id", value: "a-claude-session" }]) {
         agentSession = session;
         forgetTranscriptState();
@@ -150,5 +151,12 @@ describe("an omp pane's chat", () => {
         ]);
       }
     } finally { child.kill(); await child.exited; }
+  });
+
+  it.skipIf(process.platform !== "linux")("does not trust the omp name when its argv is inaccessible or belongs to another executable", async () => {
+    for (const pid of [2147483647, process.pid]) {
+      processes = [{ pid, name: "omp" }];
+      await expect(paneConversation(pane.pane_id)).rejects.toThrow("no_session_path");
+    }
   });
 });

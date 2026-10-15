@@ -5,6 +5,7 @@
  * store the way GJC does, so the process's open transcript or terminal breadcrumb names it then.
  */
 import { join } from "node:path";
+import { readFileSync } from "node:fs";
 
 import { paneProcessInfo } from "./herdr/client.ts";
 import { heldTranscript, runsAgent } from "./gjc-runtime.ts";
@@ -39,14 +40,19 @@ export async function ompHeldTranscript(paneId: string, cwd: string, home = proc
   const info = await paneProcessInfo(paneId).catch(() => null);
   let agentDir: string | null = null;
   const pids: number[] = [];
-  for (const process of info?.foreground_processes ?? []) {
-    const argv = Array.isArray(process.argv) ? process.argv.map(String) : [];
-    if (typeof process.pid !== "number" || !isOmpProcess(argv)) continue;
-    const dir = ompAgentDir(argv, processEnviron(process.pid), home);
+  for (const foreground of info?.foreground_processes ?? []) {
+    if (typeof foreground.pid !== "number") continue;
+    let argv = Array.isArray(foreground.argv) ? foreground.argv.map(String) : [];
+    if (argv.length === 0 && process.platform === "linux") {
+      try { argv = readFileSync(`/proc/${foreground.pid}/cmdline`, "utf8").split("\0"); }
+      catch { continue; }
+    }
+    if (!isOmpProcess(argv)) continue;
+    const dir = ompAgentDir(argv, processEnviron(foreground.pid), home);
     // a moved store, or two omp processes keeping different ones: nothing says which the pane shows
     if (dir === null || agentDir !== null && dir !== agentDir) return null;
     agentDir = dir;
-    pids.push(process.pid);
+    pids.push(foreground.pid);
   }
   return agentDir === null ? null : heldTranscript(agentDir, cwd, pids).path;
 }
