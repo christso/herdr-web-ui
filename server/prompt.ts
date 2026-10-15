@@ -13,9 +13,9 @@ const SELECTED_RE = /^[❯›>]\s*/;
 const OMP_OPTION_MARKER_RE = /^([ \t]*)(?:[❯›>]\s*)?([○●◉◯☐☑☒✓])/;
 const DIVIDER_RE = /^[\s╭╮╰╯├┤┬┴┼─━═╌▔]+$/;
 const OMP_SINGLE_HINT_RE = /enter select.*↑\/↓ move.*esc cancel/i;
-// OMP 18.0.0 can clip the end of its 57-column footer. Keep every preceding control marker
-// complete, and accept only a bounded prefix of the final `cancel` label.
-const OMP_SINGLE_CLIPPED_HINT_RE = /enter select.*n note.*↑\/↓ move.*(?:tab\/←\/→.*)?esc(?: c(?:a(?:n(?:c(?:e(?:l)?)?)?)?)?)?(?:…|\.{3})$/i;
+// OMP 18.0.0 can clip the end of its footer. Keep Enter, note, movement, and whichever final
+// control marker remains visible complete; Esc may have a bounded prefix of `cancel`.
+const OMP_SINGLE_CLIPPED_HINT_RE = /enter select.*n note.*↑\/↓ move.*(?:tab\/←\/→|esc(?: c(?:a(?:n(?:c(?:e(?:l)?)?)?)?)?)?)(?:…|\.{3})$/i;
 const OMP_MULTI_HINT_RE = /space\/enter toggle.*↑\/↓ move.*esc cancel/i;
 // the last of several questions submits them all
 const CODEX_ASK_HINT_RE = /tab to add notes.*enter to submit (?:answer|all).*esc to interrupt/i;

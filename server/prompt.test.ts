@@ -197,9 +197,14 @@ ${rows.map((row) => `│ ${row.padEnd(52)}│`).join("\n")}
     }
     expect(parseInteractivePrompt("omp", screen("Enter select · n note · ↑/↓ move · Esc ca…"))).not.toBeNull();
     expect(parseInteractivePrompt("omp", screen("Enter select · n note · ↑/↓ move · Esc…"))).not.toBeNull();
+    expect(parseInteractivePrompt("omp", screen("Enter select · n note · ↑/↓ move · Tab/←/→…"))).not.toBeNull();
+    expect(parseInteractivePrompt("omp", screen("Enter select · n note · ↑/↓ move · Tab/←/→..."))).not.toBeNull();
 
     expect(parseInteractivePrompt("omp", screen("Enter select · ↑/↓ move · Tab/←/→ · Esc can…"))).toBeNull();
     expect(parseInteractivePrompt("omp", screen("Enter select · n note · Tab/←/→ · Esc can…"))).toBeNull();
+    expect(parseInteractivePrompt("omp", screen("Enter select · ↑/↓ move · Tab/←/→…"))).toBeNull();
+    expect(parseInteractivePrompt("omp", screen("Enter select · n note · ↑/↓ move · Tab/←/→"))).toBeNull();
+    expect(parseInteractivePrompt("omp", screen("Enter select · n note · ↑/↓ move · Tab/←/…"))).toBeNull();
     for (const unmarked of ["c", "ca", "can"]) {
       expect(parseInteractivePrompt("omp", screen(`Enter select · n note · ↑/↓ move · Tab/←/→ · Esc ${unmarked}`))).toBeNull();
     }
