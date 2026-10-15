@@ -23,17 +23,17 @@ bun scripts/omp-question-browser-fixture.ts --root /tmp/herdr-omp-before --built
 bun scripts/omp-question-browser-fixture.ts --built
 ```
 
-Open each printed URL with `view=chat` in separate desktop and phone browser sessions. Set each viewport before loading the app; wait for finite animations to settle and confirm the fictional transcript is present. Before each green capture, assert one visible `.prompt-card`, two `.prompt-card-option` choices with their descriptions, and no overflow or crash. Before each red capture, assert no `.prompt-card`, two transcript turns, and no overflow or crash. On phone, also assert that `.sidebar` has `right <= 1` and computed visibility `hidden`.
+Set `FIXTURE_URL` to the full URL printed by the fixture, including its existing `?pane=…` query. Append only `&view=chat`. Open it in separate desktop and phone browser sessions. Set each viewport before loading the app; wait for finite animations to settle and confirm the fictional transcript is present. Before each green capture, assert one visible `.prompt-card`, two `.prompt-card-option` choices with their descriptions, and no overflow or crash. Before each red capture, assert no `.prompt-card`, two transcript turns, and no overflow or crash. On phone, also assert that `.sidebar` has `right <= 1` and computed visibility `hidden`.
 
 ```sh
 # Start a fresh browser session for each viewport. Set the viewport before loading the app.
 agent-browser --session omp-green-desktop set viewport 1440 900
-agent-browser --session omp-green-desktop open 'FIXTURE_URL/?pane=omp-question-fixture-pane&view=chat'
+agent-browser --session omp-green-desktop open "${FIXTURE_URL}&view=chat"
 agent-browser --session omp-green-desktop wait 2000
 agent-browser --session omp-green-desktop eval '(()=>{const c=document.querySelectorAll(".prompt-card"),o=[...document.querySelectorAll(".prompt-card-option")],r=c[0]?.getBoundingClientRect(),t=o.map(x=>x.innerText);if(c.length!==1||!r||r.width<=0||r.height<=0||r.bottom<=0||r.top>=innerHeight||o.length!==2||!t[0].includes("ARM server")||!t[0].includes("fictional workshop")||!t[1].includes("x86 runner")||!t[1].includes("fictional Linux builds"))throw Error("expected one visible card with both named choices and descriptions");document.querySelectorAll(".machine-context-name,.machine-name").forEach(e=>e.textContent="fixture-pc")})()'
 agent-browser --session omp-green-desktop screenshot docs/screenshots/omp-question-cards/green-desktop.png
 agent-browser --session omp-green-phone set viewport 390 844
-agent-browser --session omp-green-phone open 'FIXTURE_URL/?pane=omp-question-fixture-pane&view=chat'
+agent-browser --session omp-green-phone open "${FIXTURE_URL}&view=chat"
 agent-browser --session omp-green-phone wait 2000
 agent-browser --session omp-green-phone eval '(()=>{const c=document.querySelectorAll(".prompt-card"),o=[...document.querySelectorAll(".prompt-card-option")],r=c[0]?.getBoundingClientRect(),t=o.map(x=>x.innerText);if(c.length!==1||!r||r.width<=0||r.height<=0||r.bottom<=0||r.top>=innerHeight||o.length!==2||!t[0].includes("ARM server")||!t[0].includes("fictional workshop")||!t[1].includes("x86 runner")||!t[1].includes("fictional Linux builds"))throw Error("expected one visible card with both named choices and descriptions");document.querySelectorAll(".machine-context-name,.machine-name").forEach(e=>e.textContent="fixture-pc")})()'
 agent-browser --session omp-green-phone screenshot docs/screenshots/omp-question-cards/green-mobile.png
