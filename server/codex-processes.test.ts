@@ -14,6 +14,7 @@ let root: string;
 let home: string;
 let path: string;
 let screen: string;
+let peerScreens: Map<string, string>;
 let foreground: { pid: number; name?: string; argv?: string[] }[];
 let listener: ReturnType<typeof Bun.listen>;
 let socketBefore: string | undefined;
@@ -33,6 +34,7 @@ beforeEach(() => {
   db.query("INSERT INTO threads VALUES (?, ?, ?, 0, NULL, 1, 1, 'cli')").run(thread, path, root);
   db.close();
   screen = "";
+  peerScreens = new Map();
   foreground = [];
   socketBefore = process.env["HERDR_SOCKET"];
   const socket = join(root, "herdr.sock");
@@ -44,10 +46,10 @@ beforeEach(() => {
       data(socket, chunk) {
         socket.data.buffer += chunk.toString();
         if (!socket.data.buffer.includes("\n")) return;
-        const request = JSON.parse(socket.data.buffer) as { id: string; method: string };
+        const request = JSON.parse(socket.data.buffer) as { id: string; method: string; params?: { pane_id?: string } };
         const result = request.method === "agent.get" ? { agent: {} }
           : request.method === "pane.process_info" ? { process_info: { foreground_processes: foreground } }
-          : request.method === "pane.read" ? { read: { text: screen } }
+          : request.method === "pane.read" ? { read: { text: peerScreens.get(request.params?.pane_id ?? "") ?? screen } }
           : null;
         if (result === null) throw new Error(`unexpected RPC ${request.method}`);
         socket.end(`${JSON.stringify({ id: request.id, result })}\n`);
@@ -224,23 +226,43 @@ shortIt("resolves one submitted short exchange without keeping a screenless bind
   expect(await resolve()).toBeNull();
 });
 
+shortIt("resolves a submitted hello and short reply without requiring a longer answer", async () => {
+  await shortSession();
+  const db = new Database(join(home, "state_5.sqlite"));
+  db.query("UPDATE threads SET first_user_message = 'hello'").run();
+  db.close();
+  shortRollout(path, "hello");
+  screen = shortScreen.replace(shortPrompt, "hello");
+  expect(await resolve()).toBe(path);
+});
+
+shortIt("resolves its exact first exchange beside a different same-directory conversation", async () => {
+  const created = await shortSession();
+  const other = join(home, "sessions", "other.jsonl");
+  shortRollout(other, "Other fixture", "A different short reply.");
+  addShortThread("other", other, created - 60_000, "Other fixture");
+  peerScreens.set("peer", "OpenAI Codex (v1.0)\n› Other fixture\n• A different short reply.\n› ");
+  expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("peer")])).toBe(path);
+});
+
 shortIt("resolves a seconds-only schema when creation is provably after process start", async () => {
   await shortSession(false);
   expect(await resolve()).toBe(path);
 });
 
-shortIt("requires a full second after the estimated process start", async () => {
+shortIt("rejects a thread created before the process but accepts one immediately after startup", async () => {
   await shortSession();
   const startedAt = processStartedAt(foreground[0]!.pid)!;
   const beforeThreshold = new Database(join(home, "state_5.sqlite"));
   beforeThreshold.query("UPDATE threads SET created_at = ?, created_at_ms = ?")
-    .run(Math.floor((startedAt + 999) / 1000), startedAt + 999);
+    .run(Math.floor((startedAt - 1) / 1000), startedAt - 1);
   beforeThreshold.close();
   expect(await resolve()).toBeNull();
 
+  const created = Date.now() + 50;
   const atThreshold = new Database(join(home, "state_5.sqlite"));
   atThreshold.query("UPDATE threads SET created_at = ?, created_at_ms = ?")
-    .run(Math.floor((startedAt + 1000) / 1000), startedAt + 1000);
+    .run(Math.floor(created / 1000), created);
   atThreshold.close();
   expect(await resolve()).toBe(path);
 });
@@ -290,6 +312,21 @@ shortIt("allows a readable older thread whose exchange cannot explain the screen
   shortRollout(old, "Original request", "An unrelated original answer.");
   addShortThread("old", old, created - 60_000, "Original request");
   expect(await resolve()).toBe(path);
+});
+
+shortIt("checks every exchange in a tool-heavy older thread instead of rejecting its file size", async () => {
+  const created = await shortSession();
+  const old = join(home, "sessions", "tool-heavy.jsonl");
+  shortRollout(old, "Original request", "An unrelated original answer.");
+  const output = JSON.stringify({ type: "response_item", payload: { type: "function_call_output", call_id: "tool", output: "x".repeat(64 * 1024) } }) + "\n";
+  appendFileSync(old, output.repeat(20));
+  addShortThread("old", old, created - 60_000, "Original request");
+  expect(await resolve()).toBe(path);
+  appendFileSync(old, [
+    { type: "event_msg", payload: { type: "user_message", message: shortPrompt } },
+    { type: "event_msg", payload: { type: "agent_message", message: shortAnswer } },
+  ].map((entry) => JSON.stringify(entry)).join("\n") + "\n");
+  expect(await resolve()).toBeNull();
 });
 
 shortIt("does not erase unreadable older or new threads to manufacture uniqueness", async () => {
