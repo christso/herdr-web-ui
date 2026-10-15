@@ -1,0 +1,13 @@
+{
+  "verdict": "no-retained-actionable-findings",
+  "scope": "two-line harness lifecycle delta over b2cf9fc",
+  "path": "scripts/omp-question-compat.ts",
+  "start_end_sha256": "4edc707c02793c08dbe604c4b01f188bf395d719b952c3f8af6a47c346d248b5",
+  "assertions_unchanged": true,
+  "cleanup_environment_alias_verified": true,
+  "source_edits": false,
+  "native_or_browser_runs": false,
+  "builds": false,
+  "findings": [],
+  "reviewed_at": "2026-10-15T23:46:19.953416+00:00"
+}

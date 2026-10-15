@@ -1,0 +1,58 @@
+{
+  "case": "native-ask-roundtrip",
+  "ok": true,
+  "expected": [
+    {
+      "id": "route",
+      "selectedOptions": [
+        "Remote relay"
+      ]
+    },
+    {
+      "id": "targets",
+      "selectedOptions": [
+        "Desktop",
+        "Phone"
+      ]
+    },
+    {
+      "id": "note",
+      "selectedOptions": [],
+      "customInput": "fictional compatibility note"
+    },
+    {
+      "id": "wrap",
+      "selectedOptions": [
+        "A fictional answer that wraps across the narrow native terminal"
+      ]
+    }
+  ],
+  "actual": [
+    {
+      "id": "route",
+      "selectedOptions": [
+        "Remote relay"
+      ]
+    },
+    {
+      "id": "targets",
+      "selectedOptions": [
+        "Desktop",
+        "Phone"
+      ]
+    },
+    {
+      "id": "note",
+      "selectedOptions": [],
+      "customInput": "fictional compatibility note"
+    },
+    {
+      "id": "wrap",
+      "selectedOptions": [
+        "A fictional answer that wraps across the narrow native terminal"
+      ]
+    }
+  ],
+  "tool_result": "User answers:\nroute: Remote relay\ntargets: [Desktop, Phone]\nnote: \"fictional compatibility note\"\nwrap: A fictional answer that wraps across the narrow native terminal",
+  "observed_at": "2026-10-15T23:51:19.825Z"
+}

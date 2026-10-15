@@ -1,0 +1,189 @@
+{
+  "app_root": "/home/runner/work/herdr-web-ui/herdr-web-ui",
+  "app_revision": "5f07e144a1c9940adaaf4adacdbf20dc8b69f116",
+  "app_version": "0.4.8",
+  "parser_sha256": "35b72f0b33cf258cc5ac7a4eb71b4e7ddc548e5f2b7519a40832213d6bcd89db",
+  "omp_version": "18.10.4",
+  "omp_executable_version": "omp/18.10.4",
+  "herdr_version": "herdr 0.9.3",
+  "term": "xterm-256color",
+  "native_initial_viewport": [
+    1280,
+    800
+  ],
+  "native_resize_viewport": [
+    390,
+    1400
+  ],
+  "cases": [
+    {
+      "name": "route",
+      "question": "Which route should carry the fictional session?",
+      "options": [
+        {
+          "label": "Local socket",
+          "description": "Keeps the session on this PC."
+        },
+        {
+          "label": "Remote relay",
+          "description": "Uses the fictional remote endpoint."
+        }
+      ],
+      "viewport": [
+        1280,
+        800
+      ]
+    },
+    {
+      "name": "targets",
+      "question": "Which synthetic targets should be checked?",
+      "options": [
+        {
+          "label": "Desktop",
+          "description": "Wide terminal layout."
+        },
+        {
+          "label": "Phone",
+          "description": "Narrow terminal layout."
+        },
+        {
+          "label": "Tablet",
+          "description": "Medium terminal layout."
+        }
+      ],
+      "viewport": [
+        1280,
+        800
+      ]
+    },
+    {
+      "name": "note",
+      "question": "Add a fictional note for the report.",
+      "options": [
+        {
+          "label": "Use the suggested note",
+          "description": "Keeps the synthetic report brief."
+        },
+        {
+          "label": "Use the fallback note",
+          "description": "Keeps a different synthetic report brief."
+        }
+      ],
+      "viewport": [
+        1280,
+        800
+      ]
+    },
+    {
+      "name": "wrap",
+      "question": "Which fictional answer should remain readable when this question wraps across a narrow terminal?",
+      "options": [
+        {
+          "label": "A fictional answer that wraps across the narrow native terminal",
+          "description": "A synthetic description that also wraps at narrow terminal widths."
+        }
+      ],
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "name": "review-submit",
+      "question": "Submit these answers?",
+      "options": [
+        {
+          "label": "Submit",
+          "description": null
+        },
+        {
+          "label": "Cancel",
+          "description": null
+        }
+      ],
+      "viewport": [
+        390,
+        844
+      ]
+    }
+  ],
+  "native_initial_pty": {
+    "columns": 120,
+    "rows": 49
+  },
+  "native_wrap_pty": {
+    "attached_columns": 47,
+    "attached_rows": 83,
+    "browser_viewport": [
+      390,
+      1400
+    ]
+  },
+  "phone_sidebar": {
+    "left": -320,
+    "open": false,
+    "right": 0,
+    "visible": false,
+    "width": 320
+  },
+  "native_result_file": "native-result.json",
+  "native_result": {
+    "case": "native-ask-roundtrip",
+    "ok": true,
+    "expected": [
+      {
+        "id": "route",
+        "selectedOptions": [
+          "Remote relay"
+        ]
+      },
+      {
+        "id": "targets",
+        "selectedOptions": [
+          "Desktop",
+          "Phone"
+        ]
+      },
+      {
+        "id": "note",
+        "selectedOptions": [],
+        "customInput": "fictional compatibility note"
+      },
+      {
+        "id": "wrap",
+        "selectedOptions": [
+          "A fictional answer that wraps across the narrow native terminal"
+        ]
+      }
+    ],
+    "actual": [
+      {
+        "id": "route",
+        "selectedOptions": [
+          "Remote relay"
+        ]
+      },
+      {
+        "id": "targets",
+        "selectedOptions": [
+          "Desktop",
+          "Phone"
+        ]
+      },
+      {
+        "id": "note",
+        "selectedOptions": [],
+        "customInput": "fictional compatibility note"
+      },
+      {
+        "id": "wrap",
+        "selectedOptions": [
+          "A fictional answer that wraps across the narrow native terminal"
+        ]
+      }
+    ],
+    "tool_result": "User answers:\nroute: Remote relay\ntargets: [Desktop, Phone]\nnote: \"fictional compatibility note\"\nwrap: A fictional answer that wraps across the narrow native terminal",
+    "observed_at": "2026-10-15T23:51:11.790Z"
+  },
+  "status": "passed"
+}
