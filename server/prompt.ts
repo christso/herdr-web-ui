@@ -11,8 +11,8 @@ import { claudePlanFile } from "./claude-plan.ts";
 const ANSI_RE = /\u001b\[[0-?]*[ -/]*[@-~]/g;
 const SELECTED_RE = /^[❯›>]\s*/;
 const DIVIDER_RE = /^[\s╭╮╰╯├┤┬┴┼─━═╌▔]+$/;
-const OMP_SINGLE_HINT_RE = /enter select.*↑\/↓ move.*esc cancel/i;
-const OMP_MULTI_HINT_RE = /space\/enter toggle.*↑\/↓ move.*esc cancel/i;
+const OMP_SINGLE_HINT_RE = /(?:enter|⏎)\s+select.*↑\/↓\s*move.*(?:esc|⎋)\s*cancel/i;
+const OMP_MULTI_HINT_RE = /(?:space\/enter toggle|(?:space|␠)\s+toggle.*(?:enter|⏎)\s+(?:submit|next)).*↑\/↓\s*move.*(?:esc|⎋)\s*cancel/i;
 // the last of several questions submits them all
 const CODEX_ASK_HINT_RE = /tab to add notes.*enter to submit (?:answer|all).*esc to interrupt/i;
 const CODEX_ASYNC_ASK_HINT_RE = /(?:enter|return).*submit.*(?:ctrl\s*\+\s*\]|skip)/i;
@@ -205,18 +205,51 @@ function nearestQuestion(lines: string[], beforeIndex: number): string | null {
   return null;
 }
 
-function parseBorderMenu(lines: string[], startDivider: number, endDivider: number): MenuRow[] {
+/** OMP options have a marker; their descriptions and wrapped labels are indented below them. */
+function parseOmpRows(lines: string[], startDivider: number, endDivider: number): MenuRow[] | null {
   const rows: MenuRow[] = [];
+  const marker = "○●◉◯☐☑☒✓";
+  const selectedRows = lines.slice(startDivider + 1, endDivider).map((line, index) => {
+    const raw = line.replace(ANSI_RE, "").replace(/^\s*│/, "").replace(/│\s*$/, "");
+    const match = raw.match(/^\s*(?:❯|›|>)\s*[○●◉◯☐☑☒✓]/);
+    return match ? { raw, lineIndex: startDivider + 1 + index, markerColumn: match[0].search(/[○●◉◯☐☑☒✓]/) } : null;
+  }).filter((row): row is { raw: string; lineIndex: number; markerColumn: number } => row !== null);
+  if (selectedRows.length !== 1) return null;
+  const markerColumn = selectedRows[0]!.markerColumn;
   for (let index = startDivider + 1; index < endDivider; index += 1) {
-    let text = cleanLine(lines[index]!);
-    if (!text || isDivider(text)) continue;
-    const selected = SELECTED_RE.test(text);
-    text = text.replace(SELECTED_RE, "").trim();
-    const checked = /^[☑☒✓]/.test(text);
-    text = text.replace(/^[○●◉◯☐☑☒✓]\s*/, "").trim();
-    if (text) rows.push({ label: normalizeText(text), selected, checked, lineIndex: index });
+    const raw = lines[index]!.replace(ANSI_RE, "").replace(/^\s*│/, "").replace(/│\s*$/, "");
+    const prefix = raw.slice(0, markerColumn);
+    const glyph = raw[markerColumn] ?? "";
+    const option = marker.includes(glyph) && (/^\s*$/.test(prefix) || /^\s*(?:❯|›|>)\s*$/.test(prefix));
+    if (option) {
+      const label = normalizeText(raw.slice(markerColumn + 1));
+      if (label) rows.push({
+        label, selected: /(?:❯|›|>)\s*$/.test(prefix), checked: /^[☑☒✓]/.test(glyph), lineIndex: index,
+      });
+      continue;
+    }
+    const row = rows.at(-1);
+    if (!row) continue;
+    const description = raw.match(/^\s*↳\s*(.*)$/);
+    const indentation = raw.match(/^\s*/)?.[0].length ?? 0;
+    const continuation = raw.trim();
+    if (description) row.description = normalizeText([row.description, description[1]!].filter(Boolean).join(" "));
+    else if (row.description && indentation >= markerColumn + 4 && continuation) row.description = normalizeText(`${row.description} ${continuation}`);
+    else if (!row.description && indentation >= markerColumn + 4 && continuation) row.description = normalizeText(continuation);
+    else if (!row.description && indentation >= markerColumn + 2 && continuation) row.label = normalizeText(`${row.label} ${continuation}`);
+    else if (continuation) return null;
   }
   return rows;
+}
+
+function ompQuestionText(lines: string[], startDivider: number): string | null {
+  const panelTop = findLastIndex(lines, (_, index) => index < startDivider && /^\s*╭/.test(lines[index]!));
+  const headerDivider = panelTop >= 0 ? panelTop
+    : findLastIndex(lines, (_, index) => index < startDivider && isDivider(lines[index]!));
+  if (headerDivider < 0) return nearestQuestion(lines, startDivider);
+  const header = lines.slice(headerDivider + 1, startDivider).map(cleanLine).filter((line) => line
+    && !/^[←→].*Submit/i.test(line) && !/^[☐☑✔]\s+\S/.test(line) && !/^Question \d+\/\d+/i.test(line));
+  return header.length > 0 ? normalizeText(header.join(" ")) : nearestQuestion(lines, startDivider);
 }
 
 function findMenuDividers(lines: string[], hintIndex: number): [number, number] | null {
@@ -316,21 +349,46 @@ function parseOmpQuestion(screen: string): ParsedPrompt | null {
   const dividers = findMenuDividers(lines, hintIndex);
   if (!dividers) return null;
   const [startDivider, endDivider] = dividers;
-  const rows = parseBorderMenu(lines, startDivider, endDivider);
+  const rows = parseOmpRows(lines, startDivider, endDivider);
+  if (!rows) return null;
   const selectedIndex = rows.findIndex((row) => row.selected);
+  if (rows.filter((row) => row.selected).length !== 1) return null;
   const customIndex = rows.findIndex((row) => /^Other \(type your own\)$/i.test(row.label));
   const optionRows = rows.filter((_, index) => index !== customIndex);
-  const multiSelect = OMP_MULTI_HINT_RE.test(cleanLine(lines[hintIndex]!));
-  const question = nearestQuestion(lines, startDivider);
-  if (!question || selectedIndex < 0 || optionRows.length === 0 || customIndex < 0) return null;
+  const hint = wrapped(lines, hintIndex);
+  const multiSelect = OMP_MULTI_HINT_RE.test(hint);
+  const currentMulti = /(?:space|␠)\s+toggle.*(?:enter|⏎)\s+(?:submit|next)/i.test(hint);
+  const question = ompQuestionText(lines, startDivider);
+  if (!question || selectedIndex < 0 || optionRows.length === 0 || customIndex !== rows.length - 1) return null;
   return finishPrompt("omp", {
     kind: "question", title: multiSelect ? "Multiple choice" : "Question", question, body: null,
-    options: optionRows.map((row) => ({ label: row.label.replace(/ \(Recommended\)$/i, ""), description: null })),
+    options: optionRows.map((row) => ({ label: row.label.replace(/ \(Recommended\)$/i, ""), description: row.description ?? null })),
     multi_select: multiSelect, custom_option_index: multiSelect ? null : optionRows.length,
   }, {
     responder: "omp-question", menuLabels: rows.map((row) => row.label), selectedIndex,
     checkedOptionIndices: optionRows.flatMap((row, index) => row.checked ? [index] : []),
     customMenuIndex: customIndex, rejectWithEscapeIndex: null,
+    // OMP's Other row opens its own text prompt on Enter. The ordinary Enter in
+    // the question dialog selects an option, so keep the activation step explicit.
+    ...(!multiSelect ? { customSteps: (text: string) => [
+      ...keySteps(navigationKeys(customIndex - selectedIndex)),
+      ...keySteps([KEY.enter]), { text }, ...keySteps([KEY.enter]),
+    ] } : {}),
+    ...(currentMulti ? { multiSteps: (choices: number[]) => {
+      const desired = new Set(choices);
+      const checked = new Set(optionRows.flatMap((row, index) => row.checked ? [index] : []));
+      const toggles = optionRows.flatMap((_, index) => desired.has(index) !== checked.has(index) ? [index] : []);
+      let cursor = selectedIndex;
+      const keys: string[] = [];
+      for (const index of toggles) {
+        keys.push(...navigationKeys(index - cursor), KEY.space);
+        cursor = index;
+      }
+      // Current OMP advances/finishes the active question on Enter. Tab changes
+      // the active question and would make that Enter answer a different row.
+      keys.push(KEY.enter);
+      return keySteps(keys);
+    } } : {}),
   });
 }
 
