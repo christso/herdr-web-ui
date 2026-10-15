@@ -326,6 +326,44 @@ Claude has written up a plan and is ready to execute. Would you like to proceed?
     expect(parseInteractivePrompt("omp", screen.replace("│   ○ Other (type your own)                             │\n", ""))).toBeNull();
   });
 
+  test("recognizes OMP's question hint when the word itself is clipped", () => {
+    const screen = `
+╭─ Ask ───────────────────────────────────────╮
+│  Transport    Targets    Notes              │
+│  Narrow view    Submit                      │
+│ Which fictional answer should remain        │
+│ readable when this question wraps across a  │
+│ narrow terminal?                            │
+├─────────────────────────────────────────────┤
+│ ❯ ○ A fictional answer that wraps across    │
+│     the narrow native terminal              │
+│       A synthetic description that also     │
+│       wraps at narrow terminal widths.      │
+│   ○ Other (type your own)                   │
+├─────────────────────────────────────────────┤
+│ ⏎ select · n note · ↑/↓ move · ⇥/←/→ quest… │
+╰─────────────────────────────────────────────╯
+`;
+    const prompt = parseInteractivePrompt("omp", screen);
+    expect(prompt).toMatchObject({
+      question: "Which fictional answer should remain readable when this question wraps across a narrow terminal?",
+      options: [{
+        label: "A fictional answer that wraps across the narrow native terminal",
+        description: "A synthetic description that also wraps at narrow terminal widths.",
+      }],
+    });
+    expect(answerKeys(prompt!, { option_index: 0 })).toEqual([{ keys: ["enter"] }]);
+    for (const prefix of ["q", "qu", "que", "ques", "questi", "questio", "question"]) {
+      expect(parseInteractivePrompt("omp", screen.replace("quest…", `${prefix}…`))?.question).toBe(prompt?.question);
+    }
+    for (const unrelated of ["quest", "query…", "questions…"]) {
+      expect(parseInteractivePrompt("omp", screen.replace("quest…", unrelated))).toBeNull();
+    }
+    expect(parseInteractivePrompt("omp", screen.replace("n note · ", ""))).toBeNull();
+    expect(parseInteractivePrompt("omp", screen.replace("│   ○ Other (type your own)                   │\n", ""))).toBeNull();
+    expect(parseInteractivePrompt("omp", screen + "\nAgent resumed")).toBeNull();
+  });
+
   test("parses OMP's review tab as an explicit submit or cancel prompt", () => {
     const screen = `
 ╭─ Ask ──────────────────────────────────────────────────────────╮
