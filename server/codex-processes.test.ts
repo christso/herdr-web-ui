@@ -4,7 +4,7 @@ import { appendFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileS
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { codexOpenRollout, codexTranscriptPath } from "./codex.ts";
-import { processStartedAt } from "./process-start.ts";
+import { processStartedAt, processStartUpperBound } from "./process-start.ts";
 
 // Native stores and the real RPC client; only herdr's foreground metadata is synthetic.
 // In particular, a real process supplies /proc/cmdline when that metadata omits argv.
@@ -281,7 +281,7 @@ shortIt("resolves a seconds-only schema when creation is provably after process 
   expect(await resolve()).toBe(path);
 });
 
-shortIt("rejects a thread created before the process but accepts one immediately after startup", async () => {
+shortIt("rejects a pre-start thread but accepts one 542 ms after its precise start bound", async () => {
   await shortSession();
   const startedAt = processStartedAt(foreground[0]!.pid)!;
   const beforeThreshold = new Database(join(home, "state_5.sqlite"));
@@ -290,7 +290,9 @@ shortIt("rejects a thread created before the process but accepts one immediately
   beforeThreshold.close();
   expect(await resolve()).toBeNull();
 
-  const created = Date.now() + 50;
+  const upper = processStartUpperBound(foreground[0]!.pid);
+  expect(upper).not.toBeNull();
+  const created = upper! + 542;
   const atThreshold = new Database(join(home, "state_5.sqlite"));
   atThreshold.query("UPDATE threads SET created_at = ?, created_at_ms = ?")
     .run(Math.floor(created / 1000), created);
