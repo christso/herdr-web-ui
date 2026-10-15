@@ -1,0 +1,91 @@
+{
+  "pi_version": "1.2.0",
+  "herdr_version": "herdr 0.9.5",
+  "messages_sent": 0,
+  "model_calls": 0,
+  "extension_sha256": "2c5272d732b475bbf91a027203b1f98d25fe43d2c1402530a442b288aeaca1e4",
+  "fixed_parser_sha256": "ae59a1f81e357833a5dfd71df5afb373ab855721f71dfc5be40841219d3d61fb",
+  "cases": [
+    {
+      "mode": "red",
+      "kind": "fresh",
+      "api": {
+        "source": "scrollback",
+        "turns": 0,
+        "unwritten": false
+      },
+      "browser": {
+        "unavailable": true,
+        "greeting": false,
+        "turns": 0,
+        "fictionalAnswer": false
+      },
+      "phone": {
+        "sidebarRight": 0,
+        "width": 390,
+        "scroll": 390
+      }
+    },
+    {
+      "mode": "red",
+      "kind": "resumed",
+      "api": {
+        "source": "scrollback",
+        "turns": 0,
+        "unwritten": false
+      },
+      "browser": {
+        "unavailable": true,
+        "greeting": false,
+        "turns": 0,
+        "fictionalAnswer": false
+      },
+      "phone": {
+        "sidebarRight": 0,
+        "width": 390,
+        "scroll": 390
+      }
+    },
+    {
+      "mode": "green",
+      "kind": "fresh",
+      "api": {
+        "source": "pi-transcript",
+        "turns": 0,
+        "unwritten": true
+      },
+      "browser": {
+        "unavailable": false,
+        "greeting": true,
+        "turns": 0,
+        "fictionalAnswer": false
+      },
+      "phone": {
+        "sidebarRight": 0,
+        "width": 390,
+        "scroll": 390
+      }
+    },
+    {
+      "mode": "green",
+      "kind": "resumed",
+      "api": {
+        "source": "pi-transcript",
+        "turns": 2,
+        "unwritten": false
+      },
+      "browser": {
+        "unavailable": false,
+        "greeting": false,
+        "turns": 2,
+        "fictionalAnswer": true
+      },
+      "phone": {
+        "sidebarRight": 0,
+        "width": 390,
+        "scroll": 390
+      }
+    }
+  ],
+  "status": "passed"
+}

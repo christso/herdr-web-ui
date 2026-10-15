@@ -1,0 +1,59 @@
+{
+  "review": "independent final scoped Pi correctness/regression/test-preservation review",
+  "created_utc": "2026-10-15T23:31:16.722137+00:00",
+  "repo": "/home/christso/projects/christso/herdr-web-ui__worktrees/pi-chat-session",
+  "base": "aa624cb56f550f9a7dd8bf4d59ed99ffc3921741",
+  "source_hashes_start": {
+    "server/pi.ts": "ae59a1f81e357833a5dfd71df5afb373ab855721f71dfc5be40841219d3d61fb",
+    "server/pi.test.ts": "829c25859f0545d0f9afc44a66a8eda2928271562719dae62877774e3b257d21",
+    "server/pi.contract.test.ts": "d51f4aec037977fbc3b5ea697b9ef73daf51297add0f00a322d4c2c6230b1fd2",
+    "changelog.d/pi-profile-chat.md": "254cc1b8ce27bde18099fee2e2d11f38406ec6fcef2c6e597ef6e08e53cb4434"
+  },
+  "source_hashes_end": {
+    "server/pi.ts": "ae59a1f81e357833a5dfd71df5afb373ab855721f71dfc5be40841219d3d61fb",
+    "server/pi.test.ts": "829c25859f0545d0f9afc44a66a8eda2928271562719dae62877774e3b257d21",
+    "server/pi.contract.test.ts": "d51f4aec037977fbc3b5ea697b9ef73daf51297add0f00a322d4c2c6230b1fd2",
+    "changelog.d/pi-profile-chat.md": "254cc1b8ce27bde18099fee2e2d11f38406ec6fcef2c6e597ef6e08e53cb4434"
+  },
+  "source_drift_during_final_verification": false,
+  "earlier_snapshot_note": "Requested 39b21af5 snapshot changed during initial review to fix the readonly argv intersection. Reviewer inspected the type-only source correction and refreshed unit verification on ae59a1f8; no unresolved findings remain.",
+  "verdict": "No retained findings in the scoped final source. Ready for coordinator to combine with worker gates and final native/browser proof.",
+  "findings": [],
+  "resolved_draft_findings": [
+    "Linux argv omission now falls back to the foreground PID proc cmdline.",
+    "Custom tilde stores use process HOME/USERPROFILE.",
+    "Official npm bundle entrypoint is recognized without accepting arbitrary cli.js.",
+    "Fresh contract fixture creates its parent before first transcript write.",
+    "Unavailable argv preserves canonical default-store native bindings and refuses custom-store discovery.",
+    "VerifiedPiProcess uses Omit and readonly argv, resolving the mutable/readonly intersection."
+  ],
+  "test_preservation": {
+    "original_unit_tests": 21,
+    "unchanged_original_unit_body": true,
+    "removed_original_contract_assertions": [],
+    "summary": "All original unit/contract test bodies and expectations preserved; import updates and appended/inserted custom-profile tests only. Canonical written/unwritten containment helper bodies unchanged."
+  },
+  "validation": {
+    "command": "bun test server/pi.test.ts",
+    "exit_code": 0,
+    "tests_pass": 30,
+    "tests_fail": 0,
+    "assertions": 77,
+    "bun": "1.4.3",
+    "duration_ms": 284,
+    "coverage": "Original parsing/images/compaction tests plus resumed/fresh profiles, direct session store environment, process HOME and USERPROFILE, official npm argv, real Linux proc argv recovery, wrong/stale agent identity, unreadable metadata default fallback/custom rejection, competing stores, symlink escape and unsupported CLI store override."
+  },
+  "reviewed_controls": [
+    "Native agent, session agent, source and path-kind checks must agree before resolving.",
+    "Only identified foreground Pi processes contribute custom stores; executable name alone never authorizes a custom store.",
+    "Process-owned stores replace bridge default; a stale report into the bridge profile is rejected when the active process identifies another store.",
+    "Resolved written paths and prospective unwritten paths remain inside canonical stores; escaping symlinks and foreign extensions are refused by unchanged helpers.",
+    "Unsupported --session-dir and --session-dir= overrides fail closed when the Pi argv is available.",
+    "Linux-only process metadata keeps default canonical native-session fallback on other platforms or unavailable process metadata."
+  ],
+  "limits": [
+    "Reviewer did not edit source, run builds/broad admitted checks or the contract suite, send live pane input, deploy, or publish.",
+    "Worker owns contract and fast checks; coordinator owns final native Pi 1.2/full-app browser proof and shipping.",
+    "No claim of independent native-browser proof is made by this receipt."
+  ]
+}
