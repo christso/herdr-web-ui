@@ -1,0 +1,41 @@
+{
+  "omp_version": "omp/18.11.1",
+  "messages_sent": 0,
+  "model_calls": 0,
+  "cases": [
+    {
+      "kind": "default",
+      "agent": "omp",
+      "has_native_session": true,
+      "source": "omp-transcript",
+      "turns": 0,
+      "browser": {
+        "unavailable": false,
+        "greeting": true
+      }
+    },
+    {
+      "kind": "profile-missing-integration",
+      "agent": "omp",
+      "has_native_session": false,
+      "source": "scrollback",
+      "turns": 0,
+      "browser": {
+        "unavailable": true,
+        "greeting": false
+      }
+    },
+    {
+      "kind": "profile-with-integration",
+      "agent": "omp",
+      "has_native_session": true,
+      "source": "omp-transcript",
+      "turns": 0,
+      "browser": {
+        "unavailable": false,
+        "greeting": true
+      }
+    }
+  ],
+  "status": "passed"
+}
