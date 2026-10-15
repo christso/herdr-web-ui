@@ -12,7 +12,10 @@ const ANSI_RE = /\u001b\[[0-?]*[ -/]*[@-~]/g;
 const SELECTED_RE = /^[❯›>]\s*/;
 const DIVIDER_RE = /^[\s╭╮╰╯├┤┬┴┼─━═╌▔]+$/;
 const OMP_SINGLE_HINT_RE = /(?:enter|⏎)\s+select.*↑\/↓\s*move.*(?:esc|⎋)\s*cancel/i;
-const OMP_MULTI_HINT_RE = /(?:space\/enter toggle|(?:space|␠)\s+toggle.*(?:enter|⏎)\s+(?:submit|next)).*↑\/↓\s*move.*(?:esc|⎋)\s*cancel/i;
+const OMP_CLIPPED_SINGLE_HINT_RE = /(?:enter|⏎)\s+select.*\bn\s+note.*↑\/↓\s*move.*(?:tab|⇥).*question/i;
+const OMP_MULTI_HINT_RE = /(?:space\/enter toggle|(?:space|␠|␣)\s+toggle.*(?:enter|⏎)\s+(?:submit|next)).*↑\/↓\s*move.*(?:esc|⎋)\s*cancel/i;
+const OMP_REVIEW_HINT_RE = /(?:enter|⏎)\s+submit.*↑\/↓\s*scroll.*(?:esc|⎋)\s*cancel/i;
+const OMP_TABS_HINT_RE = /(?:tab|⇥).*?(?:←|left).*?(?:→|right)|(?:←|left).*?(?:→|right).*?(?:tab|⇥)/i;
 // the last of several questions submits them all
 const CODEX_ASK_HINT_RE = /tab to add notes.*enter to submit (?:answer|all).*esc to interrupt/i;
 const CODEX_ASYNC_ASK_HINT_RE = /(?:enter|return).*submit.*(?:ctrl\s*\+\s*\]|skip)/i;
@@ -122,6 +125,7 @@ type Responder =
   | "pi-model"
   | "hermes-question"
   | "hermes-input"
+  | "omp-submit"
   | "fallback-menu"
   | "fallback-gjc-menu"
   | "fallback-keys";
@@ -242,14 +246,71 @@ function parseOmpRows(lines: string[], startDivider: number, endDivider: number)
   return rows;
 }
 
-function ompQuestionText(lines: string[], startDivider: number): string | null {
+function ompQuestionText(lines: string[], startDivider: number, hasQuestionTabs: boolean): string | null {
   const panelTop = findLastIndex(lines, (_, index) => index < startDivider && /^\s*╭/.test(lines[index]!));
   const headerDivider = panelTop >= 0 ? panelTop
     : findLastIndex(lines, (_, index) => index < startDivider && isDivider(lines[index]!));
   if (headerDivider < 0) return nearestQuestion(lines, startDivider);
-  const header = lines.slice(headerDivider + 1, startDivider).map(cleanLine).filter((line) => line
-    && !/^[←→].*Submit/i.test(line) && !/^[☐☑✔]\s+\S/.test(line) && !/^Question \d+\/\d+/i.test(line));
+  const headerRows = lines.slice(headerDivider + 1, startDivider);
+  // With question navigation, OMP draws its tab bar before the question title. Drop its leading
+  // rows by position and the tab cells' extra left padding, not by their text: the strip can wrap
+  // to one cell per row or clip its final tab, and the question can itself end in `Submit`.
+  const firstHeaderRow = headerRows.findIndex((line) => cleanLine(line));
+  let tabRows = 0;
+  if (hasQuestionTabs) {
+    for (let index = firstHeaderRow; index >= 0 && index < headerRows.length; index += 1) {
+      if (!isOmpTabStripRow(headerRows[index]!)) break;
+      tabRows += 1;
+      if (isOmpSubmitTabRow(headerRows[index]!)) break;
+    }
+  }
+  const header = headerRows.map((line, index) => ({ line: cleanLine(line), index })).filter(({ line, index }) => line
+    && !(hasQuestionTabs && index >= firstHeaderRow && index < firstHeaderRow + tabRows)
+    && !/^[←→].*Submit/i.test(line) && !/^[☐☑✔]\s+\S/.test(line) && !/^Question \d+\/\d+/i.test(line)).map(({ line }) => line);
   return header.length > 0 ? normalizeText(header.join(" ")) : nearestQuestion(lines, startDivider);
+}
+
+/** The panel adds one space; TabBar cells start with one space, plus a wrapped separator when present. */
+function isOmpTabStripRow(rawLine: string): boolean {
+  const raw = ompTabRowText(rawLine);
+  const indentation = raw.match(/^\s*/)?.[0].length ?? 0;
+  return (indentation === 2 || indentation === 4) && Boolean(raw.trim());
+}
+
+/** Stop at the final visible tab so following indented question text is never consumed as tabs. */
+function isOmpSubmitTabRow(rawLine: string): boolean {
+  const cells = ompTabRowText(rawLine).trim().split(/\s{2,}/).map((cell) => cell.trim());
+  return cells.at(-1) === "Submit";
+}
+
+function ompTabRowText(rawLine: string): string {
+  return rawLine.replace(ANSI_RE, "").replace(/^\s*│/, "").replace(/│\s*$/, "");
+}
+
+/** The Submit tab is a separate review state: Enter submits, Esc cancels the native dialog. */
+function parseOmpSubmit(screen: string): ParsedPrompt | null {
+  const lines = screen.replace(ANSI_RE, "").split(/\r?\n/);
+  const hintIndex = findLastIndex(lines, (_, index) => OMP_REVIEW_HINT_RE.test(wrapped(lines, index)));
+  if (hintIndex < 0) return null;
+  const panelTop = findLastIndex(lines, (_, index) => index < hintIndex && /^\s*╭/.test(lines[index]!));
+  if (panelTop < 0) return null;
+  const heading = findLastIndex(lines, (line, index) => index > panelTop && index < hintIndex && cleanLine(line) === "Review answers");
+  if (heading < 0) return null;
+  const submitRows = lines.flatMap((line, index) => {
+    if (index <= heading || index >= hintIndex) return [];
+    return /^\s*[❯›>]\s*Submit\s*$/i.test(cleanLine(line)) ? [index] : [];
+  });
+  if (submitRows.length !== 1) return null;
+  const submitRow = submitRows[0]!;
+  const body = lines.slice(heading + 1, submitRow).map(cleanLine).filter((line) => line && !isDivider(line)).join("\n");
+  return finishPrompt("omp", {
+    kind: "menu", title: "Review answers", question: "Submit these answers?", body: body || null,
+    options: [{ label: "Submit", description: null }, { label: "Cancel", description: null }],
+    multi_select: false, custom_option_index: null,
+  }, {
+    responder: "omp-submit", menuLabels: ["Submit", "Cancel"], selectedIndex: 0,
+    checkedOptionIndices: [], customMenuIndex: null, rejectWithEscapeIndex: 1,
+  });
 }
 
 function findMenuDividers(lines: string[], hintIndex: number): [number, number] | null {
@@ -344,7 +405,8 @@ function publicPrompt(parsed: ParsedPrompt): InteractivePrompt {
 
 function parseOmpQuestion(screen: string): ParsedPrompt | null {
   const lines = screen.replace(ANSI_RE, "").split(/\r?\n/);
-  const hintIndex = findLastIndex(lines, (_, index) => OMP_SINGLE_HINT_RE.test(wrapped(lines, index)) || OMP_MULTI_HINT_RE.test(wrapped(lines, index)));
+  const hintIndex = findLastIndex(lines, (_, index) => OMP_SINGLE_HINT_RE.test(wrapped(lines, index))
+    || OMP_CLIPPED_SINGLE_HINT_RE.test(wrapped(lines, index)) || OMP_MULTI_HINT_RE.test(wrapped(lines, index)));
   if (hintIndex < 0) return null;
   const dividers = findMenuDividers(lines, hintIndex);
   if (!dividers) return null;
@@ -357,8 +419,8 @@ function parseOmpQuestion(screen: string): ParsedPrompt | null {
   const optionRows = rows.filter((_, index) => index !== customIndex);
   const hint = wrapped(lines, hintIndex);
   const multiSelect = OMP_MULTI_HINT_RE.test(hint);
-  const currentMulti = /(?:space|␠)\s+toggle.*(?:enter|⏎)\s+(?:submit|next)/i.test(hint);
-  const question = ompQuestionText(lines, startDivider);
+  const currentMulti = /(?:space|␠|␣)\s+toggle.*(?:enter|⏎)\s+(?:submit|next)/i.test(hint);
+  const question = ompQuestionText(lines, startDivider, OMP_TABS_HINT_RE.test(hint));
   if (!question || selectedIndex < 0 || optionRows.length === 0 || customIndex !== rows.length - 1) return null;
   return finishPrompt("omp", {
     kind: "question", title: multiSelect ? "Multiple choice" : "Question", question, body: null,
@@ -1966,7 +2028,8 @@ function promptTailIsActive(prompt: ParsedPrompt, screen: string): boolean {
   // the last one, never for a hint that ended above later output (an answered, stale menu).
   const ends = (re: RegExp): boolean => [1, 2, 3].some((span) =>
     re.test(shown.slice(-span).join(" ")) && (span === 1 || !re.test(shown.slice(-span, -1).join(" "))));
-  if (prompt.responder === "omp-question") return ends(OMP_SINGLE_HINT_RE) || ends(OMP_MULTI_HINT_RE);
+  if (prompt.responder === "omp-question") return ends(OMP_SINGLE_HINT_RE) || ends(OMP_CLIPPED_SINGLE_HINT_RE) || ends(OMP_MULTI_HINT_RE);
+  if (prompt.responder === "omp-submit") return ends(OMP_REVIEW_HINT_RE);
   // Hermes keeps its status line (and maybe the hint's wrapped tail) under the hint; an answered
   // question leaves the screen, so a hint among the last few lines is the live one
   if (prompt.responder === "hermes-question" || prompt.responder === "hermes-input") return shown.slice(-4).some((line) => HERMES_HINT_RE.test(line));
@@ -2376,7 +2439,7 @@ function parsePrompt(agent: string, screen: string, omoAsk: OmoAsk | null = null
   const candidates = agent === "codex"
     ? [parseCodexContinueMenu(screen), parseCodexQuestion(screen), parseCodexAsyncQuestion(screen), parseCodexApproval(screen), parseCodexModel(screen)]
     : agent === "omp"
-      ? [parseOmpQuestion(screen), parseOmpApproval(screen)]
+      ? [parseOmpQuestion(screen), parseOmpSubmit(screen), parseOmpApproval(screen)]
       // herdr names an omo pane `pi` while omo waits (or no agent at all, as it can for an omo
       // started in the pane's shell), `claude` while its claude-sdk child runs. A pane named
       // `pi` reads pi's own dialogs first: pi's hint is its own, so an omo form never matches
