@@ -248,6 +248,113 @@ Claude has written up a plan and is ready to execute. Would you like to proceed?
     expect(answerKeys(prompt!, { option_index: 1 })).toEqual([{ keys: ["down"] }, { keys: ["enter"] }]);
   });
 
+  test("keeps OMP's native question tab strip out of the question title", () => {
+    const screen = `
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Update Available
+ New version 18.11.1 is available. Run: omp update
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  ⎋ Working…
+╭─ Ask ───────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│  Transport    Targets    Notes    Narrow view    Submit                                                             │
+│ Which route should carry the fictional session?                                                                     │
+├─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ ❯ ○ Local socket                                                                                                    │
+│       Keeps the session on this PC.                                                                                 │
+│   ○ Remote relay                                                                                                    │
+│       Uses the fictional remote endpoint.                                                                           │
+│   ○ Other (type your own)                                                                                           │
+│                                                                                                                     │
+│                                                                                                                     │
+├─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ ⏎ select · n note · ↑/↓ move · ⇥/←/→ question · ⎋ cancel · Alt+H hide                                               │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+`;
+    const prompt = parseInteractivePrompt("omp", screen);
+    expect(prompt).toMatchObject({ question: "Which route should carry the fictional session?", custom_option_index: 2 });
+    expect(labels(prompt)).toEqual(["Local socket", "Remote relay"]);
+    expect(prompt?.options.map((option) => option.description)).toEqual([
+      "Keeps the session on this PC.", "Uses the fictional remote endpoint.",
+    ]);
+    expect(parseInteractivePrompt("omp", screen.replace(
+      "Which route should carry the fictional session?",
+      "Should we choose   Submit\n│ or Cancel for the fictional task?",
+    ))?.question).toBe("Should we choose Submit or Cancel for the fictional task?");
+    expect(parseInteractivePrompt("omp", screen.replace(
+      "Transport    Targets    Notes    Narrow view    Submit",
+      "Transport    Targets    Notes\n│  Narrow view    Submit",
+    ))?.question).toBe("Which route should carry the fictional session?");
+    expect(parseInteractivePrompt("omp", screen.replace(
+      "Transport    Targets    Notes    Narrow view    Submit",
+      "Transport\n│  Targets\n│  Notes\n│  Narrow view\n│  Submit",
+    ))?.question).toBe("Which route should carry the fictional session?");
+    expect(parseInteractivePrompt("omp", screen.replace(
+      "Transport    Targets    Notes    Narrow view    Submit",
+      "Transport    Targ…",
+    ))?.question).toBe("Which route should carry the fictional session?");
+    expect(parseInteractivePrompt("omp", screen.replace(
+      "Which route should carry the fictional session?",
+      "Submit\n│    Cancel\n│ Which action should run?",
+    ))?.question).toBe("Submit Cancel Which action should run?");
+  });
+
+  test("recognizes OMP's clipped single-question footer only with its question controls", () => {
+    const screen = `
+╭─ Ask ─────────────────────────────────────────────────╮
+│  Transport    Targets    Notes    Narrow view         │
+│  Submit                                               │
+│ Which deliberately long answer should remain readable │
+│ when the native question wraps across a narrow        │
+│ terminal?                                             │
+├───────────────────────────────────────────────────────┤
+│ ❯ ○ Local socket                                      │
+│   ○ Remote relay                                      │
+│   ○ Other (type your own)                             │
+├───────────────────────────────────────────────────────┤
+│ ⏎ select · n note · ↑/↓ move · ⇥/←/→ question · ↓ sc… │
+╰───────────────────────────────────────────────────────╯
+`;
+    const prompt = parseInteractivePrompt("omp", screen);
+    expect(prompt).toMatchObject({
+      kind: "question", question: "Which deliberately long answer should remain readable when the native question wraps across a narrow terminal?",
+    });
+    expect(labels(prompt)).toEqual(["Local socket", "Remote relay"]);
+    expect(answerKeys(prompt!, { option_index: 1 })).toEqual([{ keys: ["down"] }, { keys: ["enter"] }]);
+    expect(parseInteractivePrompt("omp", screen.replace("n note · ", ""))).toBeNull();
+    expect(parseInteractivePrompt("omp", screen.replace("⇥/←/→ question", "⇥/←/→ navigate"))).toBeNull();
+    expect(parseInteractivePrompt("omp", screen.replace("│   ○ Other (type your own)                             │\n", ""))).toBeNull();
+  });
+
+  test("parses OMP's review tab as an explicit submit or cancel prompt", () => {
+    const screen = `
+╭─ Ask ──────────────────────────────────────────────────────────╮
+│  Transport    Targets    Submit                                │
+│ Review answers                                                  │
+├────────────────────────────────────────────────────────────────┤
+│ 1. Transport: Remote relay                                      │
+│ 2. Targets: ARM server                                          │
+│                                                                 │
+│ ❯ Submit                                                        │
+│                                                                 │
+├────────────────────────────────────────────────────────────────┤
+│ ⏎ submit · ↑/↓ scroll · ⎋ cancel · Alt+H hide                  │
+╰────────────────────────────────────────────────────────────────╯
+`;
+    const prompt = parseInteractivePrompt("omp", screen);
+    expect(prompt).toMatchObject({
+      kind: "menu", title: "Review answers", question: "Submit these answers?", custom_option_index: null,
+    });
+    expect(prompt?.body).toContain("1. Transport: Remote relay");
+    expect(prompt?.body).toContain("2. Targets: ARM server");
+    expect(labels(prompt)).toEqual(["Submit", "Cancel"]);
+    expect(answerKeys(prompt!, { option_index: 0 })).toEqual([{ keys: ["enter"] }]);
+    expect(answerKeys(prompt!, { option_index: 1 })).toEqual([{ keys: ["esc"] }]);
+    expect(() => answerKeys(prompt!, { custom_text: "submit now" })).toThrow();
+    expect(parseInteractivePrompt("omp", screen.replace("❯ Submit", "  Submit"))).toBeNull();
+    expect(parseInteractivePrompt("omp", screen.replace("Review answers", "Ordinary title"))).toBeNull();
+  });
+
   test("parses current OMP multi-select hints with checked choices and safe option indices", () => {
     const screen = `
 ╭─ Ask ───────────────────────────╮
@@ -3956,7 +4063,7 @@ ${rows.map((row, index) => `│${index === at ? "❯" : " "} ○ ${row}`).join("
 ├────────────────────────────────┤
 ${["Linux", "macOS", "Other (type your own)"].map((label, index) => `│${cursor === index ? "❯ " : "  "}${index === 2 ? "○" : checked.includes(index) ? "☑" : "☐"} ${label}`).join("\n")}
 ├────────────────────────────────┤
-│ ␠ toggle · ⏎ next · ↑/↓ move · Tab/←/→ question · ⎋ cancel │
+│ ␣ toggle · ⏎ next · ↑/↓ move · Tab/←/→ question · ⎋ cancel │
 ╰────────────────────────────────╯
 ` : `
 ╭─ Ask ───────────────────────────╮
@@ -4012,6 +4119,86 @@ ${["Linux", "macOS", "Other (type your own)"].map((label, index) => `│${cursor
       expect(pane.sent).toEqual(["space", "enter"]);
       expect(checked).toBe(true);
       expect(pane.screen).toBe("Fictional OMP answer submitted");
+    });
+  });
+
+  test("moves through OMP questions, refuses stale or typed review answers, then submits once", async () => {
+    const questions = [
+      { title: "Which route should carry the fictional session?", options: ["Local socket", "Remote relay"] },
+      { title: "Which target should receive it?", options: ["ARM server", "x86 runner"] },
+    ];
+    const drawQuestion = (question: number, cursor: number) => `
+╭─ Ask ──────────────────────────────────────────────────────────╮
+│  Transport    Targets    Submit                                │
+│ ${questions[question]!.title}
+├────────────────────────────────────────────────────────────────┤
+${questions[question]!.options.map((label, index) => `│  ${cursor === index ? "❯ " : "  "}○ ${label}`).join("\n")}
+│    ○ Other (type your own)
+├────────────────────────────────────────────────────────────────┤
+│ ⏎ select · n note · ↑/↓ move · ⇥/←/→ question · ⎋ cancel       │
+╰────────────────────────────────────────────────────────────────╯
+`;
+    const drawReview = (target = "ARM server") => `
+╭─ Ask ──────────────────────────────────────────────────────────╮
+│  Transport    Targets    Submit                                │
+│ Review answers                                                  │
+├────────────────────────────────────────────────────────────────┤
+│ 1. Transport: Remote relay                                      │
+│ 2. Targets: ${target.padEnd(50)}│
+│                                                                 │
+│ ❯ Submit                                                        │
+│                                                                 │
+├────────────────────────────────────────────────────────────────┤
+│ ⏎ submit · ↑/↓ scroll · ⎋ cancel · Alt+H hide                  │
+╰────────────────────────────────────────────────────────────────╯
+`;
+
+    await withPane("omp", "blocked", drawQuestion(0, 0), async (pane) => {
+      let activeQuestion = 0;
+      let cursor = 0;
+      let submitted = false;
+      pane.onSent = (sent) => {
+        if (sent === "down") cursor = Math.min(1, cursor + 1);
+        if (sent === "enter" && activeQuestion === 0) {
+          activeQuestion = 1;
+          cursor = 0;
+          pane.screen = drawQuestion(activeQuestion, cursor);
+        } else if (sent === "enter" && activeQuestion === 1) {
+          pane.screen = drawReview();
+        } else if (sent === "enter" && activeQuestion === 2) {
+          submitted = true;
+          pane.screen = "Fictional OMP answers submitted";
+        } else if (activeQuestion < 2) {
+          pane.screen = drawQuestion(activeQuestion, cursor);
+        }
+      };
+
+      const first = (await card())!;
+      expect(first.question).toBe(questions[0]!.title);
+      expect(await answer(first.id, { option_index: 1 })).toEqual({ status: 200, code: undefined });
+      expect(activeQuestion).toBe(1);
+      expect(pane.sent).toEqual(["down", "enter"]);
+
+      const second = (await card())!;
+      expect(second.question).toBe(questions[1]!.title);
+      expect(await answer(second.id, { option_index: 0 })).toEqual({ status: 200, code: undefined });
+      expect(pane.screen).toContain("Review answers");
+
+      const review = (await card())!;
+      expect(labels(review)).toEqual(["Submit", "Cancel"]);
+      pane.screen = drawReview("Changed target");
+      expect(await answer(review.id, { option_index: 0 })).toEqual({ status: 409, code: "prompt_changed" });
+      expect(pane.sent).toEqual(["down", "enter", "enter"]);
+
+      const refreshedReview = (await card())!;
+      expect(await answer(refreshedReview.id, { custom_text: "ordinary text" })).toEqual({ status: 400, code: "invalid_answer" });
+      expect(pane.sent).toEqual(["down", "enter", "enter"]);
+
+      activeQuestion = 2;
+      expect(await answer(refreshedReview.id, { option_index: 0 })).toEqual({ status: 200, code: undefined });
+      expect(submitted).toBe(true);
+      expect(pane.sent).toEqual(["down", "enter", "enter", "enter"]);
+      expect(pane.screen).toBe("Fictional OMP answers submitted");
     });
   });
 
