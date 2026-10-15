@@ -1,0 +1,23 @@
+{
+  "before": "79beb36a82e0ca2eff7ab995c774b290af52a9b8",
+  "after": "d7a2982ac1b47911cab5e3c80fe47bd62abb8f44",
+  "capture": "isolated fixture replay, Chrome 155 at 1200x760",
+  "nativeResolverResults": {
+    "before": {
+      "codexTurns": 0,
+      "ompTurns": 0
+    },
+    "after": {
+      "codexTurns": 2,
+      "ompTurns": 2
+    }
+  },
+  "sha256": {
+    "screenshots/codex-before.png": "7d09b797528266671625ed821ad28f40a437fe1194d07d9bb1b198677fade078",
+    "screenshots/omp-before.png": "d05e52e2d7ff42737d7a52978243ace3e3c0ad0d2bec551feab8d080e309978a",
+    "screenshots/sidebar-before.png": "71f10d43c5e753edaa8531336d8b34e0219dbbd1df920aacba3654df74d501e4",
+    "screenshots/codex-after.png": "34c91cb3413d352dbe7e3d325d79cf78851354a41e56eed0bf7b97ea56146d78",
+    "screenshots/omp-after.png": "bab8bb04ec238407d60f04eeb8cc6db4c25df0ca406dc894ff60e6db368be34e",
+    "screenshots/sidebar-after.png": "ede64adacde1cdc09fd7a22f669c67a74531e7d5387644b997599a56b06b17ea"
+  }
+}
