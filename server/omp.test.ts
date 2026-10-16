@@ -7,7 +7,9 @@ import type { HerdrPane, SessionSnapshot } from "../shared/protocol.ts";
 import { forgetTranscriptState, paneConversation } from "./conversation.ts";
 import * as herdr from "./herdr/client.ts";
 import { terminalBreadcrumb } from "./gjc-runtime.ts";
-import { isOmpProcess, ompAgentDir } from "./omp.ts";
+import { isOmpProcess, ompAgentDir, ompHeldTranscript } from "./omp.ts";
+import * as ompProbe from "./omp-process.ts";
+import * as omo from "./omo.ts";
 
 it("recognizes native and interpreter-launched omp, not look-alikes", () => {
   expect(isOmpProcess(["omp", "--profile", "personal", "--resume"])).toBe(true);
@@ -197,5 +199,15 @@ describe("an omp pane's chat", () => {
       processes = [{ pid, name: "omp" }];
       await expect(paneConversation(pane.pane_id)).rejects.toThrow("no_session_path");
     }
+  });
+
+  it.skipIf(process.platform !== "linux")("a failed probe with supplied argv never falls back to a synchronous environment read", async () => {
+    const probe = spyOn(ompProbe, "ompProcessMemory").mockResolvedValue(null);
+    const environ = spyOn(omo, "processEnviron").mockImplementation(() => { throw new Error("unsafe synchronous read"); });
+    restores.push(() => probe.mockRestore(), () => environ.mockRestore());
+    processes = [{ pid: process.pid, argv: ["omp"] }];
+    expect(await ompHeldTranscript(pane.pane_id, pane.cwd!)).toBeNull();
+    expect(probe).toHaveBeenCalledWith(process.pid, false);
+    expect(environ).not.toHaveBeenCalled();
   });
 });
