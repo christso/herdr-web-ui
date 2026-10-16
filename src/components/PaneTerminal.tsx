@@ -75,6 +75,8 @@ const inUse = (): boolean => document.visibilityState === "visible" && document.
 export interface PaneTerminalProps {
   /** The pane this terminal attaches to; null renders the placeholder. */
   paneId: string | null;
+  /** A restored pane keeps its ID but gets a new terminal after herdr restarts. */
+  terminalId?: string | null;
   /** null while the PC identity loads, before the first attach's fixed-grid frame arrives. */
   mirrored?: boolean | null;
   /**
@@ -137,6 +139,7 @@ const heldRowNotes = new Map<string, { owner: string; id: string; text: string }
 
 export function PaneTerminal({
   paneId,
+  terminalId = null,
   mirrored = false,
   restoreError = null,
   agent = null,
@@ -546,6 +549,10 @@ export function PaneTerminal({
       // a chosen family follows in the font effect below, once its faces have loaded
       fontFamily: TERMINAL_FONT_STACK,
       theme: terminalTheme(theme, palette),
+      // a program's own colors suit one background (Claude Code's question titles are #ffffff, near
+      // 1:1 on a light palette): xterm moves a foreground under 4.5:1 toward black or white. Dim text
+      // needs half that, and box, block and powerline glyphs keep their color.
+      minimumContrastRatio: 4.5,
       linkHandler: {
         activate: (event, uri) => {
           if (!linkPressed(event)) return;
@@ -2117,7 +2124,8 @@ export function PaneTerminal({
     if (sizesPty() && inUse()) socketRef.current?.resize(pane, term.cols, term.rows, true);
   }, [follow]);
 
-  // Reset synchronously on pane changes: old composition timers must never see the new pane.
+  // Reset on a pane or terminal replacement: a herdr restart can keep the pane ID.
+  // Old composition timers must never see the new terminal.
   useLayoutEffect(() => {
     const socket = socketRef.current;
     const term = termRef.current;
@@ -2163,6 +2171,11 @@ export function PaneTerminal({
     // A fresh background pane must not acquire size ownership even with the release setting off.
     // This also covers a replacement pane: no prior release or input ownership is inherited.
     setReleased(false);
+    // A restored terminal in a cached tab waits until that tab is presented again.
+    if (cachedRef.current) {
+      setReleased(true);
+      return leavePane;
+    }
     if (deferAttachRef.current(paneId)) return leavePane;
     // under the keyboard (a pane picked while typing) the fit waits for it to go, and the attach adopts
     // the pane's size meanwhile
@@ -2184,7 +2197,7 @@ export function PaneTerminal({
     // grid sent the keys straight to the pane, and showed a phone's IME text mid-screen
     if (activeRef.current && !chatViewRef.current && !autoSelected && !coarseRef.current && !modalOpen() && !findOpenRef.current) term.focus();
     return leavePane;
-  }, [paneId]);
+  }, [paneId, terminalId]);
 
   // the message the tab kept its pane for has gone (or was held): out of use, it lets go now
   useEffect(() => { releaseRef.current(); }, [pending]);
