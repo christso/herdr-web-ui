@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "runId": "80595d16-1d99-4fa5-b354-913c0ff3120c",
+  "status": "success",
+  "exitCode": 0,
+  "startedAt": "2026-10-16T22:43:15.999Z",
+  "endedAt": "2026-10-16T22:44:40.074Z",
+  "durationMs": 84075,
+  "mode": [
+    "fast"
+  ],
+  "revision": {
+    "head": "47f21b6f2b13700981d1f2e2cabad7594f27c61b",
+    "testedSha": "47f21b6f2b13700981d1f2e2cabad7594f27c61b",
+    "headSha": "47f21b6f2b13700981d1f2e2cabad7594f27c61b",
+    "headBranch": "fix/codex-profile-chat-start",
+    "baseBranch": null,
+    "baseSha": null,
+    "branch": "fix/codex-profile-chat-start"
+  },
+  "toolchain": {
+    "bunVersion": "1.4.3",
+    "nodeVersion": "v26.7.0",
+    "herdrVersion": null,
+    "herdrTestShards": null,
+    "platform": "linux",
+    "arch": "x64",
+    "ci": false
+  },
+  "source": {
+    "start": {
+      "head": "47f21b6f2b13700981d1f2e2cabad7594f27c61b",
+      "branch": "fix/codex-profile-chat-start",
+      "trackedDiffSha256": "12b81757bb9695f3662c551ad6e29dc5940e5577d41300733ee78dbc5be92abf",
+      "untrackedFiles": [
+        {
+          "path": "changelog.d/codex-profile-chat-start.md",
+          "sha256": "01ed9169d660e6b88d307ac5144a2d55c5d8d1cdd9c2f6a4136c442ba25466ea"
+        }
+      ],
+      "untrackedFileCount": 1,
+      "untrackedContentSha256": "1d41f8859be8198986de61c9c9db70e2523d6464988163c56ade8cfde0e78fbd",
+      "untrackedFilesTruncated": false,
+      "fingerprint": "44ff6d8b5b349838198089d3229a7d49a60a4bed772501173d1eed6d5deff1da",
+      "reason": null
+    },
+    "end": {
+      "head": "47f21b6f2b13700981d1f2e2cabad7594f27c61b",
+      "branch": "fix/codex-profile-chat-start",
+      "trackedDiffSha256": "12b81757bb9695f3662c551ad6e29dc5940e5577d41300733ee78dbc5be92abf",
+      "untrackedFiles": [
+        {
+          "path": "changelog.d/codex-profile-chat-start.md",
+          "sha256": "01ed9169d660e6b88d307ac5144a2d55c5d8d1cdd9c2f6a4136c442ba25466ea"
+        }
+      ],
+      "untrackedFileCount": 1,
+      "untrackedContentSha256": "1d41f8859be8198986de61c9c9db70e2523d6464988163c56ade8cfde0e78fbd",
+      "untrackedFilesTruncated": false,
+      "fingerprint": "44ff6d8b5b349838198089d3229a7d49a60a4bed772501173d1eed6d5deff1da",
+      "reason": null
+    },
+    "unchanged": true
+  },
+  "verification": {
+    "scope": "source-state-and-step-results",
+    "browserCurrentSource": "not-claimed",
+    "status": "verified",
+    "reason": null
+  },
+  "currentStep": null,
+  "steps": [
+    {
+      "name": "workflow syntax",
+      "command": [
+        "node_modules/.cache/actionlint-1.7.12/actionlint",
+        "-shellcheck="
+      ],
+      "cwd": "/home/christso/projects/christso/herdr-web-ui",
+      "status": "success",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 39,
+      "startedAt": "2026-10-16T22:43:16.156Z",
+      "endedAt": "2026-10-16T22:43:16.195Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/01-workflow-syntax.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/01-workflow-syntax.stderr.log",
+      "reason": null
+    },
+    {
+      "name": "generated types are fresh",
+      "command": [
+        "/home/christso/.bun/bin/bun",
+        "run",
+        "generate:types",
+        "--check"
+      ],
+      "cwd": "/home/christso/projects/christso/herdr-web-ui",
+      "status": "success",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 23,
+      "startedAt": "2026-10-16T22:43:16.195Z",
+      "endedAt": "2026-10-16T22:43:16.218Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/02-generated-types-are-fresh.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/02-generated-types-are-fresh.stderr.log",
+      "reason": null
+    },
+    {
+      "name": "typecheck",
+      "command": [
+        "/home/christso/.bun/bin/bun",
+        "run",
+        "typecheck"
+      ],
+      "cwd": "/home/christso/projects/christso/herdr-web-ui",
+      "status": "success",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 3130,
+      "startedAt": "2026-10-16T22:43:16.218Z",
+      "endedAt": "2026-10-16T22:43:19.348Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/03-typecheck.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/03-typecheck.stderr.log",
+      "reason": null
+    },
+    {
+      "name": "build",
+      "command": [
+        "/home/christso/.bun/bin/bun",
+        "run",
+        "build"
+      ],
+      "cwd": "/home/christso/projects/christso/herdr-web-ui",
+      "status": "success",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 10261,
+      "startedAt": "2026-10-16T22:43:19.349Z",
+      "endedAt": "2026-10-16T22:43:29.610Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/04-build.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/04-build.stderr.log",
+      "reason": null
+    },
+    {
+      "name": "unit tests",
+      "command": [
+        "/home/christso/.bun/bin/bun",
+        "run",
+        "test:unit"
+      ],
+      "cwd": "/home/christso/projects/christso/herdr-web-ui",
+      "status": "success",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 69821,
+      "startedAt": "2026-10-16T22:43:30.251Z",
+      "endedAt": "2026-10-16T22:44:40.072Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/05-unit-tests.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/05-unit-tests.stderr.log",
+      "reason": null
+    }
+  ],
+  "errors": [],
+  "browserArtifact": {
+    "path": "dist",
+    "buildAttempted": true,
+    "buildThisRun": true,
+    "identity": "2f3f89c776509b2ab8dc9520adc3babac82d7c0baf435881a0f7bd9c0aea59ef",
+    "finalIdentity": "2f3f89c776509b2ab8dc9520adc3babac82d7c0baf435881a0f7bd9c0aea59ef",
+    "unchangedAfterBuild": true,
+    "provenance": "built-this-run"
+  },
+  "evidence": {
+    "logs": [
+      "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/01-workflow-syntax.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/01-workflow-syntax.stderr.log",
+      "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/02-generated-types-are-fresh.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/02-generated-types-are-fresh.stderr.log",
+      "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/03-typecheck.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/03-typecheck.stderr.log",
+      "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/04-build.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/04-build.stderr.log",
+      "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/05-unit-tests.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui/node_modules/.cache/check/80595d16-1d99-4fa5-b354-913c0ff3120c/report.json.logs/80595d16-1d99-4fa5-b354-913c0ff3120c/05-unit-tests.stderr.log"
+    ],
+    "artifacts": [
+      "/home/christso/projects/christso/herdr-web-ui/dist"
+    ]
+  }
+}

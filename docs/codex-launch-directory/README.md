@@ -1,3 +1,5 @@
+> Historical experiment: the argument parser below was reverted in 47f21b6. The current fork uses native process directories and confirms fresh launcher screens. See [Codex profile Chat checks](../codex-profile-chat-start/README.md).
+
 # Codex launch directory lookup
 
 Launching Codex from one directory with `codex --cd /path/to/project` can show

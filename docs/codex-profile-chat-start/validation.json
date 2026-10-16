@@ -1,0 +1,40 @@
+{
+  "status": "passed",
+  "base": "47f21b6f2b13700981d1f2e2cabad7594f27c61b",
+  "fast": {
+    "unit_pass": 3894,
+    "unit_fail": 0,
+    "unit_skip": 8,
+    "unit_files": 300,
+    "typecheck": true,
+    "build": true,
+    "generated_types": true,
+    "workflow_syntax": true
+  },
+  "focused": {
+    "pass": 152,
+    "fail": 0,
+    "assertions": 575,
+    "files": 6
+  },
+  "existing_assertions_removed_or_changed": false,
+  "production_sha256": {
+    "server/codex.ts": "53fe07fb6068e39985f6d872a016568f9d97a1e4bcf7ba5232e8e2789fb27c4b",
+    "server/index.ts": "2eb54f14160c1ef6e134f4dfcab1a8497f9468b4f257976c37604fe2a8622ab0",
+    "server/start-screen.ts": "10bfa25022d80d6e7adb020005b14bc606dcfa0e49c00e2f974424a4acc08c6a"
+  },
+  "independent_reviews": {
+    "standards": "No outstanding findings; required changelog added.",
+    "spec": "Two P2 findings fixed and rechecked: unknown peer cwd, canonical store aliases. No outstanding findings."
+  },
+  "revision": "424dcde2ae3e44a90ed0aa8317ff274617aa55e7",
+  "browser": {
+    "cases": 16,
+    "passed": true,
+    "tool": "agent-browser CLI",
+    "model_calls": 0,
+    "user_panes_touched": 0,
+    "source_unchanged": true,
+    "built_current_source": true
+  }
+}

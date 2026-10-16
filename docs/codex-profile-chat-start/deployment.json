@@ -1,0 +1,26 @@
+{
+  "previous_revision": "47f21b6f2b13700981d1f2e2cabad7594f27c61b",
+  "revision": "424dcde2ae3e44a90ed0aa8317ff274617aa55e7",
+  "existing_codex_controls": [
+    {
+      "source": "codex-transcript",
+      "turns_before": 78
+    },
+    {
+      "source": "codex-transcript",
+      "turns_before": 63
+    }
+  ],
+  "legacy_cd_pane": {
+    "source": "scrollback",
+    "turns": 0
+  },
+  "config_preserved": {
+    "env": true,
+    "agent-profiles.json": true,
+    "push-subscriptions.json": true
+  },
+  "machines_preserved": true,
+  "native_socket_preserved": true,
+  "user_codex_process_preserved": true
+}
