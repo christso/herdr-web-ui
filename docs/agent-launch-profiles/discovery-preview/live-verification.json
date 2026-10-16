@@ -1,0 +1,290 @@
+{
+  "messages_sent": 0,
+  "sessions_created": 0,
+  "terminal_attach": false,
+  "all_websocket_input_blocked_by_test": true,
+  "screenshots_taken": false,
+  "cases": [
+    {
+      "viewport": "desktop",
+      "machine": "ubuntu-m900-1",
+      "agent": "codex",
+      "choices": {
+        "Profile": [],
+        "Launcher": [
+          "codex-compound",
+          "codex-tsoyang"
+        ]
+      },
+      "dialog": "New workspace \u00b7 ubuntu-m900-1"
+    },
+    {
+      "viewport": "desktop",
+      "machine": "ubuntu-m900-1",
+      "agent": "omp",
+      "choices": {
+        "Profile": [],
+        "Launcher": []
+      },
+      "dialog": "New workspace \u00b7 ubuntu-m900-1"
+    },
+    {
+      "viewport": "desktop",
+      "machine": "ubuntu-m900-1",
+      "agent": "pi",
+      "choices": {
+        "Profile": [],
+        "Launcher": []
+      },
+      "dialog": "New workspace \u00b7 ubuntu-m900-1"
+    },
+    {
+      "viewport": "desktop",
+      "machine": "ubuntu-m900-1",
+      "agent": "claude",
+      "choices": {
+        "Profile": [],
+        "Launcher": []
+      },
+      "dialog": "New workspace \u00b7 ubuntu-m900-1"
+    },
+    {
+      "viewport": "desktop",
+      "machine": "WTG",
+      "agent": "codex",
+      "choices": {
+        "Profile": [],
+        "Launcher": [
+          "codex-eng"
+        ]
+      },
+      "dialog": "New workspace \u00b7 WTG"
+    },
+    {
+      "viewport": "desktop",
+      "machine": "WTG",
+      "agent": "omp",
+      "choices": {
+        "Profile": [
+          "agcon",
+          "agent-conductor",
+          "compound-engineering",
+          "omp-compound"
+        ],
+        "Launcher": [
+          "omp-compound"
+        ]
+      },
+      "dialog": "New workspace \u00b7 WTG"
+    },
+    {
+      "viewport": "desktop",
+      "machine": "WTG",
+      "agent": "pi",
+      "choices": {
+        "Profile": [],
+        "Launcher": [
+          "pi-compound",
+          "pi-rpiv"
+        ]
+      },
+      "dialog": "New workspace \u00b7 WTG"
+    },
+    {
+      "viewport": "desktop",
+      "machine": "WTG",
+      "agent": "claude",
+      "choices": {
+        "Profile": [],
+        "Launcher": []
+      },
+      "dialog": "New workspace \u00b7 WTG"
+    },
+    {
+      "viewport": "desktop",
+      "machine": "spectre-x360",
+      "agent": "codex",
+      "choices": {
+        "Profile": [],
+        "Launcher": [
+          "codex-compound"
+        ]
+      },
+      "dialog": "New workspace \u00b7 spectre-x360"
+    },
+    {
+      "viewport": "desktop",
+      "machine": "spectre-x360",
+      "agent": "omp",
+      "choices": {
+        "Profile": [
+          "compound-engineering",
+          "omp-compound"
+        ],
+        "Launcher": [
+          "omp-compound"
+        ]
+      },
+      "dialog": "New workspace \u00b7 spectre-x360"
+    },
+    {
+      "viewport": "desktop",
+      "machine": "spectre-x360",
+      "agent": "pi",
+      "choices": {
+        "Profile": [],
+        "Launcher": []
+      },
+      "dialog": "New workspace \u00b7 spectre-x360"
+    },
+    {
+      "viewport": "desktop",
+      "machine": "spectre-x360",
+      "agent": "claude",
+      "installed": false,
+      "offered": false,
+      "dialog": "New workspace \u00b7 spectre-x360"
+    },
+    {
+      "viewport": "phone",
+      "machine": "ubuntu-m900-1",
+      "agent": "codex",
+      "choices": {
+        "Profile": [],
+        "Launcher": [
+          "codex-compound",
+          "codex-tsoyang"
+        ]
+      },
+      "dialog": "New workspace \u00b7 ubuntu-m900-1"
+    },
+    {
+      "viewport": "phone",
+      "machine": "ubuntu-m900-1",
+      "agent": "omp",
+      "choices": {
+        "Profile": [],
+        "Launcher": []
+      },
+      "dialog": "New workspace \u00b7 ubuntu-m900-1"
+    },
+    {
+      "viewport": "phone",
+      "machine": "ubuntu-m900-1",
+      "agent": "pi",
+      "choices": {
+        "Profile": [],
+        "Launcher": []
+      },
+      "dialog": "New workspace \u00b7 ubuntu-m900-1"
+    },
+    {
+      "viewport": "phone",
+      "machine": "ubuntu-m900-1",
+      "agent": "claude",
+      "choices": {
+        "Profile": [],
+        "Launcher": []
+      },
+      "dialog": "New workspace \u00b7 ubuntu-m900-1"
+    },
+    {
+      "viewport": "phone",
+      "machine": "WTG",
+      "agent": "codex",
+      "choices": {
+        "Profile": [],
+        "Launcher": [
+          "codex-eng"
+        ]
+      },
+      "dialog": "New workspace \u00b7 WTG"
+    },
+    {
+      "viewport": "phone",
+      "machine": "WTG",
+      "agent": "omp",
+      "choices": {
+        "Profile": [
+          "agcon",
+          "agent-conductor",
+          "compound-engineering",
+          "omp-compound"
+        ],
+        "Launcher": [
+          "omp-compound"
+        ]
+      },
+      "dialog": "New workspace \u00b7 WTG"
+    },
+    {
+      "viewport": "phone",
+      "machine": "WTG",
+      "agent": "pi",
+      "choices": {
+        "Profile": [],
+        "Launcher": [
+          "pi-compound",
+          "pi-rpiv"
+        ]
+      },
+      "dialog": "New workspace \u00b7 WTG"
+    },
+    {
+      "viewport": "phone",
+      "machine": "WTG",
+      "agent": "claude",
+      "choices": {
+        "Profile": [],
+        "Launcher": []
+      },
+      "dialog": "New workspace \u00b7 WTG"
+    },
+    {
+      "viewport": "phone",
+      "machine": "spectre-x360",
+      "agent": "codex",
+      "choices": {
+        "Profile": [],
+        "Launcher": [
+          "codex-compound"
+        ]
+      },
+      "dialog": "New workspace \u00b7 spectre-x360"
+    },
+    {
+      "viewport": "phone",
+      "machine": "spectre-x360",
+      "agent": "omp",
+      "choices": {
+        "Profile": [
+          "compound-engineering",
+          "omp-compound"
+        ],
+        "Launcher": [
+          "omp-compound"
+        ]
+      },
+      "dialog": "New workspace \u00b7 spectre-x360"
+    },
+    {
+      "viewport": "phone",
+      "machine": "spectre-x360",
+      "agent": "pi",
+      "choices": {
+        "Profile": [],
+        "Launcher": []
+      },
+      "dialog": "New workspace \u00b7 spectre-x360"
+    },
+    {
+      "viewport": "phone",
+      "machine": "spectre-x360",
+      "agent": "claude",
+      "installed": false,
+      "offered": false,
+      "dialog": "New workspace \u00b7 spectre-x360"
+    }
+  ],
+  "status": "passed"
+}

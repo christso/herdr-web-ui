@@ -1,0 +1,15 @@
+bun test v1.4.3 (c6da4a4d3)
+
+server/agent-profiles.contract.test.ts:
+(pass) HTTP discovery only exposes exact profile and launcher IDs [121.59ms]
+(pass) keeps canonical installed availability separate from valid wrapper availability [2.64ms]
+(pass) refuses unknown, mismatched and request-argument profiles before any creation [68.20ms]
+(pass) executes discovered wrappers in all creation flows without assuming an opaque launcher starts fresh [3479.31ms]
+(pass) runs a discovered Claude launcher with its own configuration directory [960.06ms]
+(pass) preserves a created pane when the selected launcher blocks during startup [859.20ms]
+(pass) native profiles use fixed native agent.start arguments and retain controlled freshness [34.27ms]
+
+ 7 pass
+ 0 fail
+ 100 expect() calls
+Ran 7 tests across 1 file. [5.87s]

@@ -1,0 +1,50 @@
+{
+  "status": "complete",
+  "review_type": "targeted followup",
+  "original_run_id": "20261016-034015-2f2b474f",
+  "finding_closure": {
+    "1": {
+      "status": "closed",
+      "reason": "Shared native OMP root now governs discovery, reported-session validation and foreground-process fallback. Readable pane environment takes precedence; existing containment, realpath and ownership checks remain intact.",
+      "runtime_evidence": "Supplied native custom-root red→green proves unavailable→zero-turn greeting, with zero model calls; written-transcript resolution also supported by source and unit checks."
+    }
+  },
+  "reviewers": [
+    "independent OMP closure validator",
+    "Claude correctness",
+    "security",
+    "project-standards"
+  ],
+  "findings": [],
+  "actionable_findings": [],
+  "source_frozen_verified": true,
+  "validation": {
+    "root_followup": "121 passed, 0 failed, 678 assertions",
+    "claude_contract": "7 passed, 0 failed, 100 assertions",
+    "followup_units_conventions": "33 passed, 0 failed, 156 assertions",
+    "typecheck": "Supplied followup-typecheck.log has no errors; caller runs final full checks after all changes.",
+    "diff_check": "passed",
+    "executed_by_review": "Read-only source, diff, evidence and hash inspection; no tests/providers/native sessions run by reviewers."
+  },
+  "coverage_limits": [
+    "No real Claude wrappers/authenticated native startup available; Claude fixture proves literal configuration forwarding, detected native kind and idle gating, with idle reported by fixture.",
+    "Native OMP custom-root green proves zero-turn greeting through scrollback; custom-root written transcript, custom-root symlink rejection and differing pane/bridge environment cases lack a combined end-to-end fixture. Existing guards and helper precedence verified in source.",
+    "Previous omitted-bridge-PATH native-launch boundary remains an unmeasured integration risk from original review.",
+    "Unrelated actual native worktree browser navigation remains under caller diagnosis; no complete native browser QA pass claimed.",
+    "No cross-model route available; all independent leaves use the same model family."
+  ],
+  "scope": [
+    "shared ompConfigRoot and transcript/process root usage plus tests",
+    "Claude discovered launchers and canonical ordinary-userbin availability",
+    "Claude HTTP fixture, API fixture isolation, demo/test/docs/changelog"
+  ],
+  "artifact_path": "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-review.json",
+  "artifacts": [
+    "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-omp-validation.json",
+    "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-claude-correctness.json",
+    "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-security.json",
+    "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-standards.json",
+    "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-snapshot.json",
+    "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup.diff"
+  ]
+}

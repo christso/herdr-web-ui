@@ -1,0 +1,47 @@
+{
+  "runtime": "remote-v27-christso-2942c44",
+  "previous_runtime": "remote-v27-christso-b8b8655",
+  "commit": "2942c44cfd9ffc4685a04d576fe0e9481024e683",
+  "files_verified": 119,
+  "choices": {
+    "profiles": [
+      {
+        "kind": "omp",
+        "id": "agcon"
+      },
+      {
+        "kind": "omp",
+        "id": "agent-conductor"
+      },
+      {
+        "kind": "omp",
+        "id": "compound-engineering"
+      },
+      {
+        "kind": "omp",
+        "id": "omp-compound"
+      }
+    ],
+    "launchers": [
+      {
+        "kind": "omp",
+        "id": "omp-compound"
+      },
+      {
+        "kind": "pi",
+        "id": "pi-compound"
+      },
+      {
+        "kind": "pi",
+        "id": "pi-rpiv"
+      },
+      {
+        "kind": "codex",
+        "id": "codex-eng"
+      }
+    ]
+  },
+  "stopped_only_verified_web_bridge": 1681949,
+  "native_socket_inode": 6235193,
+  "native_socket_preserved": true
+}

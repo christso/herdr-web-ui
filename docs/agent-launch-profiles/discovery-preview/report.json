@@ -1,0 +1,188 @@
+{
+  "messages_sent": 0,
+  "paid_model_calls": 0,
+  "manual_herdr_catalog": false,
+  "native_versions": {
+    "codex": "0.163.0 (--no-daemon fixture adapter)",
+    "omp": "18.11.1",
+    "pi": "1.2.0"
+  },
+  "cases": [
+    {
+      "agent": {
+        "kind": "codex",
+        "profile": "compound-engineering"
+      },
+      "native_kind": "codex",
+      "native_status": "idle",
+      "conversation_source": "codex-transcript",
+      "turns": 0,
+      "browser": {
+        "greeting": true,
+        "unavailable": false,
+        "sidebarError": false,
+        "turns": 0
+      }
+    },
+    {
+      "agent": {
+        "kind": "omp",
+        "profile": "compound-engineering"
+      },
+      "native_kind": "omp",
+      "native_status": "idle",
+      "conversation_source": "omp-transcript",
+      "turns": 0,
+      "browser": {
+        "greeting": true,
+        "unavailable": false,
+        "sidebarError": false,
+        "turns": 0
+      }
+    },
+    {
+      "agent": {
+        "kind": "codex",
+        "launcher": "codex-compound"
+      },
+      "native_kind": "codex",
+      "native_status": "idle",
+      "conversation_source": "scrollback",
+      "turns": 0,
+      "browser": {
+        "greeting": false,
+        "unavailable": true,
+        "sidebarError": false,
+        "turns": 0
+      }
+    },
+    {
+      "agent": {
+        "kind": "omp",
+        "launcher": "omp-compound"
+      },
+      "native_kind": "omp",
+      "native_status": "idle",
+      "conversation_source": "omp-transcript",
+      "turns": 0,
+      "browser": {
+        "greeting": true,
+        "unavailable": false,
+        "sidebarError": false,
+        "turns": 0
+      }
+    },
+    {
+      "agent": {
+        "kind": "pi",
+        "launcher": "pi-compound"
+      },
+      "native_kind": "pi",
+      "native_status": "idle",
+      "conversation_source": "pi-transcript",
+      "turns": 0,
+      "browser": {
+        "greeting": true,
+        "unavailable": false,
+        "sidebarError": false,
+        "turns": 0
+      }
+    }
+  ],
+  "discovered": [
+    {
+      "kind": "codex",
+      "label": "Codex",
+      "installed": true,
+      "profiles": [
+        {
+          "id": "compound-engineering",
+          "label": "compound-engineering"
+        }
+      ],
+      "launchers": [
+        {
+          "id": "codex-compound",
+          "label": "codex-compound"
+        },
+        {
+          "id": "codex-tsoyang",
+          "label": "codex-tsoyang"
+        }
+      ]
+    },
+    {
+      "kind": "omp",
+      "label": "Oh My Pi",
+      "installed": true,
+      "profiles": [
+        {
+          "id": "compound-engineering",
+          "label": "compound-engineering"
+        }
+      ],
+      "launchers": [
+        {
+          "id": "omp-compound",
+          "label": "omp-compound"
+        }
+      ]
+    },
+    {
+      "kind": "pi",
+      "label": "pi",
+      "installed": true,
+      "launchers": [
+        {
+          "id": "pi-compound",
+          "label": "pi-compound"
+        }
+      ]
+    }
+  ],
+  "ui_new_tab": {
+    "kind": "codex",
+    "launcher": "codex-compound"
+  },
+  "worktree_response": {
+    "url": "/api/worktree/create",
+    "body": {
+      "workspace_id": "w2",
+      "branch": "feat/discovery-native-1789488",
+      "base": null,
+      "label": "feat-discovery-native-1789488",
+      "agent": {
+        "kind": "omp",
+        "profile": "compound-engineering"
+      }
+    },
+    "response": {
+      "workspace_id": "w7",
+      "pane_id": "w7:p1",
+      "already_open": false,
+      "path": "/tmp/herdr-discovery-native-kXx3t1/home/.herdr/worktrees/fictional-project/feat-discovery-native-1789488",
+      "branch": "feat/discovery-native-1789488",
+      "agent_started": true
+    },
+    "status": 200
+  },
+  "ui_new_worktree": {
+    "agent": {
+      "kind": "omp",
+      "profile": "compound-engineering"
+    },
+    "greeting": true
+  },
+  "status": "passed",
+  "source_sha256": {
+    "server/index.ts": "afc242dfb08af4cea7ac76f00cae98f023e2a276cad0290875f2ec109935a1fb",
+    "server/agent-profiles.ts": "4ec6dbd11c5819b56de4f3b33d5ef68fbe7ac0ccb18589cf3588f25ffa671fec",
+    "server/shell-agent.ts": "0576a5770e7889f479d026513c01d140c72b107843088e985fa035cca45a9fdc",
+    "src/components/AgentLaunchPicker.tsx": "6a5756fb0cc7201e259ef81e7735aebf6a7f7195db6bb423ecbc319ccbba6d92",
+    "src/components/NewSessionDialog.tsx": "bf9c6b83e8431ef3b4c07d820553a85aa79a03ad4a8b0861bb9a8061294443fe",
+    "src/components/WorktreeDialog.tsx": "650058771e40f9625c229cd6e491576e65bb3904bcfd62770bf9af340cf7a7df",
+    "src/App.tsx": "f20c8489ffd6a4e9b5ce565d36ad5aae03ed334938fa7ce1ba77eeb014d35add",
+    "server/omp.ts": "0b4ba42aad420ee0e1eac61ee5efea047c5fa0c86b3db90ca07efa01f6d3edaa",
+    "server/conversation.ts": "9bdba2b6561a39e9bb0d1473b41fc226e068eb5429c78e8b76451d27df1d8c4e"
+  }
+}

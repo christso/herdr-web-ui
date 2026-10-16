@@ -1,0 +1,31 @@
+{
+  "runtime": "remote-v27-christso-2942c44",
+  "previous_runtime": "remote-v27-d2beebe8171f57f3",
+  "commit": "2942c44cfd9ffc4685a04d576fe0e9481024e683",
+  "files_verified": 119,
+  "choices": {
+    "profiles": [
+      {
+        "kind": "omp",
+        "id": "compound-engineering"
+      },
+      {
+        "kind": "omp",
+        "id": "omp-compound"
+      }
+    ],
+    "launchers": [
+      {
+        "kind": "codex",
+        "id": "codex-compound"
+      },
+      {
+        "kind": "omp",
+        "id": "omp-compound"
+      }
+    ]
+  },
+  "stopped_only_verified_web_bridge": 3939743,
+  "native_socket_inode": 16260973,
+  "native_socket_preserved": true
+}

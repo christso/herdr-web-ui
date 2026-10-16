@@ -1,0 +1,282 @@
+{
+  "status": "complete",
+  "verdict": "Ready with fixes",
+  "scope": {
+    "base": "b8b8655bf61aada3b9dad310634505ee58be5b82",
+    "branch": "feat/agent-launch-discovery",
+    "head_sha": "b8b8655bf61aada3b9dad310634505ee58be5b82",
+    "pr_url": null,
+    "files_changed": 23
+  },
+  "intent": "Discover exact native profile IDs and installed POSIX shell launchers per selected local/SSH PC without a manual catalog. Keep native Profile separate from Launcher, reset choices by PC/agent, and revalidate before workspace/tab/worktree creation. Preserve default/resume safety, controlled freshness, shell guards, and creation-only links targeting their linked PC.",
+  "intent_confidence": "explicit",
+  "reviewers": [
+    "correctness",
+    "project-standards",
+    "testing",
+    "maintainability",
+    "security",
+    "api-contract",
+    "reliability",
+    "adversarial",
+    "julik-frontend-races"
+  ],
+  "findings": [
+    {
+      "#": 1,
+      "autofix_class": "manual",
+      "confidence": 75,
+      "evidence": [
+        "server/agent-profiles.ts:85:   const ompProfiles = join(home, env[\"PI_CONFIG_DIR\"] || \".omp\", \"profiles\");",
+        "Trigger: set PI_CONFIG_DIR=.custom-omp in the bridge and pane environment, create the native profile ~/.custom-omp/profiles/work/agent, and select its discovered work ID. server/agent-profiles.ts:86 includes this profile, and server/index.ts:302 translates the selection into fixed --profile work arguments for native agent.start.",
+        "server/conversation.ts:1215:   const profiles = paths.join(home, \".omp\", \"profiles\"); The reported ~/.custom-omp/profiles/work/agent/sessions/session.jsonl is outside that root, so ompSessionStore returns null.",
+        "server/conversation.ts:1231-1233 calls ompHeldTranscript when the reported path is rejected and throws ConversationUnavailable(\"no_session_path\") if the fallback finds nothing.",
+        "server/omp.ts:35:   return /^[\\w.-]+$/.test(profile) && profile !== \".\" && profile !== \"..\" ? join(home, \".omp\", \"profiles\", profile, \"agent\") : null; This fallback ignores PI_CONFIG_DIR even though it receives the foreground process environment, so it looks under the wrong profile directory as well.",
+        "server/agent-profiles.test.ts:12 and :23 already exercise discovery using PI_CONFIG_DIR=.custom-omp; the production conversation readers do not share that root resolution."
+      ],
+      "file": "server/agent-profiles.ts",
+      "first_evidence": "server/agent-profiles.ts:85:   const ompProfiles = join(home, env[\"PI_CONFIG_DIR\"] || \".omp\", \"profiles\");",
+      "independent_reviewers": [
+        "adversarial"
+      ],
+      "line": 85,
+      "owner": "downstream-resolver",
+      "pre_existing": false,
+      "requires_verification": true,
+      "reviewers": [
+        "adversarial"
+      ],
+      "severity": "P2",
+      "suggested_fix": "Share the native OMP root calculation with transcript resolution. Make ompSessionStore accept the configured native root while preserving its containment and symlink checks, and make ompAgentDir derive PI_CONFIG_DIR from the pane process environment. Add a fixture where discovery offers a custom-root OMP profile and the reported transcript and process fallback both resolve that profile's actual session.",
+      "title": "Custom-root OMP profiles launch without readable chat history",
+      "why_it_matters": "Discovery explicitly supports native OMP profiles under PI_CONFIG_DIR, but the conversation reader still accepts only ~/.omp session paths and its process fallback also searches only ~/.omp. With PI_CONFIG_DIR=.custom-omp and a profile under ~/.custom-omp/profiles/work/agent, the new picker offers work and agent.start launches it successfully, yet chat cannot resolve its transcript even when herdr reports the correct absolute session path. The user gets a running agent with unavailable conversation history. This is an interaction between the newly supported discovery root and existing transcript readers.",
+      "validation_status": "confirmed",
+      "validation_reason": "With PI_CONFIG_DIR=.custom-omp in the bridge and pane environments and a native work profile, newly added discovery (server/agent-profiles.ts:85-86; fixture coverage in server/agent-profiles.test.ts:12-29) offers it and server/index.ts:302 launches --profile work, but server/conversation.ts:1213-1233 rejects its custom-root session and server/omp.ts:26-35 plus server/gjc-runtime.ts:198-218 confine fallback to ~/.omp, yielding no_session_path when no matching default-root store exists; runtime incidence was not measured.",
+      "protected_subject": null
+    }
+  ],
+  "actionable_findings": [
+    {
+      "#": 1,
+      "autofix_class": "manual",
+      "confidence": 75,
+      "evidence": [
+        "server/agent-profiles.ts:85:   const ompProfiles = join(home, env[\"PI_CONFIG_DIR\"] || \".omp\", \"profiles\");",
+        "Trigger: set PI_CONFIG_DIR=.custom-omp in the bridge and pane environment, create the native profile ~/.custom-omp/profiles/work/agent, and select its discovered work ID. server/agent-profiles.ts:86 includes this profile, and server/index.ts:302 translates the selection into fixed --profile work arguments for native agent.start.",
+        "server/conversation.ts:1215:   const profiles = paths.join(home, \".omp\", \"profiles\"); The reported ~/.custom-omp/profiles/work/agent/sessions/session.jsonl is outside that root, so ompSessionStore returns null.",
+        "server/conversation.ts:1231-1233 calls ompHeldTranscript when the reported path is rejected and throws ConversationUnavailable(\"no_session_path\") if the fallback finds nothing.",
+        "server/omp.ts:35:   return /^[\\w.-]+$/.test(profile) && profile !== \".\" && profile !== \"..\" ? join(home, \".omp\", \"profiles\", profile, \"agent\") : null; This fallback ignores PI_CONFIG_DIR even though it receives the foreground process environment, so it looks under the wrong profile directory as well.",
+        "server/agent-profiles.test.ts:12 and :23 already exercise discovery using PI_CONFIG_DIR=.custom-omp; the production conversation readers do not share that root resolution."
+      ],
+      "file": "server/agent-profiles.ts",
+      "first_evidence": "server/agent-profiles.ts:85:   const ompProfiles = join(home, env[\"PI_CONFIG_DIR\"] || \".omp\", \"profiles\");",
+      "independent_reviewers": [
+        "adversarial"
+      ],
+      "line": 85,
+      "owner": "downstream-resolver",
+      "pre_existing": false,
+      "requires_verification": true,
+      "reviewers": [
+        "adversarial"
+      ],
+      "severity": "P2",
+      "suggested_fix": "Share the native OMP root calculation with transcript resolution. Make ompSessionStore accept the configured native root while preserving its containment and symlink checks, and make ompAgentDir derive PI_CONFIG_DIR from the pane process environment. Add a fixture where discovery offers a custom-root OMP profile and the reported transcript and process fallback both resolve that profile's actual session.",
+      "title": "Custom-root OMP profiles launch without readable chat history",
+      "why_it_matters": "Discovery explicitly supports native OMP profiles under PI_CONFIG_DIR, but the conversation reader still accepts only ~/.omp session paths and its process fallback also searches only ~/.omp. With PI_CONFIG_DIR=.custom-omp and a profile under ~/.custom-omp/profiles/work/agent, the new picker offers work and agent.start launches it successfully, yet chat cannot resolve its transcript even when herdr reports the correct absolute session path. The user gets a running agent with unavailable conversation history. This is an interaction between the newly supported discovery root and existing transcript readers.",
+      "validation_status": "confirmed",
+      "validation_reason": "With PI_CONFIG_DIR=.custom-omp in the bridge and pane environments and a native work profile, newly added discovery (server/agent-profiles.ts:85-86; fixture coverage in server/agent-profiles.test.ts:12-29) offers it and server/index.ts:302 launches --profile work, but server/conversation.ts:1213-1233 rejects its custom-root session and server/omp.ts:26-35 plus server/gjc-runtime.ts:198-218 confine fallback to ~/.omp, yielding no_session_path when no matching default-root store exists; runtime incidence was not measured.",
+      "protected_subject": null
+    }
+  ],
+  "triage_groups": [],
+  "pre_existing_findings": [],
+  "requirements_completeness": {
+    "source": "explicit",
+    "plan_path": "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/review-plan.md",
+    "requirements": [
+      {
+        "id": "R1",
+        "requirement": "No new manual config or aliases; show exact native profile IDs.",
+        "status": "met",
+        "evidence": "Met in the diff: manual catalog and aliases removed; native discovery and picker use exact IDs. The new custom OMP root exposes transcript defect #1."
+      },
+      {
+        "id": "R2",
+        "requirement": "Profiles and installed launchers separate; custom launcher owns env; hide native Profile and reject combined selections before creation.",
+        "status": "met",
+        "evidence": "Met in the diff: separate Profile and Launcher choices, Profile hidden for wrappers, fixed discovered selections, combined selections rejected before all three creation routes."
+      },
+      {
+        "id": "R3",
+        "requirement": "Discover and revalidate per selected local/SSH PC on every dialog/start; scoped cancelled fetches and defaults; Shell usable after discovery failure; missing canonical with usable wrapper requires explicit wrapper.",
+        "status": "met",
+        "evidence": "Met in the diff: selected-machine discovery, cancellation and machine/agent state guards, reset and revalidation, Shell fallback and explicit wrapper choice when canonical agent is absent. Delayed-response regression coverage and the bridge/pane PATH boundary remain unmeasured."
+      },
+      {
+        "id": "R4",
+        "requirement": "Same workspace/tab/worktree semantics, demo API, ja/ko/zh strings, no dependencies/generated/package/version edits, preserve unrelated tests and fixes.",
+        "status": "met",
+        "evidence": "Met in the diff: workspace/tab/worktree payloads, demo API and ja/ko/zh strings updated; no dependency/package/version/generated edits. Caller fast, SSH and multi-PC checks passed. Complete native worktree browser proof remains pending after a navigation/greeting failure; this is a validation limit, not an established missing implementation."
+      }
+    ],
+    "implementation_units": [],
+    "unrequested_behavior_rules": [],
+    "reverse_check": "Compared the reviewed diff with the complete explicit plan and supplied scope; no additional unrequested behavior rule identified. Linked-PC creation changes are explicitly included in the review intent and caller scope."
+  },
+  "learnings": [],
+  "agent_native_gaps": [],
+  "deployment_notes": [],
+  "residual_risks": [
+    "Discovery searches PATH plus ~/.local/bin, ~/.bun/bin and ~/bin, while native agent.start resolves a command in the pane environment. The native-profile HTTP contract uses an agentStart spy; the completed generic SSH integration does not exercise native profile selection with the canonical executable absent from bridge PATH. Fixture QA should establish that canonical CLI/configuration identity at that boundary; this is an unmeasured integration risk, not a proven launch defect. Later appended caller evidence verified five native fixtures with their canonical bin explicitly on PATH; that does not exercise this omitted-PATH boundary. Full native worktree browser completion remains pending diagnosis."
+  ],
+  "testing_gaps": [
+    "Discovery guard regression coverage remains incomplete for binary-helper shadowing (an executable non-shell codex-X earlier in PATH than a same-name shell launcher), canonical-help timeout/output bounds and cached capability reuse/no-probe-when-no-profile behavior. Fixture-only tests can assert no later launcher substitution and bounded discovery with launchers retained. Source guards exist; no current failure was demonstrated.",
+    "The changed dialogs cancel discovery and scope selections to machine/agent, but no inspected fixture holds PC A discovery across close/reopen or a switch to PC B with overlapping IDs and then releases A. Add that controlled response-order test to protect the explicit stale-fetch isolation requirement. Inspection found the cancellation and machine guards, so this is a regression coverage gap without an established race defect."
+  ],
+  "coverage": {
+    "depth": "full",
+    "scope_mode": "standalone",
+    "tracked_changed_lines": 716,
+    "executable_non_test_changed_lines": 368,
+    "additional_untracked_paths": [
+      "scripts/demo-agent-launch.test.ts",
+      "src/components/AgentLaunchPicker.tsx",
+      "changelog.d/creation-link-machine.md"
+    ],
+    "untracked_excluded": [],
+    "reviewer_selection": [
+      {
+        "reviewer": "correctness",
+        "tier": "session",
+        "reason": "Cross-layer logic and creation contracts"
+      },
+      {
+        "reviewer": "project-standards",
+        "tier": "mid",
+        "reason": "Applicable AGENTS criteria fallback"
+      },
+      {
+        "reviewer": "testing",
+        "tier": "mid",
+        "reason": "Changed discovery and HTTP/demo/browser tests"
+      },
+      {
+        "reviewer": "maintainability",
+        "tier": "mid",
+        "reason": "368 executable lines and replacement architecture"
+      },
+      {
+        "reviewer": "security",
+        "tier": "session",
+        "reason": "Discovery-derived executable selection and input rejection"
+      },
+      {
+        "reviewer": "api-contract",
+        "tier": "mid",
+        "reason": "API metadata and creation payload changes"
+      },
+      {
+        "reviewer": "reliability",
+        "tier": "mid",
+        "reason": "Bounded CLI probe, filesystem failures, launch readiness"
+      },
+      {
+        "reviewer": "adversarial",
+        "tier": "session",
+        "reason": "Cross-model unavailable; cross-layer composition and assumptions"
+      },
+      {
+        "reviewer": "julik-frontend-races",
+        "tier": "mid",
+        "reason": "Per-PC async catalogs and selection transitions"
+      }
+    ],
+    "standards": {
+      "criteria": [
+        {
+          "path": "AGENTS.md",
+          "governs": "all changed paths"
+        },
+        {
+          "path": "server/AGENTS.md",
+          "governs": "server/*"
+        },
+        {
+          "path": "src/AGENTS.md",
+          "governs": "src/*"
+        }
+      ],
+      "fallback_named": true,
+      "not_run_reason": null
+    },
+    "compound_packs": {
+      "roots": [],
+      "warnings": [],
+      "errors": []
+    },
+    "cross_model": "Cross-model pass: not run; no different-family CLI installed (Claude, Grok, Antigravity and Cursor absent). Local adversarial reviewer supplies the lens without cross-model corroboration.",
+    "validator": {
+      "outcome": "verdicts",
+      "batch_count": 1,
+      "selected": 1,
+      "confirmed": 1,
+      "rejected": 0,
+      "unresolved": 0,
+      "malformed": 0,
+      "failed": 0,
+      "shortcut_skipped": 0,
+      "bound_exceeded": false,
+      "evidence_basis": "No independently verified different-family peer; the one remaining actionable finding received the required validator batch. Verdicts landed. Confirmation is code-based; runtime incidence was not measured.",
+      "per_finding": [
+        {
+          "#": 1,
+          "status": "confirmed",
+          "protected_subject": null,
+          "reason": "With PI_CONFIG_DIR=.custom-omp in the bridge and pane environments and a native work profile, newly added discovery (server/agent-profiles.ts:85-86; fixture coverage in server/agent-profiles.test.ts:12-29) offers it and server/index.ts:302 launches --profile work, but server/conversation.ts:1213-1233 rejects its custom-root session and server/omp.ts:26-35 plus server/gjc-runtime.ts:198-218 confine fallback to ~/.omp, yielding no_session_path when no matching default-root store exists; runtime incidence was not measured."
+        }
+      ]
+    },
+    "protected_subject_classification": {
+      "1": null
+    },
+    "protected_subject_reclassifications": [],
+    "validation_degraded_blockers": [],
+    "suppressed_by_confidence": {},
+    "suppressed_count": 0,
+    "first_evidence_backfilled": 0,
+    "quote_gate_demotions": 0,
+    "mode_aware_demotion_count": 0,
+    "settlement_suppressed_count": 0,
+    "malformed_findings": 0,
+    "malformed_returns": 0,
+    "failed_reviewers": [],
+    "timed_out_reviewers": [],
+    "applied_count": 0,
+    "apply_local": false,
+    "caller_validation_source": "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/caller-validation.txt",
+    "validation": [
+      "Caller-owned final fast checks passed workflow syntax, generated types, typecheck, build and unit tests: 3817 pass, 0 fail, 8 skip, 295 files (/tmp/herdr-launch-discovery/final-fast.log).",
+      "Caller-owned SSH integration passed, exit 0 (/tmp/herdr-launch-discovery/final-ssh.log). Multi-PC creation-link regression passed desktop and phone, including selected remote PC API and prior cross-PC cases (/tmp/herdr-launch-discovery/final-multi-pc.log).",
+      "HTTP contracts: 6 pass/95 assertions. Focused unit tests: 60 pass/225 assertions. Existing broad deep-link focus failures were reproduced on pristine baseline; new linked-host cases passed.",
+      "Scratch actual-browser desktop checks passed all three forms and payloads, hidden Profile, reopen and agent resets, wrapper-only enablement and Shell after discovery failure. Phone workspace/profile/Pi/native-tab checks passed; its context-menu worktree navigation driver timed out. That timeout is not evidence of an application defect.",
+      "Latest native fixture report failed at worktree greeting/navigation. All five native agent launches were verified: Codex/OMP native profile zero-turn greetings and Codex/OMP/Pi wrappers with correct native kind and idle state. Actual New tab hidden Profile and launcher-only payload passed. Actual New worktree native-profile payload and desktop/phone forms were captured, but UI stayed on the prior Codex tab while caller diagnoses request settlement/navigation. Complete native worktree browser validation is pending; no complete native QA pass is claimed.",
+      "Native fixtures use the default OMP root and put canonical executables on PATH. They do not exercise custom PI_CONFIG_DIR transcript resolution or the omitted-bridge-PATH boundary."
+    ],
+    "notes": [
+      "Full review across 23 paths; helper facts cover tracked changes plus three explicitly included untracked paths.",
+      "Cross-model pass: not run; no different-family CLI installed (Claude, Grok, Antigravity and Cursor absent). Local adversarial reviewer supplies the lens without cross-model corroboration.",
+      "All nine reviewers terminal; no outstanding jobs. Same-model agreement did not raise confidence or grant the validator shortcut.",
+      "No previous-comments pass: standalone diff without PR metadata. No migration/deployment lens: no migration artifacts. No performance lens: no material algorithmic/resource-cache policy change. No agent-native lens: no tool/skill/prompt surface change. No learnings corpus or declared packs.",
+      "The broad missing-dialog-test claim was rejected because caller fixture evidence exercises those actual dialog paths. It is not recycled into risks or missing tests.",
+      "Earlier handoff notes that fast/SSH/browser checks were pending are superseded by caller-validation.txt. The native worktree completion limit above remains current.",
+      "No project, index, commit, push or deployment changes were made by this report-only review."
+    ]
+  },
+  "verdict_reason": "Fix #1: discovered OMP profiles under PI_CONFIG_DIR can run while chat cannot resolve their history because transcript readers still use ~/.omp. This P2 is independently validated in code, with runtime incidence unmeasured. No P0/P1 findings remain. Complete native worktree browser proof is still pending after the recorded navigation/greeting failure.",
+  "fix_order": [
+    1
+  ],
+  "artifact_path": "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f",
+  "run_id": "20261016-034015-2f2b474f"
+}

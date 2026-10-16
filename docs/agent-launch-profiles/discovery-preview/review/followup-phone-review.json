@@ -1,0 +1,90 @@
+{
+  "status": "complete",
+  "verdict": "Ready with fixes",
+  "original_phone_race": "closed for direct creation: pane-only navigation takes over sheet history entry before deferred cleanup; workspace enrichment replaces that entry once roster arrives.",
+  "findings": [
+    {
+      "title": "Forward loses new panes before their roster arrives",
+      "severity": "P2",
+      "file": "src/App.tsx",
+      "line": 1079,
+      "why_it_matters": "The new writer correctly takes over the phone sheet's history entry before the created pane appears in the combined roster, but it also makes that pending pane reachable through Forward. With the regression fixture's roster hold still active, create the worktree, go Back to the previous pane, then Forward. The Forward URL contains the new pane and no workspace; onPop resolves it against the old machine.snapshot, gets null, and returns without selecting the pane or requesting fresh confirmation. The old pane stays selected. When the held roster arrives, the URL writer replaces that Forward entry with the old pane, permanently losing the navigation target. This is newly exposed by publishing a history entry before its pane is rostered; the existing initial-link path already confirms an absent pane against fetchSession, but popstate does not use it.",
+      "suggested_fix": "Make a popstate targeting a pane absent from the cached snapshot use the existing pending-link/fresh-session confirmation path before discarding or rewriting its target. Extend the held-roster browser regression to go Back and Forward before release, then verify that the created pane is selected and remains in the URL after release.",
+      "autofix_class": "manual",
+      "owner": "downstream-resolver",
+      "requires_verification": true,
+      "confidence": 75,
+      "evidence": [
+        "src/App.tsx:1079:   const linkWorkspaceId = selectedPane?.workspace_id ?? null;",
+        "src/App.tsx:1083 removes the undefined-workspace guard, and :1085 writes selectedPaneId with workspace null. :1098 pushes a history navigation for this new pane; sheetHistory.ts replaces a sheet-owned entry and removes its sheet mark, so sheet cleanup no longer traverses away.",
+        "src/App.tsx:1139:         const pane = machine?.snapshot ? resolveLink(machine.snapshot, link).pane : link.pane;\nsrc/App.tsx:1140:         if (pane === null) return;",
+        "src/lib/deepLink.ts resolveLink finds no pane or workspace for the pane-only Forward link while the old combined roster is held, and returns { pane: null, workspace: null, note: 'workspace-closed' }. The onPop branch neither sets pendingLink nor calls fetchSession for this result.",
+        "src/App.tsx:1096-1099 replaces the current entry when roster arrival reruns the writer with the old selected pane and writtenLink already describing that same old pane; isNavigation is false.",
+        "scripts/worktree-selection-demo-regression.ts:65-70 demonstrates the intended pending-pane history interval, but releases the held roster immediately after asserting the new pane URL and does not traverse Back/Forward during it. The supplied red/green logs establish sheet-cleanup closure, not this traversal case."
+      ],
+      "pre_existing": false,
+      "id": "phone-1",
+      "validation_status": "confirmed",
+      "validation_reason": "Two fresh source traces plus isolated runtime regression: direct create passes; Back then Forward before releasing held roster fails new-workspace enrichment at 3000ms.",
+      "reviewers": [
+        "correctness",
+        "security-history-boundary"
+      ],
+      "runtime_evidence": "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-phone-back-forward.log"
+    }
+  ],
+  "actionable_findings": [
+    {
+      "title": "Forward loses new panes before their roster arrives",
+      "severity": "P2",
+      "file": "src/App.tsx",
+      "line": 1079,
+      "why_it_matters": "The new writer correctly takes over the phone sheet's history entry before the created pane appears in the combined roster, but it also makes that pending pane reachable through Forward. With the regression fixture's roster hold still active, create the worktree, go Back to the previous pane, then Forward. The Forward URL contains the new pane and no workspace; onPop resolves it against the old machine.snapshot, gets null, and returns without selecting the pane or requesting fresh confirmation. The old pane stays selected. When the held roster arrives, the URL writer replaces that Forward entry with the old pane, permanently losing the navigation target. This is newly exposed by publishing a history entry before its pane is rostered; the existing initial-link path already confirms an absent pane against fetchSession, but popstate does not use it.",
+      "suggested_fix": "Make a popstate targeting a pane absent from the cached snapshot use the existing pending-link/fresh-session confirmation path before discarding or rewriting its target. Extend the held-roster browser regression to go Back and Forward before release, then verify that the created pane is selected and remains in the URL after release.",
+      "autofix_class": "manual",
+      "owner": "downstream-resolver",
+      "requires_verification": true,
+      "confidence": 75,
+      "evidence": [
+        "src/App.tsx:1079:   const linkWorkspaceId = selectedPane?.workspace_id ?? null;",
+        "src/App.tsx:1083 removes the undefined-workspace guard, and :1085 writes selectedPaneId with workspace null. :1098 pushes a history navigation for this new pane; sheetHistory.ts replaces a sheet-owned entry and removes its sheet mark, so sheet cleanup no longer traverses away.",
+        "src/App.tsx:1139:         const pane = machine?.snapshot ? resolveLink(machine.snapshot, link).pane : link.pane;\nsrc/App.tsx:1140:         if (pane === null) return;",
+        "src/lib/deepLink.ts resolveLink finds no pane or workspace for the pane-only Forward link while the old combined roster is held, and returns { pane: null, workspace: null, note: 'workspace-closed' }. The onPop branch neither sets pendingLink nor calls fetchSession for this result.",
+        "src/App.tsx:1096-1099 replaces the current entry when roster arrival reruns the writer with the old selected pane and writtenLink already describing that same old pane; isNavigation is false.",
+        "scripts/worktree-selection-demo-regression.ts:65-70 demonstrates the intended pending-pane history interval, but releases the held roster immediately after asserting the new pane URL and does not traverse Back/Forward during it. The supplied red/green logs establish sheet-cleanup closure, not this traversal case."
+      ],
+      "pre_existing": false,
+      "id": "phone-1",
+      "validation_status": "confirmed",
+      "validation_reason": "Two fresh source traces plus isolated runtime regression: direct create passes; Back then Forward before releasing held roster fails new-workspace enrichment at 3000ms.",
+      "reviewers": [
+        "correctness",
+        "security-history-boundary"
+      ],
+      "runtime_evidence": "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-phone-back-forward.log"
+    }
+  ],
+  "source_frozen_verified": true,
+  "changed_during_review": [],
+  "reviewers": [
+    "frontend races",
+    "correctness",
+    "security/history boundary"
+  ],
+  "validation": {
+    "direct_regression": "Independent run passed exit0: /tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-phone-test.log",
+    "back_forward": "Independent extension failed exit1 on expected workspace enrichment after Back/Forward during held roster: /tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-phone-back-forward.log",
+    "test_script": "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-phone-back-forward.ts"
+  },
+  "coverage": [
+    "Scope only latest two App URL-writer lines, new held-roster UI regression, browser CI registration and changelog. Earlier creation-linked-PC change not re-reviewed.",
+    "Lock/initial-roster/pending-link guards preserved; no auth/secret/cross-PC boundary regression identified.",
+    "CI script registration covers serial and existing parallel parser; fixture uses isolated demo without native or provider calls."
+  ],
+  "limits": [
+    "Complete native worktree browser QA remains caller-owned; no complete pass claimed.",
+    "No code/index/commit/push/deploy changes by review."
+  ],
+  "artifact_path": "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-phone-review.json",
+  "completed_at": "2026-10-16T04:08:48.698822+00:00"
+}

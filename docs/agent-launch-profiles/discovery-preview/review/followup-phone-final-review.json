@@ -1,0 +1,39 @@
+{
+  "status": "complete",
+  "verdict": "Ready to merge",
+  "scope": "Targeted phone-1 closure and exact pending-link/CI-inventory tail; original OMP finding already closed in followup-review.json.",
+  "closed_findings": [
+    "phone-1"
+  ],
+  "findings": [],
+  "actionable_findings": [],
+  "source_frozen_verified": true,
+  "changed_during_review": [],
+  "reason": "Popstate for a pane absent from cached roster now selects the intended target and enters existing pending-link fresh-session confirmation; linkLanded blocks URL rewrite until settlement, and identity/cleanup cancel obsolete responses.",
+  "validation": {
+    "independent_browser": {
+      "status": "passed",
+      "exit_code": 0,
+      "log": "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-phone-closure-browser.log",
+      "scenario": "Actual phone worktree creation followed by Back/Forward before held SSE/GETmachines roster release; created pane remains selected and URL gains correct workspace."
+    },
+    "independent_ci_inventory": {
+      "status": "passed",
+      "exit_code": 0,
+      "log": "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-phone-closure-ci.log"
+    },
+    "fresh_validator": "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-phone-closure-validation.json",
+    "root_red_green": [
+      "/tmp/herdr-launch-discovery/worktree-forward-red.log",
+      "/tmp/herdr-launch-discovery/worktree-forward-green.log"
+    ]
+  },
+  "limits": [
+    "Ready verdict is for reviewed code and targeted closure, not a claim all CI or native browser checks passed.",
+    "Caller selected deep-link diagnostic passed 16 cases then timed out on More/Cancel animation/detached element (/tmp/herdr-launch-discovery/deep-link-selected-regressions.log); broad browser CI not claimed green.",
+    "Earlier omitted-bridge-PATH native-launch and real authenticated Claude startup remain original coverage limits; no new defects established.",
+    "No project/index/commit/push/deploy changes by reviewers."
+  ],
+  "artifact_path": "/tmp/herdr-launch-discovery/review/20261016-034015-2f2b474f/followup-phone-final-review.json",
+  "completed_at": "2026-10-16T04:15:07.805339+00:00"
+}

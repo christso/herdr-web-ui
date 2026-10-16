@@ -1,0 +1,119 @@
+{
+  "fork_commit": "2942c44cfd9ffc4685a04d576fe0e9481024e683",
+  "installed_commit": "2942c44cfd9ffc4685a04d576fe0e9481024e683",
+  "health_web_ui": {
+    "boot_id": "0cfeae09-c708-4883-aee1-4e84ea08136f",
+    "revision": "2942c44cfd9ffc4685a04d576fe0e9481024e683"
+  },
+  "installed_files_sha256": {
+    "src/App.tsx": "f20c8489ffd6a4e9b5ce565d36ad5aae03ed334938fa7ce1ba77eeb014d35add",
+    "server/index.ts": "afc242dfb08af4cea7ac76f00cae98f023e2a276cad0290875f2ec109935a1fb",
+    "server/shell-agent.ts": "0576a5770e7889f479d026513c01d140c72b107843088e985fa035cca45a9fdc",
+    "server/agent-profiles.ts": "4ec6dbd11c5819b56de4f3b33d5ef68fbe7ac0ccb18589cf3588f25ffa671fec",
+    "shared/protocol.ts": "e8dec1c3e1cf5b159ef5c5fb94c75d7dff0f5025d58263d1fce88d079f642934",
+    "server/codex.ts": "595276def3a57fd888714df06bdf619be7f9f7fb8e88c845ab2b8df1572b1e27",
+    "server/process-start.ts": "a061962600c6ca1fa4a6e4de8a6f1614bce4bc3b3722618593ad134f3b091305",
+    "server/omp.ts": "0b4ba42aad420ee0e1eac61ee5efea047c5fa0c86b3db90ca07efa01f6d3edaa",
+    "server/conversation.ts": "9bdba2b6561a39e9bb0d1473b41fc226e068eb5429c78e8b76451d27df1d8c4e",
+    "server/prompt.ts": "35b72f0b33cf258cc5ac7a4eb71b4e7ddc548e5f2b7519a40832213d6bcd89db",
+    "server/pi.ts": "ae59a1f81e357833a5dfd71df5afb373ab855721f71dfc5be40841219d3d61fb",
+    "src/lib/worktreeBranches.ts": "b4a0c54328f59f32a7828017bd296cffa57e8a45a86f3f4fb96097ec709fb426",
+    "src/components/NewSessionDialog.tsx": "bf9c6b83e8431ef3b4c07d820553a85aa79a03ad4a8b0861bb9a8061294443fe",
+    "src/components/WorktreeDialog.tsx": "650058771e40f9625c229cd6e491576e65bb3904bcfd62770bf9af340cf7a7df",
+    "src/components/AgentLaunchPicker.tsx": "6a5756fb0cc7201e259ef81e7735aebf6a7f7195db6bb423ecbc319ccbba6d92"
+  },
+  "choices": {
+    "local": {
+      "claude": {
+        "installed": true,
+        "profiles": [],
+        "launchers": []
+      },
+      "codex": {
+        "installed": true,
+        "profiles": [],
+        "launchers": [
+          "codex-compound",
+          "codex-tsoyang"
+        ]
+      },
+      "omp": {
+        "installed": true,
+        "profiles": [],
+        "launchers": []
+      },
+      "pi": {
+        "installed": true,
+        "profiles": [],
+        "launchers": []
+      }
+    },
+    "wtg": {
+      "claude": {
+        "installed": true,
+        "profiles": [],
+        "launchers": []
+      },
+      "codex": {
+        "installed": true,
+        "profiles": [],
+        "launchers": [
+          "codex-eng"
+        ]
+      },
+      "omp": {
+        "installed": true,
+        "profiles": [
+          "agcon",
+          "agent-conductor",
+          "compound-engineering",
+          "omp-compound"
+        ],
+        "launchers": [
+          "omp-compound"
+        ]
+      },
+      "pi": {
+        "installed": true,
+        "profiles": [],
+        "launchers": [
+          "pi-compound",
+          "pi-rpiv"
+        ]
+      }
+    },
+    "spectre": {
+      "claude": {
+        "installed": false,
+        "profiles": [],
+        "launchers": []
+      },
+      "codex": {
+        "installed": true,
+        "profiles": [],
+        "launchers": [
+          "codex-compound"
+        ]
+      },
+      "omp": {
+        "installed": true,
+        "profiles": [
+          "compound-engineering",
+          "omp-compound"
+        ],
+        "launchers": [
+          "omp-compound"
+        ]
+      },
+      "pi": {
+        "installed": true,
+        "profiles": [],
+        "launchers": []
+      }
+    }
+  },
+  "auth_config_preserved": true,
+  "registered_PCs_preserved": true,
+  "native_socket_preserved": true,
+  "claude_version": "2.1.301 (Claude Code)"
+}
