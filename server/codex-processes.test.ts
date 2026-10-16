@@ -362,7 +362,7 @@ shortIt("checks every exchange in a tool-heavy older thread instead of rejecting
   expect(await resolve()).toBeNull();
 });
 
-shortIt("reads an unchanged older rollout once across polls", async () => {
+shortIt("reads an older rollout once, then only what is appended to it", async () => {
   const created = await shortSession();
   const old = join(home, "sessions", "tool-heavy.jsonl");
   shortRollout(old, "Original request", "An unrelated original answer.");
@@ -377,6 +377,14 @@ shortIt("reads an unchanged older rollout once across polls", async () => {
   closeSync(fd);
   utimesSync(old, 1_700_000_000, 1_700_000_000);
   expect(await resolve()).toBe(path);
+  // Grown: only the appended lines are read, so the broken line above stays unread.
+  appendFileSync(old, output);
+  expect(await resolve()).toBe(path);
+  appendFileSync(old, [
+    { type: "event_msg", payload: { type: "user_message", message: shortPrompt } },
+    { type: "event_msg", payload: { type: "agent_message", message: shortAnswer } },
+  ].map((entry) => JSON.stringify(entry)).join("\n") + "\n");
+  expect(await resolve()).toBeNull();
 });
 
 shortIt("rejects cumulative retained messages over the short matching limit", async () => {

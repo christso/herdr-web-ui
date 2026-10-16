@@ -189,13 +189,15 @@ it("reads a short first exchange beside another Codex pane through the conversat
   const paneId = await pane("short-first", `SCREEN_FILE=${screen} ${join(root, "bin", "codex")}`, cwd);
   const peer = join(cwd, "peer.txt");
   writeFileSync(peer, "OpenAI Codex (v0.162.1)\n› Other task\n• A different conversation.\n› \n");
-  await pane("short-peer", `SCREEN_FILE=${peer} ${join(root, "bin", "codex")}`, cwd);
+  const peerId = await pane("short-peer", `SCREEN_FILE=${peer} ${join(root, "bin", "codex")}`, cwd);
   const db = new Database(join(codexHome, "state_5.sqlite"));
   const created = Math.ceil(Date.now() / 1000) + 2;
   db.query("INSERT INTO threads VALUES (?, ?, ?, 0, NULL, ?, ?, 'cli', ?)").run(id, path, cwd, created, created, prompt);
   db.close();
   try {
     await onScreen(paneId, "SHORT_SCREEN_READY");
+    // a blank peer screen rightly blocks a short match, so wait until it shows its own exchange
+    await onScreen(peerId, "A different conversation.");
     const conversation = await read(paneId);
     expect(conversation.source).toBe("codex-transcript"); // regression
     expect(lastAnswer(conversation)).toBe(reply);
