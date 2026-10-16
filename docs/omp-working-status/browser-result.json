@@ -1,0 +1,20 @@
+{
+  "desktop": {
+    "sidebar": true,
+    "workspaces": 32,
+    "sidebarError": false,
+    "errorCount": 0,
+    "webSocketsBlocked": 2
+  },
+  "phone": {
+    "sidebar": true,
+    "workspaces": 32,
+    "sidebarError": false,
+    "errorCount": 0,
+    "webSocketsBlocked": 2
+  },
+  "revision": "883f2b65add9b873b6f836c16299df2bcae2d526",
+  "status": "passed",
+  "screenshots_taken": 0,
+  "terminal_attachments": 0
+}

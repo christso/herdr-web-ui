@@ -1,0 +1,661 @@
+{
+  "kernel": "6.18.40.1-microsoft-standard-WSL2",
+  "offline_reply_delay_seconds": 15,
+  "model_calls": 0,
+  "cases": [
+    {
+      "official_integration": false,
+      "before": {
+        "agent": "omp",
+        "agent_status": "idle",
+        "state_change_seq": 1
+      },
+      "working_status_counts": {
+        "idle": 50
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 0.3,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 0.6,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 0.91,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 1.21,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 1.52,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 1.82,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 2.12,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 2.43,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 2.73,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 3.03,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 3.33,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 3.63,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 3.94,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 4.24,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 4.54,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 4.84,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 5.14,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 5.45,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 5.75,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 6.05,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 6.35,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 6.66,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 6.96,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 7.26,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 7.56,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 7.87,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 8.17,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 8.47,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 8.77,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 9.07,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 9.38,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 9.68,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 9.98,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 10.28,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 10.58,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 10.88,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 11.18,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 11.49,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 11.79,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 12.09,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 12.4,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 12.7,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 13.0,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 13.3,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 13.6,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 13.9,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 14.21,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 14.51,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        },
+        {
+          "elapsed": 14.81,
+          "status": "idle",
+          "session_reported": false,
+          "seq": 1
+        }
+      ],
+      "after": {
+        "agent": "omp",
+        "agent_status": "idle",
+        "state_change_seq": 1
+      },
+      "session_reported_after": false
+    },
+    {
+      "official_integration": true,
+      "before": {
+        "agent": "omp",
+        "agent_status": "idle",
+        "state_change_seq": 2
+      },
+      "working_status_counts": {
+        "idle": 1,
+        "working": 49
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "status": "idle",
+          "session_reported": true,
+          "seq": 2
+        },
+        {
+          "elapsed": 0.3,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 0.6,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 0.91,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 1.21,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 1.51,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 1.81,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 2.12,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 2.42,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 2.72,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 3.02,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 3.32,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 3.63,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 3.93,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 4.23,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 4.53,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 4.83,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 5.14,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 5.44,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 5.74,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 6.05,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 6.35,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 6.65,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 6.95,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 7.25,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 7.55,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 7.86,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 8.16,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 8.46,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 8.76,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 9.06,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 9.37,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 9.67,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 9.97,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 10.27,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 10.57,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 10.87,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 11.17,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 11.48,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 11.78,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 12.08,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 12.38,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 12.68,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 12.98,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 13.28,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 13.59,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 13.89,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 14.19,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 14.49,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        },
+        {
+          "elapsed": 14.79,
+          "status": "working",
+          "session_reported": true,
+          "seq": 3
+        }
+      ],
+      "after": {
+        "agent": "omp",
+        "agent_status": "idle",
+        "state_change_seq": 4
+      },
+      "session_reported_after": true
+    }
+  ],
+  "herdr": {
+    "type": "pong",
+    "version": "0.9.5",
+    "protocol": 22,
+    "capabilities": {
+      "live_handoff": true,
+      "detached_server_daemon": false,
+      "endpoint_protocol_generation": 1,
+      "surface_interest": true,
+      "health_check": true,
+      "ssh_agent_registration": true
+    }
+  },
+  "omp_version": "omp/18.11.1",
+  "status": "completed"
+}

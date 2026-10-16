@@ -1,0 +1,31 @@
+{
+  "commit": "883f2b65add9b873b6f836c16299df2bcae2d526",
+  "https_health": true,
+  "config_preserved": {
+    "env": true,
+    "agent-profiles.json": true,
+    "push-subscriptions.json": true
+  },
+  "machine_registrations_preserved": true,
+  "native_socket_preserved": true,
+  "wtg_existing_chat": {
+    "source": "omp-transcript",
+    "turns": 134
+  },
+  "remote_bridges": [
+    {
+      "host": "wtg",
+      "runtime": "remote-v29-christso-883f2b6",
+      "source_files_verified": 120,
+      "new_bridge_pid_verified": true,
+      "native_socket_preserved": true
+    },
+    {
+      "host": "spectre",
+      "runtime": "remote-v29-christso-883f2b6",
+      "source_files_verified": 120,
+      "new_bridge_pid_verified": true,
+      "native_socket_preserved": true
+    }
+  ]
+}
