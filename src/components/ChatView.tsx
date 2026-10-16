@@ -30,7 +30,8 @@ import { copyText } from "../lib/clipboard.ts";
 import { attachmentFileName, mentionFileName, type GalleryImage } from "../lib/imageViewer.ts";
 import { useMachineApi } from "../lib/machineContext.tsx";
 import { toTranscriptMessages, type TranscriptMessage } from "../lib/transcript.ts";
-import { isLiveWorkTurn, isWaitingWorkTurn, formatWorkDuration, splitTurn, workFailed, workStartsOpen, workSummary, type ToolPart as ToolPartType } from "../lib/workBlocks.ts";
+import { hasLiveWorkBlock, isLiveWorkTurn, isWaitingWorkTurn, formatWorkDuration, splitTurn, workFailed, workStartsOpen, workSummary, type ToolPart as ToolPartType } from "../lib/workBlocks.ts";
+import { standaloneChatActivity } from "../lib/chatActivity.ts";
 import { phaseRows, planRows, taskRows, todoRows, type ChecklistRow } from "../lib/checklist.ts";
 import { isTodoTool, parseTodoAnswer, todoCallSummary, type TodoItem, type TodoStatus } from "../lib/todos.ts";
 import { formatGoalTime, turnGoal, type GoalState, type GoalStatus } from "../lib/goals.ts";
@@ -1268,7 +1269,8 @@ export const ChatView = memo(function ChatView({ paneId, active = true, visible:
   const finishedBeforeSend = sentOver !== null && sentOver.page === state.turns ? sentOver.turn : null;
   // the last turn is an open work block, whose head already says the agent works
   const lastShownTurn = state.source === "conversation" ? shownTurns.at(-1) : undefined;
-  const workBlockLive = lastShownTurn !== undefined && isLiveWorkTurn(lastShownTurn, true, workStatus, finishedBeforeSend);
+  const workBlockLive = lastShownTurn !== undefined && hasLiveWorkBlock(lastShownTurn, true, workStatus, finishedBeforeSend);
+  const standaloneActivity = standaloneChatActivity(activity, workBlockLive, agentStatus === "blocked");
   const empty = state.source === "conversation" ? turns.length === 0 : agent === null && state.messages.length === 0;
   const blank = !ended && chatIsBlank({ loaded, failed: error !== null, transcript: state.source === "conversation", turns: turns.length, older: typeof olderCursor === "string", abandoned: abandoned?.count ?? 0, prompt: prompt !== null, agent });
   // the scrollback standing in says nothing of the conversation: it has no history to compare
@@ -1374,8 +1376,8 @@ export const ChatView = memo(function ChatView({ paneId, active = true, visible:
       {loaded && error === null && agent === "agy" && state.source !== "conversation" && <p className="chat-inline-state" role="status">{t("Antigravity chat is unavailable. Open Terminal to see activity and tool calls.")}</p>}
       {/* A native turn's activity, where no open work block says it: before the turn has an assistant
           or tool row, and while it thinks (a work block's head says Working). One Working at a time. */}
-      {state.activity !== undefined && connected && !ended && activity !== "idle" && agentStatus !== "blocked" && prompt === null && (activity === "thinking" || !workBlockLive) && <p className="chat-activity" role="status"><CircleDot aria-hidden="true" />{activity === "thinking" ? t("Thinking…") : t("Working…")}</p>}
-      {loaded && empty && error === null && prompt === null && (state.activity === undefined || activity === "idle") && !(greeted && blank) && <div className="chat-empty"><AgentMark agent={agent ?? "agent"} size={32} /><p>{t("No conversation yet — say something below")}</p></div>}
+      {connected && !ended && standaloneActivity !== null && prompt === null && <p className="chat-activity" role="status"><CircleDot aria-hidden="true" />{standaloneActivity === "thinking" ? t("Thinking…") : t("Working…")}</p>}
+      {loaded && empty && error === null && prompt === null && activity === "idle" && !(greeted && blank) && <div className="chat-empty"><AgentMark agent={agent ?? "agent"} size={32} /><p>{t("No conversation yet — say something below")}</p></div>}
       {ended && <p className="chat-endcap">{t("terminal ended")}</p>}
   </>;
   const jump = newMessages ? <button type="button" className="btn chat-new-messages chat-virtual-jump" onClick={scrollToBottom}>{t("New messages")} <ArrowDown aria-hidden="true" /></button>

@@ -117,6 +117,11 @@ export function isLiveWorkTurn(turn: ConversationTurn, last: boolean, status?: s
   return last && turn.role === "assistant" && (status === "working" || status === "blocked");
 }
 
+/** A live assistant answer is only a visible live work block when it has work parts to render. */
+export function hasLiveWorkBlock(turn: ConversationTurn, last: boolean, status?: string, sentOver?: ConversationTurn | null): boolean {
+  return isLiveWorkTurn(turn, last, status, sentOver) && splitTurn(turn.parts).work.length > 0;
+}
+
 /**
  * Whether the open work block's head says the agent waits for the user ("Needs you") instead of
  * "Working…". By the pane's status, not by a parsed prompt: a blocked pane whose menu no reader
