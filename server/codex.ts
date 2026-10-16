@@ -1089,33 +1089,12 @@ const VALUELESS_OPTIONS = new Set([
   "no-experimental-fetch", "harmony", "bun", "smol", "hot", "watch", "noprofile", "norc", "posix", "login",
 ]);
 
-function codexExecutableIndex(argv: readonly string[]): number {
-  const executable = argv[0] ?? "";
-  const codex = /(?:^|[\\/])codex(?:\.js|\.exe|\.opencodex-real)?$/;
-  if (codex.test(executable)) return 0;
-  // `node codex.js` and shell shebangs name the script after the interpreter and its
-  // `--flag` options (`node --no-warnings codex.js`). Only options known to take no
-  // value may precede the script, plus `--name=value` forms that do not run code: an
-  // option that takes the next argument (`--title x`, `-e`, `-c`) or one that evaluates
-  // code or loads a module ends the search, since what follows it is not the script.
-  // Later arguments (echo, etc.) are not executables.
-  if (!/(?:^|[\\/])(?:node|bun|sh|bash|dash|zsh)(?:\.exe)?$/.test(executable)) return -1;
-  let script = 1;
-  for (; argv[script]?.startsWith("--"); script++) {
-    const option = argv[script] ?? "";
-    const name = option.slice(2, option.includes("=") ? option.indexOf("=") : undefined);
-    if (CODE_OPTIONS.has(name)) return -1;
-    if (!option.includes("=") && !VALUELESS_OPTIONS.has(name)) return -1;
-  }
-  return codex.test(argv[script] ?? "") ? script : -1;
-}
-
 /** A pane's Codex executables (or interpreter scripts), and their pids as one key. */
-async function codexProcessesOf(paneId: string): Promise<{ list: { pid: number; argv?: string[]; cwd?: string }[]; key: string }> {
+async function codexProcessesOf(paneId: string): Promise<{ list: { pid: number; argv?: string[] }[]; key: string }> {
   const processInfo = await paneProcessInfo(paneId);
   // herdr's schema allows `argv: null`; this reader has always read argv as absent or a list
   // (the cast is the inline result type herdrRpc was given before the typed seam)
-  const list = ((processInfo?.foreground_processes ?? []) as { pid: number; argv?: string[]; cwd?: string }[])
+  const list = ((processInfo?.foreground_processes ?? []) as { pid: number; argv?: string[] }[])
     .map((foreground) => {
       if (foreground.argv?.length || process.platform !== "linux") return foreground;
       // herdr can report only pid/name. Read this process, never infer argv from
@@ -1124,69 +1103,27 @@ async function codexProcessesOf(paneId: string): Promise<{ list: { pid: number; 
         return { ...foreground, argv: readFileSync(`/proc/${foreground.pid}/cmdline`, "utf8").split("\0") };
       } catch { return foreground; }
     })
-    .filter(({ argv = [] }) => codexExecutableIndex(argv) >= 0);
+    .filter(({ argv = [] }) => {
+      const executable = argv[0] ?? "";
+      const codex = /(?:^|[\\/])codex(?:\.js|\.exe|\.opencodex-real)?$/;
+      if (codex.test(executable)) return true;
+      // `node codex.js` and shell shebangs name the script after the interpreter and its
+      // `--flag` options (`node --no-warnings codex.js`). Only options known to take no
+      // value may precede the script, plus `--name=value` forms that do not run code: an
+      // option that takes the next argument (`--title x`, `-e`, `-c`) or one that evaluates
+      // code or loads a module ends the search, since what follows it is not the script.
+      // Later arguments (echo, etc.) are not executables.
+      if (!/(?:^|[\\/])(?:node|bun|sh|bash|dash|zsh)(?:\.exe)?$/.test(executable)) return false;
+      let script = 1;
+      for (; argv[script]?.startsWith("--"); script++) {
+        const option = argv[script] ?? "";
+        const name = option.slice(2, option.includes("=") ? option.indexOf("=") : undefined);
+        if (CODE_OPTIONS.has(name)) return false;
+        if (!option.includes("=") && !VALUELESS_OPTIONS.has(name)) return false;
+      }
+      return codex.test(argv[script] ?? "");
+    });
   return { list, key: list.map((process) => process.pid).sort((left, right) => left - right).join(",") };
-}
-
-/** Options that consume the next token; a value spelled --cd is not a directory option. */
-const CODEX_VALUE_OPTIONS = new Set([
-  "--config", "-c", "--enable", "--disable", "--image", "-i", "--model", "-m",
-  "--profile", "-p", "--sandbox", "-s", "--ask-for-approval", "-a", "--add-dir",
-  "--local-provider", "--remote", "--remote-auth-token-env",
-]);
-const CODEX_SWITCHES = new Set([
-  "--oss", "--search", "--full-auto", "--dangerously-bypass-approvals-and-sandbox",
-  "--no-alt-screen", "--yolo", "--last", "--all", "--help", "-h", "--version", "-V",
-]);
-
-/** Codex --cd changes its session cwd without changing the terminal's OS cwd. */
-function codexWorkingDirectory(processes: Awaited<ReturnType<typeof codexProcessesOf>>["list"], fallback: string): string | null {
-  const first = processes[0];
-  if (!first?.argv) return null;
-  const base = first.cwd || fallback;
-  let directory: string | null = null;
-  for (let at = codexExecutableIndex(first.argv) + 1; at < first.argv.length; at++) {
-    const arg = first.argv[at]!;
-    if (arg === "--") break;
-    if (!arg.startsWith("-")) continue;
-    let value: string | undefined;
-    if (arg === "--cd" || arg === "-C") value = first.argv[++at];
-    else if (arg.startsWith("--cd=")) value = arg.slice(5);
-    else if (arg.startsWith("-C")) value = arg.slice(2).replace(/^=/, "");
-    else {
-      const option = arg.split("=", 1)[0]!;
-      if (CODEX_VALUE_OPTIONS.has(option)) {
-        if (!arg.includes("=")) at++;
-      } else if (!CODEX_SWITCHES.has(arg)) return null;
-      continue;
-    }
-    if (!value || value.startsWith("-")) return null;
-    if (!nodePath.isAbsolute(value) && !nodePath.isAbsolute(base)) return null;
-    const resolved = nodePath.isAbsolute(value) ? nodePath.normalize(value) : nodePath.resolve(base, value);
-    if (directory !== null && !sameDirectory(directory, resolved)) return null;
-    directory = resolved;
-  }
-  return directory ?? (base || null);
-}
-
-type CodexPeerReads = Map<string, ReturnType<typeof codexProcessesOf>>;
-
-function codexPeerProcesses(paneId: string, reads: CodexPeerReads): ReturnType<typeof codexProcessesOf> {
-  let pending = reads.get(paneId);
-  if (pending === undefined) {
-    pending = codexProcessesOf(paneId);
-    reads.set(paneId, pending);
-  }
-  return pending;
-}
-
-async function codexPeerPanes(panes: readonly HerdrPane[], paneId: string, cwd: string, peerReads: CodexPeerReads, requireKnown = false): Promise<HerdrPane[]> {
-  const candidates = panes.filter((pane) => pane.pane_id !== paneId && (pane.agent ?? pane.agent_session?.agent) === "codex");
-  const peers = await Promise.all(candidates.map(async (pane) => {
-    const directory = await codexPeerProcesses(pane.pane_id, peerReads).then(({ list }) => codexWorkingDirectory(list, pane.cwd ?? "")).catch(() => null);
-    return (directory === null ? !requireKnown : sameDirectory(directory, cwd)) ? pane : null;
-  }));
-  return peers.filter((pane): pane is HerdrPane => pane !== null);
 }
 
 /** When each pane last looked at the other Codex panes for a set of threads, and which panes those were. */
@@ -1206,17 +1143,16 @@ const CLAIM_CHECK_MS = 5000;
  * message like "hi", the thread is never claimed, and this pane says it cannot tell while
  * its own answer is off screen, until that pane's chat binds it. Never another conversation.
  */
-async function claimedByOtherPanes(paneId: string, cwd: string, threads: string[], own: string[], firsts: ReadonlyMap<string, string>, home: string, sessionPanes: HerdrPane[] | undefined, peerReads: CodexPeerReads): Promise<Set<string>> {
+async function claimedByOtherPanes(paneId: string, cwd: string, threads: string[], own: string[], firsts: ReadonlyMap<string, string>, home: string, sessionPanes?: HerdrPane[]): Promise<Set<string>> {
   const claimed = new Set<string>();
   const key = `${paneId}\0${[...threads].sort().join("\0")}`;
-  const paneCandidates = sessionPanes ?? (await sessionSnapshot()).panes;
+  const panes = codexPeersIn(sessionPanes ?? (await sessionSnapshot()).panes, paneId, cwd).slice(0, 8);
   // a pane that appeared since is looked at at once
   const last = claimChecks.get(key);
-  const seen = paneCandidates.filter((pane) => pane.pane_id !== paneId && (pane.agent ?? pane.agent_session?.agent) === "codex").map((pane) => pane.pane_id).join();
-  if (seen === "" || (last !== undefined && last.panes === seen && Date.now() - last.at < CLAIM_CHECK_MS)) return claimed;
+  const seen = panes.map((pane) => pane.pane_id).join();
+  if (panes.length === 0 || (last !== undefined && last.panes === seen && Date.now() - last.at < CLAIM_CHECK_MS)) return claimed;
   claimChecks.set(key, { panes: seen, at: Date.now() });
   if (claimChecks.size > 64) claimChecks.delete(claimChecks.keys().next().value!);
-  const panes = (await codexPeerPanes(paneCandidates, paneId, cwd, peerReads, true)).slice(0, 8);
   const tail = (path: string) => { try { return [{ path, text: codexHistoryTail(path, 1024 * 1024, home) }]; } catch { return []; } };
   const candidates = threads.flatMap(tail);
   if (candidates.length === 0) return claimed;
@@ -1236,7 +1172,7 @@ async function claimedByOtherPanes(paneId: string, cwd: string, threads: string[
       const first = normalizeDisplay(firsts.get(shown) ?? "").slice(0, 48);
       if (firsts.has(shown) && (first.length < 8 || !normalizeDisplay(screen.text).includes(first))) continue;
       claimed.add(shown);
-      const processes = (await codexPeerProcesses(pane.pane_id, peerReads)).key;
+      const processes = (await codexProcessesOf(pane.pane_id)).key;
       if (processes !== "") {
         boundRollouts.delete(pane.pane_id);
         boundRollouts.set(pane.pane_id, { processes, path: shown, at: Date.now() });
@@ -1248,11 +1184,11 @@ async function claimedByOtherPanes(paneId: string, cwd: string, threads: string[
 }
 
 /** Whether another Codex pane in this cwd was started as `codex resume <thread>`. */
-async function resumedElsewhere(paneId: string, cwd: string, thread: string, sessionPanes: HerdrPane[] | undefined, peerReads: CodexPeerReads): Promise<boolean> {
-  const panes = await codexPeerPanes(sessionPanes ?? (await sessionSnapshot()).panes, paneId, cwd, peerReads);
+async function resumedElsewhere(paneId: string, cwd: string, thread: string, sessionPanes?: HerdrPane[]): Promise<boolean> {
+  const panes = codexPeersIn(sessionPanes ?? (await sessionSnapshot()).panes, paneId, cwd);
   for (const pane of panes) {
     try {
-      if (resumedThread((await codexPeerProcesses(pane.pane_id, peerReads)).list.map((process) => process.argv ?? [])) === thread) return true;
+      if (resumedThread((await codexProcessesOf(pane.pane_id)).list.map((process) => process.argv ?? [])) === thread) return true;
     } catch { /* a pane closed meanwhile */ }
   }
   return false;
@@ -1335,7 +1271,7 @@ async function safeShortThreads(rows: readonly CodexThreadRow[], home: string): 
  */
 async function shortThreadFromProcess(
   paneId: string, cwd: string, home: string, screen: string,
-  processes: readonly { pid: number }[], panes: HerdrPane[] | undefined, peerReads: CodexPeerReads,
+  processes: readonly { pid: number }[], panes?: HerdrPane[],
 ): Promise<string | null> {
   const starts = processes.map(({ pid }) => processStartUpperBound(pid));
   if (starts.length === 0 || starts.some((start) => start === null || !Number.isFinite(start))) return null;
@@ -1363,7 +1299,7 @@ async function shortThreadFromProcess(
     if (candidates === null) return null;
     const path = matchCodexFirstExchange(screen, candidates, notBefore);
     if (path === null || theirs([path], paneId).length !== 1) return null;
-    const peerScreens = await Promise.all((await codexPeerPanes(peers, paneId, cwd, peerReads)).map((peer) =>
+    const peerScreens = await Promise.all(codexPeersIn(peers, paneId, cwd).map((peer) =>
       paneRead({ paneId: peer.pane_id, source: "recent", lines: 400, stripAnsi: true })));
     const own = candidates.filter((candidate) => candidate.path === path);
     for (const peer of peerScreens) {
@@ -1433,8 +1369,7 @@ async function openRollouts(paneId: string, home: string): Promise<{ codexProces
 export async function codexOpenRollout(paneId: string, cwd: string | null | undefined, home = defaultCodexHome()): Promise<string | null> {
   const session = (await agentGet(paneId)).agent_session;
   if (session?.kind === "path" && session.value) return codexRolloutPath(session.value, home);
-  const { codexProcesses, processes, open } = await openRollouts(paneId, home);
-  cwd = codexWorkingDirectory(codexProcesses, cwd ?? "") ?? cwd;
+  const { processes, open } = await openRollouts(paneId, home);
   if (open.size === 1) return [...open][0]!;
   const bound = boundRollouts.get(paneId);
   if (bound === undefined || bound.processes !== processes || processes === "" || !cwd || codexRolloutPath(bound.path, home) === null) return null;
@@ -1469,7 +1404,6 @@ export async function codexTranscriptPath(paneId: string, cwd: string, home = de
   if (session?.kind === "path" && session.value) return codexRolloutPath(session.value, home);
 
   const { codexProcesses, processes, open } = await openRollouts(paneId, home);
-  cwd = codexWorkingDirectory(codexProcesses, cwd) ?? cwd;
   if (open.size === 1) return [...open][0]!;
   const resumed = resumedThread(codexProcesses.map((process) => process.argv ?? []));
 
@@ -1541,14 +1475,13 @@ export async function codexTranscriptPath(paneId: string, cwd: string, home = de
   // Failing that, the thread herdr has for this pane, unless another pane shows it, is
   // bound to it, or was resumed on it. Failing that, the thread it was resumed on, under
   // the same rule as the binding.
-  const peerReads: CodexPeerReads = new Map();
   const unsure = [...new Set([...boundNewer, ...(resumedPath !== null ? resumedNewer : []), ...(reported !== null ? [reported] : [])])];
   if (unsure.length > 0) {
     const own = [boundHere?.path, resumedPath].filter((path): path is string => typeof path === "string");
-    const claimed = await claimedByOtherPanes(paneId, cwd, unsure, own, firsts, home, panes, peerReads);
+    const claimed = await claimedByOtherPanes(paneId, cwd, unsure, own, firsts, home, panes);
     boundNewer = theirs(boundNewer, paneId, claimed);
     resumedNewer = theirs(resumedNewer, paneId, claimed);
-    if (reported !== null && (theirs([reported], paneId, claimed).length === 0 || await resumedElsewhere(paneId, cwd, session!.value!, panes, peerReads))) reported = null;
+    if (reported !== null && (theirs([reported], paneId, claimed).length === 0 || await resumedElsewhere(paneId, cwd, session!.value!, panes))) reported = null;
   }
   if (boundHere !== undefined && boundNewer.length === 0 && codexRolloutPath(boundHere.path, home) !== null) {
     // a pane in use stays among the kept ones
@@ -1574,5 +1507,5 @@ export async function codexTranscriptPath(paneId: string, cwd: string, home = de
   } catch { return null; }
   const short = matchShortCodexAnswers(screen.text, candidates.map((candidate, index) => ({ ...candidate, cut: cut[index] })));
   if (short !== null) return short;
-  return shortThreadFromProcess(paneId, cwd, home, screen.text, codexProcesses, panes, peerReads);
+  return shortThreadFromProcess(paneId, cwd, home, screen.text, codexProcesses, panes);
 }
