@@ -26,7 +26,7 @@ Prerequisites: Python 3, Git, Bun 1.4+, Herdr 0.9.5, and native OMP 18.11.1. The
 WSL_REPRO_ROOT=$(mktemp -d)
 git clone https://github.com/christso/herdr-web-ui.git "$WSL_REPRO_ROOT/herdr-web-ui"
 cd "$WSL_REPRO_ROOT/herdr-web-ui"
-git checkout --detach 3b6d381cbebd3f6d1e953e569f0478f2836656d9
+git checkout --detach 4704bbd5b35fe83e8cfabebe54f6a9c88360d1b9
 bun install --frozen-lockfile
 curl -fsSL https://raw.githubusercontent.com/christso/herdr-web-ui/dogfood/evidence/docs/omp-native-wsl-repro/native-repro.py -o "$WSL_REPRO_ROOT/native-repro.py"
 HERDR_REPRO_RUNTIME="$WSL_REPRO_ROOT/herdr-web-ui" \
@@ -42,6 +42,8 @@ Expected: three rows with `reported_argc: 0`, `native_session_reported: false`, 
 
 ## Safety finding about the proposed fix
 
-The existing synchronous `/proc/<pid>/cmdline` fallback bypasses Herdr's WSL safeguard. Herdr applies the same safeguard to environment reads. No hang occurred during these runs, but successful reads do not rule out the process-exit race. The proposed fallback needs a bounded approach before being called ready for upstream review. This is separate from establishing a repeatable reproduction.
+The initial synchronous `/proc/<pid>/cmdline` fallback bypassed Herdr's WSL safeguard. Herdr applies the same safeguard to environment reads. PR #1157 was updated in `53051d4b13fea09798de4fb91cc1d920ed647aa1` to perform both reads in a helper process with a one-second parent deadline, a one-MiB output limit, shared concurrent probes and a maximum of four outstanding helpers. A timed-out helper retains its slot until it exits. Failed probes return no match.
+
+The bounded implementation passed the same native three-run check: [bounded-report.json](bounded-report.json). Fifteen focused tests and the PR branch's fast checks passed (3,778 unit tests, eight opt-in skips). Timeout tests simulate a stalled helper and verify event-loop progress, deduplication and concurrency limits. An independent review checked the exit/deadline/slot behavior. We have not reproduced the actual WSL kernel hang; retaining a slot for a kernel-blocked child was checked by inspection. The default repeat commands above now check the integrated bounded implementation.
 
 These personal reproduction materials live only on the fork's orphan evidence branch, outside application branches and upstream PR diffs.

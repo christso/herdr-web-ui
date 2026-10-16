@@ -1,0 +1,80 @@
+{
+  "kernel": "6.18.40.1-microsoft-standard-WSL2",
+  "metadata_injected": false,
+  "model_calls": 0,
+  "resume_only": true,
+  "cases": [
+    {
+      "profile": "default",
+      "native_agent": "omp",
+      "native_status": "idle",
+      "native_session_reported": false,
+      "processes": [
+        {
+          "name": "omp",
+          "reported_argc": 0,
+          "fields": [
+            "cwd",
+            "name",
+            "pid"
+          ]
+        }
+      ],
+      "upstream_found": false,
+      "fixed_found": true
+    },
+    {
+      "profile": "personal",
+      "native_agent": "omp",
+      "native_status": "idle",
+      "native_session_reported": false,
+      "processes": [
+        {
+          "name": "omp",
+          "reported_argc": 0,
+          "fields": [
+            "cwd",
+            "name",
+            "pid"
+          ]
+        }
+      ],
+      "upstream_found": false,
+      "fixed_found": true
+    },
+    {
+      "profile": "default",
+      "native_agent": "omp",
+      "native_status": "idle",
+      "native_session_reported": false,
+      "processes": [
+        {
+          "name": "omp",
+          "reported_argc": 0,
+          "fields": [
+            "cwd",
+            "name",
+            "pid"
+          ]
+        }
+      ],
+      "upstream_found": false,
+      "fixed_found": true
+    }
+  ],
+  "herdr": {
+    "type": "pong",
+    "version": "0.9.5",
+    "protocol": 22,
+    "capabilities": {
+      "live_handoff": true,
+      "detached_server_daemon": false,
+      "endpoint_protocol_generation": 1,
+      "surface_interest": true,
+      "health_check": true,
+      "ssh_agent_registration": true
+    }
+  },
+  "omp_version": "omp/18.11.1",
+  "status": "passed"
+}
