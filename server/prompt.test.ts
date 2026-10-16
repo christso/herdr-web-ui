@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { InteractivePrompt } from "../shared/protocol.ts";
 
-import { answerKeys, claudeClearableDraft, claudeInputBoxText, claudeInputDraft, claudeInputEmpty, viewportShowsLive, removedInvisible, noteSubmitted, codexQuestionsCollapsed, codexQueuedPrompt, handlePromptRequest, modelListWaits, openOmoAsks, parseClaudeSuggestion, parseFallbackPrompt, parseInteractivePrompt, pendingOmoAsk, promptWaitEnded, claudeRestoredDraft, lastChatSubmitted } from "./prompt.ts";
+import { answerKeys, hermesInputDraft, claudeClearableDraft, claudeInputBoxText, claudeInputDraft, claudeInputEmpty, viewportShowsLive, removedInvisible, noteSubmitted, codexQuestionsCollapsed, codexQueuedPrompt, handlePromptRequest, modelListWaits, openOmoAsks, parseClaudeSuggestion, parseFallbackPrompt, parseInteractivePrompt, pendingOmoAsk, promptWaitEnded, claudeRestoredDraft, lastChatSubmitted } from "./prompt.ts";
 
 const labels = (prompt: InteractivePrompt | null) => prompt?.options.map((option) => option.label);
 // Real omo-ai 5.1.30 pane.read captures at 120 and 45 columns, with the recorded open calls.
@@ -464,6 +464,32 @@ Enter to select · ↑/↓ to navigate · Esc to cancel
     expect(trust).toMatchObject({ kind: "approval", title: "Trust this folder?", body: "Codex can read, edit, and run files here, subject to your permission settings." });
     expect(labels(trust)).toEqual(["Trust and continue", "Back to Agent Command Center"]);
     expect(answerKeys(trust!, { option_index: 0 })).toEqual([{ keys: ["enter"] }]);
+  });
+
+  test("parses Codex's folder trust prompt when its hint ends with esc quit", () => {
+    const trust = parseInteractivePrompt("codex", `
+  Folder access
+  /tmp/prompt-lab-codex
+  Trust this folder? Codex can read, edit, and run files here, subject to your permission settings.
+› 1. Trust and continue
+  2. Open restricted
+  enter continue · esc quit
+`);
+    expect(trust).toMatchObject({ kind: "approval", title: "Trust this folder?" });
+    expect(labels(trust)).toEqual(["Trust and continue", "Open restricted"]);
+    expect(answerKeys(trust!, { option_index: 0 })).toEqual([{ keys: ["enter"] }]);
+  });
+
+  test("does not read Codex's update prompt as an approval under a question-like line", () => {
+    expect(parseInteractivePrompt("codex", `
+• Would you like to continue with the tests next?
+
+  Update available! 0.162.1 -> 0.163.0
+› 1. Update now
+  2. Skip
+  3. Skip until next version
+  enter continue · esc skip
+`)).toBeNull();
   });
 
   test("ignores unknown agents, stale transcript menus, and ordinary output", () => {
@@ -1017,6 +1043,81 @@ ${rows}
 
   test("does not take a rule of another program under the panel for Claude's own", () => {
     expect(parseInteractivePrompt("claude", question + "\n⏺ Done.\n──── user@host:~/project ─\n")).toBeNull();
+  });
+});
+
+describe("Claude's review of several answers in a named session", () => {
+  // live-captured from Claude Code 2.1.299 (CLAUDE_CODE_NO_FLICKER=1, `--name`, 120x40): the review
+  // has no key hint of its own, its last row is Cancel, and the session's rule follows it
+  const rule = `${"─".repeat(107)} session-name ─`;
+  const review = `❯ ASKREPRO 7
+
+${"─".repeat(120)}
+←  ☒ Route  ☒ Author  ☒ Notes  ✔ Submit  →
+
+Review your answers
+
+ ● Which way should the PR go?
+   → my own words typed in the chat my own words t
+ ● Who should author the commits?
+   → Repo owner
+ ● What should the release notes say?
+   → my own words typed in the chat my own words typed in the chat my own w
+
+Ready to submit your answers?
+
+❯ 1. Submit answers
+  2. Cancel
+`;
+  const withRule = (rows = "") => `${review}${rule}\n${rows ? `\n${rows}\n` : ""}`;
+  // a review taller than the pane, same capture: the tabs and the heading are cut off at the top
+  const tall = `
+ │ ● The PC splits traffic between the main server and the reserve almost evenly, because both servers sit in the same
+ │   city and answer equally fast. Which way should we go?
+   → my own words typed in the chat my own words typed in the chat my own words typed in the chat my own words typed in
+   the chat my own words typed in the chat
+ │ ● After every subscription update the client restarts the tunnel. How often should the subscription be updated?
+   → Once a day
+ │ ● The client has no leak protection. What should we do?
+   → my own words typed in the chat my own words typed in the chat my own words typed in the chat my own words typed in
+   my own words typed in the chat my o
+
+Ready to submit your answers?
+
+❯ 1. Submit answers
+  2. Cancel
+${rule}
+`;
+
+  test("reads the review under the session's rule, with or without the task list", () => {
+    for (const rows of ["", "  3 tasks (0 done, 1 in progress, 2 open)\n  ◼ 구현\n    Running tests…\n  ◻ 검증\n  ◻ 정리"]) {
+      const card = parseInteractivePrompt("claude", withRule(rows));
+      expect(card).toMatchObject({ kind: "menu", title: "Review your answers", question: "Ready to submit your answers?", custom_option_index: null });
+      expect(labels(card)).toEqual(["Submit answers", "Cancel"]);
+      expect(card?.body).toContain("→ Repo owner");
+      expect(answerKeys(card!, { option_index: 0 })).toEqual([{ keys: ["enter"] }]);
+    }
+  });
+
+  test("reads a review cut off at the top of the pane, its tabs and heading out of view", () => {
+    const card = parseInteractivePrompt("claude", tall);
+    expect(card).toMatchObject({ kind: "menu", title: "Review your answers", question: "Ready to submit your answers?" });
+    expect(labels(card)).toEqual(["Submit answers", "Cancel"]);
+    expect(card?.body).toContain("→ Once a day");
+  });
+
+  test("does not take an answered review above later output and the session's rule for an open one", () => {
+    expect(parseInteractivePrompt("claude", `${review}\n⏺ Done.\n\n${rule}\n`)).toBeNull();
+    expect(parseInteractivePrompt("claude", `${review}\n⏺ Done.\n──── user@host:~/project ─\n`)).toBeNull();
+  });
+
+  test("takes no screen without the review's own tabs, answers and rows for one", () => {
+    // no tabs and no answer of the review's above the question: some other text that says the same
+    expect(parseInteractivePrompt("claude", `Notes for the release\n\nReady to submit your answers?\n\n❯ 1. Submit answers\n  2. Cancel\n${rule}\n`)).toBeNull();
+    // cut off at the top, but the rows are not the review's
+    expect(parseInteractivePrompt("claude", tall.replace("1. Submit answers", "1. Ship it"))).toBeNull();
+    // tabs far above, with another panel's rule between them and the question: not this review's
+    expect(parseInteractivePrompt("claude", `←  ☒ Route  ✔ Submit  →\n ● Which way?\n   → Fork\n${"─".repeat(120)}\nReady to submit your answers?\n\n❯ 1. Submit answers\n  2. Cancel\n`)).toBeNull();
   });
 });
 
@@ -2939,6 +3040,46 @@ ${"─".repeat(120)}
     for (const at of [0, 2, 3, 4]) expect(parseInteractivePrompt("claude", claudeEffort(at))!.id).toBe(prompt.id);
     // herdr reports the pane idle while the slider waits: no other agent's reader takes it for its own
     for (const agent of ["codex", "omp", "pi", "omo", ""]) expect(parseInteractivePrompt(agent, captured)).toBeNull();
+  });
+
+  test("reads 2.1.301's slider, which describes the level between the names and the hint", () => {
+    // captures from Claude Code 2.1.301: one line under the names at low, two at max
+    const rule = "▔".repeat(120);
+    const low = `❯ /effort
+${rule}
+   Effort
+
+                             Faster                             Smarter
+                             ─▲────────────────────────────────────────      Ultracode  off
+                             low     medium     high     xhigh      max      Tab to toggle
+
+                                    ~0.7x the estimated cost of medium (the default)
+
+
+   ←/→ to adjust · Enter to confirm · s for this session only · Esc to cancel
+`;
+    const max = `❯ /effort
+${rule}
+   Effort
+
+                             Faster                             Smarter
+                             ────────────────────────────────────────▲─      Ultracode  off
+                             low     medium     high     xhigh      max      Tab to toggle
+
+    May use excessive tokens resulting in long response times or overthinking. Use sparingly for the hardest tasks.
+    (~5.2x)
+
+   ←/→ to adjust · Enter to confirm · s for this session only · Esc to cancel
+`;
+    const atLow = parseInteractivePrompt("claude", low)!;
+    expect(labels(atLow)).toEqual(["low", "medium", "high", "xhigh", "max"]);
+    expect(answerKeys(atLow, { option_index: 2 })).toEqual([{ keys: ["right"] }, { keys: ["right"] }, { text: "s" }]);
+    const atMax = parseInteractivePrompt("claude", max)!;
+    expect(atMax.id).toBe(atLow.id);
+    expect(answerKeys(atMax, { option_index: 3 })).toEqual([{ keys: ["left"] }, { text: "s" }]);
+    // the description a narrow pane wrapped over more lines is still between the names and the hint
+    const wrapped = max.replace("Use sparingly for the hardest tasks.", "\n    Use sparingly\n    for the hardest tasks.");
+    expect(labels(parseInteractivePrompt("claude", wrapped)!)).toEqual(["low", "medium", "high", "xhigh", "max"]);
   });
 
   test("moves with ←/→ from the level ▲ is over and picks with s, never with Enter", () => {
@@ -4918,5 +5059,46 @@ describe("Claude Code's model list under a hint wrapped anywhere", () => {
     const quoted = `${CLAUDE_MODEL_CLOSED}⏺ Example: Enter to set as default · s to use this session only · Esc to\n  cancel\n──────────── Summary ─\n`;
     expect(modelListWaits("claude", quoted)).toBe(false);
     expect(modelListWaits("claude", `⏺ Enter to set as default · s to use this session only · Esc to cancel\n`)).toBe(false);
+  });
+});
+
+describe("hermesInputDraft", () => {
+  // input rows of real Hermes 0.21.5 screens (herdr pane read --source visible --format ansi)
+  const CLASSIC_HINT = "\u001b[0m\u001b[38;5;230m❯ \u001b[0m\u001b[3m\u001b[38;5;136mType / to browse commands, or Ctrl+P for the palette\u001b[0m";
+  const CLASSIC_TYPED = "\u001b[0m\u001b[38;5;230m❯ \u001b[0mReply with only the word";
+  const TUI_HINT = " \u001b[0m\u001b[1m\u001b[38;2;255;248;220m❯ \u001b[0m\u001b[38;2;255;255;255m\u001b[48;2;184;134;11mT\u001b[0m\u001b[38;2;184;134;11mry \"how does the config loader work?\"\u001b[0m";
+  const TUI_TYPED = " \u001b[0m\u001b[1m\u001b[38;2;255;248;220m❯ \u001b[0m\u001b[38;2;255;248;220mReply with only the word\u001b[0m              ";
+  const screen = (input: string) => `● ❯ an earlier message, echoed\n────────\n${input}\n────────`;
+  const plain = (ansi: string) => ansi.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "");
+  const draft = (input: string, colors: string | null = screen(input)) => hermesInputDraft(plain(screen(input)), colors);
+
+  test("knows text typed into the classic CLI or the TUI for a draft", () => {
+    expect(draft(CLASSIC_TYPED)).toBe(true);
+    expect(draft(TUI_TYPED)).toBe(true);
+    // a `❯` the user typed is text, not the prompt
+    expect(draft("\u001b[0m\u001b[38;5;230m❯ \u001b[0mreview ❯ ")).toBe(true);
+  });
+
+  test("takes neither interface's own hint for a draft: the classic italic placeholder, the TUI's cursor chip", () => {
+    expect(draft(CLASSIC_HINT)).toBe(false);
+    expect(draft(TUI_HINT)).toBe(false);
+  });
+
+  test("reads an input with nothing after the prompt as empty, without colors", () => {
+    expect(draft(" \u001b[1m❯ \u001b[0m", null)).toBe(false);
+  });
+
+  test("knows a draft that holds a `❯` without colors too, and reads an empty prompt row with colors as empty", () => {
+    expect(draft("\u001b[0m\u001b[38;5;230m❯ \u001b[0mreview ❯ ", null)).toBe(true);
+    expect(draft("\u001b[0m\u001b[38;5;230m❯ \u001b[0m")).toBe(false);
+  });
+
+  test("counts any text as a draft without colors verified to show that screen", () => {
+    expect(draft(CLASSIC_HINT, null)).toBe(true);
+    expect(draft(TUI_HINT, screen(CLASSIC_TYPED))).toBe(true);
+  });
+
+  test("does not know a screen without an input row to be empty", () => {
+    expect(hermesInputDraft("Approve this command?\n  [1] Approve once\n", null)).toBe(true);
   });
 });
