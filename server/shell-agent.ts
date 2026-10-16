@@ -9,7 +9,7 @@
  *   command is run by the Enter key;
  * - process_info names only the shell, so the shell's children say whether the agent runs.
  */
-import type { AgentProfile } from "./agent-profiles.ts";
+import type { AgentLauncher } from "./agent-profiles.ts";
 import { isAgentName } from "../shared/agent-name.ts";
 import { freeAgentName } from "./agent-name.ts";
 import { agentGet, agentRename, HerdrError, paneProcessInfo, paneSendText, sessionSnapshot, type ProcessInfo as NativeProcessInfo } from "./herdr/client.ts";
@@ -99,19 +99,19 @@ export async function startShellAgent(kind: string, paneId: string, args: string
 }
 
 /** Same foreground ownership evidence as native agent.start; an unreadable job is never safe. */
-export function availableProfileShell(info: NativeProcessInfo | undefined): PaneShell | null {
+export function availableLauncherShell(info: NativeProcessInfo | undefined): PaneShell | null {
   const pid = info?.shell_pid;
   const processes = info?.foreground_processes;
   if (!pid || info?.foreground_process_group_id !== pid || !processes?.length || processes.some((entry) => entry.pid !== pid)) return null;
   const name = processes[0]!.name.split(/[\\/]/).pop()!.replace(/^-+/, "").replace(/\.exe$/, "").toLowerCase();
   if (["sh", "bash", "dash", "zsh", "fish", "ksh", "mksh"].includes(name)) return "posix";
-  // Other native shells have different quoting rules; offer profiles only where we can quote safely.
+  // Other native shells have different quoting rules; offer launchers only where we can quote safely.
   return null;
 }
 
-/** A profile starts only in the root pane just created by its request. No browser command enters here. */
-export async function startAgentProfile(profile: AgentProfile, paneId: string, name?: string, timeoutMs = 60_000): Promise<void> {
-  if (process.platform !== "linux" && process.platform !== "darwin") throw new Error("Agent profiles are available on Linux and macOS only");
+/** A launcher starts only in the root pane just created by its request. No browser command enters here. */
+export async function startAgentLauncher(launcher: AgentLauncher, paneId: string, name?: string, timeoutMs = 60_000): Promise<void> {
+  if (process.platform !== "linux" && process.platform !== "darwin") throw new Error("Custom launchers are available on Linux and macOS only");
   if (name && !isAgentName(name)) throw new HerdrError("invalid_agent_name", "Invalid agent name");
   if (name && (await sessionSnapshot()).agents.some((entry) => entry.name === name)) throw new HerdrError("agent_name_taken", "That agent name is already in use");
   const deadline = Date.now() + timeoutMs;
@@ -122,7 +122,7 @@ export async function startAgentProfile(profile: AgentProfile, paneId: string, n
       throw error;
     });
     if (agent && (agent.agent || agent.name || agent.launch_pending)) throw new HerdrError("agent_pane_busy", "The created pane is already running an agent. Open its terminal to continue.");
-    return availableProfileShell(await paneProcessInfo(paneId));
+    return availableLauncherShell(await paneProcessInfo(paneId));
   };
   let ready: PaneShell | null = null;
   while (Date.now() < shellDeadline) {
@@ -132,22 +132,22 @@ export async function startAgentProfile(profile: AgentProfile, paneId: string, n
   }
   // A second observation immediately before writing protects a shell that changed during startup.
   if (ready === null || await shell() !== ready) throw new HerdrError("agent_pane_busy", "The created pane has no available interactive shell. Open its terminal to continue.");
-  await paneSendText(paneId, shellCommandLine(ready, profile.command, profile.args ?? []) + "\n");
+  await paneSendText(paneId, shellCommandLine(ready, launcher.command, []) + "\n");
   while (Date.now() < deadline) {
     const agent = await agentGet(paneId).catch((error: unknown) => {
       if (error instanceof HerdrError && error.code === "agent_not_found") return null;
       throw error;
     });
-    if (agent?.agent === profile.kind && (agent.agent_status === "idle" || agent.agent_status === "done")) {
+    if (agent?.agent === launcher.kind && (agent.agent_status === "idle" || agent.agent_status === "done")) {
       for (let attempt = 0; ; attempt += 1) {
-        try { await agentRename(paneId, name || freeAgentName(profile.kind, (await sessionSnapshot()).agents.filter((entry) => entry.pane_id !== paneId).map((entry) => entry.name))); break; }
+        try { await agentRename(paneId, name || freeAgentName(launcher.kind, (await sessionSnapshot()).agents.filter((entry) => entry.pane_id !== paneId).map((entry) => entry.name))); break; }
         catch (error) { if (name || attempt >= 2 || !(error instanceof HerdrError) || error.code !== "agent_name_taken") throw error; }
       }
       return;
     }
-    if (agent?.agent && agent.agent !== profile.kind) throw new Error("The profile started a different agent. Open the created pane's terminal to continue.");
-    if (agent?.agent_status === "blocked") throw new Error("The profile needs attention during startup. Open the created pane's terminal to continue.");
+    if (agent?.agent && agent.agent !== launcher.kind) throw new Error("The launcher started a different agent. Open the created pane's terminal to continue.");
+    if (agent?.agent_status === "blocked") throw new Error("The launcher needs attention during startup. Open the created pane's terminal to continue.");
     await Bun.sleep(250);
   }
-  throw new Error("The profile did not become ready within 60 seconds. Open the created pane's terminal to inspect startup, then choose Default or check the launcher on this PC.");
+  throw new Error("The launcher did not become ready within 60 seconds. Open the created pane's terminal to inspect startup, then choose Default or check the launcher on this PC.");
 }

@@ -767,10 +767,12 @@ export interface RepoDiffFilePatch {
 export interface AgentKind {
   kind: string;
   label: string;
-  /** whether the server finds the agent's command (its kind) on its PATH; absent from an older bridge */
+  /** whether the server finds the agent's command on PATH or in a supported client's ordinary user-bin directories; absent from an older bridge */
   installed?: boolean;
-  /** Named launchers configured on this PC; executable paths and arguments stay on the host. */
+  /** Native profile IDs discovered on this PC. */
   profiles?: { id: string; label: string }[];
+  /** Installed shell wrappers; paths and environment stay on the host. */
+  launchers?: { id: string; label: string }[];
 }
 
 /**
@@ -797,7 +799,7 @@ export interface IntegrationsResponse {
 export interface CreateWorkspaceRequest {
   cwd?: string | null;
   label?: string | null;
-  agent?: { kind: string; name?: string; args?: string[]; profile?: string } | null;
+  agent?: { kind: string; name?: string; args?: string[]; profile?: string; launcher?: string } | null;
 }
 
 /** POST /api/tab/move: the boundary is counted BEFORE removing the source tab. */
@@ -822,7 +824,7 @@ export interface CreateWorktreeRequest {
   /** an absolute checkout path; herdr's `<worktrees.directory>/<repo>/<branch>` when absent */
   path?: string | null;
   /** started in the new workspace's root pane, as /api/workspace/create starts one */
-  agent?: { kind: string; name?: string; args?: string[]; profile?: string } | null;
+  agent?: { kind: string; name?: string; args?: string[]; profile?: string; launcher?: string } | null;
 }
 
 /** POST /api/worktree/open: one of path or branch names the checkout. */

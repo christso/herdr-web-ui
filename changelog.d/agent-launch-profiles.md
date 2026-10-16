@@ -1,2 +1,4 @@
 ### Added
-- Choose host-configured Codex, Oh My Pi and Pi launch profiles when creating a workspace, tab or worktree on Linux and macOS.
+- Discover existing Codex and Oh My Pi native profile IDs and installed Codex, Oh My Pi, Pi and
+  Claude Code shell launchers on the selected PC when creating a workspace, tab or worktree on
+  Linux and macOS.

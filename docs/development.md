@@ -665,4 +665,4 @@ input regression matrix.
 | [`site/`](../site/) | The website, built by `scripts/build-site.ts` and deployed by GitHub Pages |
 | [`DESIGN.md`](../DESIGN.md) | Design tokens and UI conventions |
 
-Agent launchers can be configured per PC; see [Agent launch profiles](agent-profiles.md).
+Native profiles and installed shell launchers are discovered on each PC; see [Native profiles and launchers](agent-profiles.md).

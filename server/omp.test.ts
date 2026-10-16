@@ -37,6 +37,14 @@ it("keeps a process's sessions where its profile puts them, and nowhere it canno
   expect(ompAgentDir(["omp", "--profile"], null, home)).toBeNull();
 });
 
+it("uses the pane's native config directory for default and named profiles", () => {
+  const env = ["PI_CONFIG_DIR=.custom-omp"];
+  expect(ompAgentDir(["omp"], env, "/home/u")).toBe("/home/u/.custom-omp/agent");
+  expect(ompAgentDir(["omp", "--profile", "work"], env, "/home/u")).toBe("/home/u/.custom-omp/profiles/work/agent");
+  expect(ompAgentDir(["omp", "--profile", "../escape"], env, "/home/u")).toBeNull();
+  expect(ompAgentDir(["omp", "--session-dir", "/tmp/s"], env, "/home/u")).toBeNull();
+});
+
 it("reads omp's breadcrumb, whose transcript starts with a title record before the header", () => {
   const home = realpathSync(mkdtempSync(join(tmpdir(), "omp-breadcrumb-")));
   try {

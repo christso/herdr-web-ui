@@ -865,6 +865,22 @@ describe("omo transcript resolution", () => {
 });
 
 describe("omp session store", () => {
+  it("keeps configured native roots contained for default and named profiles", () => {
+    const previous = process.env["PI_CONFIG_DIR"];
+    process.env["PI_CONFIG_DIR"] = ".custom-omp";
+    try {
+      const root = "/home/u/.custom-omp", store = `${root}/profiles/work/agent/sessions`;
+      expect(ompSessionStore(`${root}/agent/sessions/project/session.jsonl`, "/home/u")).toBe(`${root}/agent/sessions`);
+      expect(ompSessionStore(`${store}/project/session.jsonl`, "/home/u")).toBe(store);
+      expect(ompSessionStore(`${root}-evil/profiles/work/agent/sessions/id.jsonl`, "/home/u")).toBeNull();
+      expect(ompSessionStore(`${store}/../../../../../etc/id.jsonl`, "/home/u")).toBeNull();
+      expect(ompSessionStore("/home/u/.omp/profiles/work/agent/sessions/id.jsonl", "/home/u")).toBeNull();
+      expect(ompSessionStore("C:\\Users\\u\\.custom-omp\\profiles\\work\\agent\\sessions\\id.jsonl", "C:\\Users\\u", win32)).toBe("C:\\Users\\u\\.custom-omp\\profiles\\work\\agent\\sessions");
+    } finally {
+      if (previous === undefined) delete process.env["PI_CONFIG_DIR"]; else process.env["PI_CONFIG_DIR"] = previous;
+    }
+  });
+
   it("accepts the path herdr reports only inside the user's own store", () => {
     const home = "/home/u", store = "/home/u/.omp/agent/sessions";
     expect(ompSessionStore(`${store}/project/session.jsonl`, home)).toBe(store);

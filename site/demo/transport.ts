@@ -30,14 +30,15 @@ import terminalFixture from "./fixtures/terminal.json";
 
 const DEMO_VERSION = "demo";
 const demoAgents: AgentKind[] = agentsFixture.agents.map((agent) => ({ ...agent,
-  ...(["codex", "omp", "pi"].includes(agent.kind) ? { profiles: [{ id: "compound", label: "Compound" }, { id: "review", label: "Review" }] } : {}),
+  ...(["codex", "omp"].includes(agent.kind) ? { profiles: [{ id: "compound-engineering", label: "compound-engineering" }, { id: "review", label: "review" }] } : {}),
+  ...(["codex", "omp", "pi", "claude"].includes(agent.kind) ? { launchers: [{ id: `${agent.kind}-compound`, label: `${agent.kind}-compound` }] } : {}),
 }));
-function demoProfileFault(value: unknown): Response | null {
+function demoLaunchFault(value: unknown): Response | null {
   if (value === null || typeof value !== "object") return null;
-  const agent = value as { kind?: unknown; profile?: unknown; args?: unknown };
-  if (agent.profile === undefined) return null;
-  if (agent.args !== undefined || Object.keys(agent).some((key) => !["kind", "name", "profile"].includes(key))
-    || !demoAgents.find((entry) => entry.kind === agent.kind)?.profiles?.some((profile) => profile.id === agent.profile)) {
+  const agent = value as { kind?: unknown; profile?: unknown; launcher?: unknown; args?: unknown };
+  if (agent.profile === undefined && agent.launcher === undefined) return null;
+  if (agent.args !== undefined || (agent.profile !== undefined && agent.launcher !== undefined) || Object.keys(agent).some((key) => !["kind", "name", "profile", "launcher"].includes(key))
+    || (agent.launcher !== undefined ? !demoAgents.find((entry) => entry.kind === agent.kind)?.launchers?.some((launcher) => launcher.id === agent.launcher) : !demoAgents.find((entry) => entry.kind === agent.kind)?.profiles?.some((profile) => profile.id === agent.profile))) {
     return error("invalid_agent_profile", "The selected agent profile is unavailable on this PC", 400);
   }
   return null;
@@ -551,7 +552,7 @@ async function route(url: URL, method: string, init: RequestInit | undefined, in
       || (agent.args !== undefined && (!Array.isArray(agent.args) || !agent.args.every((arg) => typeof arg === "string"))))) {
       return error("invalid_agent", "agent.kind is required; agent.name must be a string and agent.args must be an array of strings", 400);
     }
-    const profileFault = demoProfileFault(agent);
+    const profileFault = demoLaunchFault(agent);
     if (profileFault) return profileFault;
     let checkout: Omit<WorktreeEntry, "open_workspace_id"> | undefined;
     if (creating) {
@@ -929,7 +930,7 @@ async function route(url: URL, method: string, init: RequestInit | undefined, in
   }
   if (path === "/api/workspace/create") {
     const body = await bodyOf(init, input);
-    const profileFault = demoProfileFault(body["agent"]);
+    const profileFault = demoLaunchFault(body["agent"]);
     if (profileFault) return profileFault;
     const agent = (body["agent"] as { kind?: string } | null | undefined)?.kind ?? null;
     const cwd = String(body["cwd"] ?? "/home/demo/new-project");
@@ -940,7 +941,7 @@ async function route(url: URL, method: string, init: RequestInit | undefined, in
   }
   if (path === "/api/tab/create") {
     const body = await bodyOf(init, input);
-    const profileFault = demoProfileFault(body["agent"]);
+    const profileFault = demoLaunchFault(body["agent"]);
     if (profileFault) return profileFault;
     const snap = snapshot();
     const workspace = snap.workspaces.find((w) => w.workspace_id === body["workspace_id"]);
