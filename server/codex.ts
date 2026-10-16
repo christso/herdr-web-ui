@@ -2,7 +2,7 @@
  * conversation records belong in chat; developer prompts and terminal chrome do not. */
 import { Database } from "bun:sqlite";
 import { closeSync, openSync, readdirSync, readFileSync, readlinkSync, readSync, realpathSync, statSync } from "node:fs";
-import { open, readFile, stat } from "node:fs/promises";
+import { open, readFile, realpath, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { StringDecoder } from "node:string_decoder";
 import nodePath, { isAbsolute, join, type PlatformPath } from "node:path";
@@ -343,7 +343,8 @@ export function parseCodexTranscript(text: string, maxTurns = 100): Conversation
 export const defaultCodexHome = (): string => process.env["CODEX_HOME"] || join(homedir(), ".codex");
 
 /** What processCodexHome found, by pid and argv, and when (PROCESS_HOME_TTL_MS). */
-const processHomes = new Map<string, { home: string | null; at: number }>();
+type CodexProcessHome = { home: string | null; store: string | null };
+const processHomes = new Map<string, CodexProcessHome & { at: number }>();
 /**
  * A visible chat reads its conversation up to every 2 s while the transcript changes, the
  * conversation monitor re-resolves its file every 5 s, and macOS reads the environment with
@@ -358,21 +359,28 @@ const PROCESS_HOME_TTL_MS = 30_000;
  * kept for PROCESS_HOME_TTL_MS under the process's pid and argv.
  */
 export async function processCodexHome(pid: number, argv: readonly string[] = []): Promise<string | null> {
+  return (await processCodexHomeInfo(pid, argv)).home;
+}
+
+async function processCodexHomeInfo(pid: number, argv: readonly string[] = []): Promise<CodexProcessHome> {
   const key = `${pid}\0${argv.join("\0")}`;
   const known = processHomes.get(key);
-  if (known && Date.now() - known.at < PROCESS_HOME_TTL_MS) return known.home;
+  if (known && Date.now() - known.at < PROCESS_HOME_TTL_MS) return known;
   const home = await readProcessCodexHome(pid);
   processHomes.delete(key);
-  processHomes.set(key, { home, at: Date.now() });
+  processHomes.set(key, { ...home, at: Date.now() });
   if (processHomes.size > 256) processHomes.delete(processHomes.keys().next().value!);
   return home;
 }
 
-async function readProcessCodexHome(pid: number): Promise<string | null> {
+async function readProcessCodexHome(pid: number): Promise<CodexProcessHome> {
   let home: string | null = null;
+  let userHome: string | null = null;
   try {
     if (process.platform === "linux") {
-      home = (await readFile(`/proc/${pid}/environ`, "utf8")).split("\0").find((entry) => entry.startsWith("CODEX_HOME="))?.slice(11) || null;
+      const env = (await readFile(`/proc/${pid}/environ`, "utf8")).split("\0");
+      home = env.find((entry) => entry.startsWith("CODEX_HOME="))?.slice(11) || null;
+      userHome = env.find((entry) => entry.startsWith("HOME="))?.slice(5) || null;
     } else if (process.platform === "darwin") {
       const child = Bun.spawn(["/bin/ps", "-E", "-ww", "-p", String(pid), "-o", "command="], { stdout: "pipe", stderr: "ignore" });
       const timer = setTimeout(() => child.kill(), 3000);
@@ -382,12 +390,17 @@ async function readProcessCodexHome(pid: number): Promise<string | null> {
         // ponytail: a value holding ` NAME=` is cut there, and with none in the environment an
         // argument spelled CODEX_HOME=/path would be taken. /proc on Linux has neither problem
         const text = await new Response(child.stdout).text();
-        await child.exited;
+        if (await child.exited !== 0) return { home: null, store: null };
         home = codexHomeInPsLine(text);
+        userHome = /(?:^|\s)HOME=(.*?)(?=\s+[A-Za-z_][A-Za-z0-9_]*=|\s*$)/.exec(text)?.[1] || null;
       } finally { clearTimeout(timer); }
     }
-  } catch { home = null; }
-  return home !== null && (await isCodexHomeDir(home)) ? home : null;
+  } catch { return { home: null, store: null }; }
+  const explicit = home !== null && await isCodexHomeDir(home) ? home : null;
+  const fallback = home === null && userHome !== null ? join(userHome, ".codex") : null;
+  const store = explicit ?? (fallback !== null && await isCodexHomeDir(fallback) ? fallback : null);
+  try { return { home: explicit, store: store === null ? null : await realpath(store) }; }
+  catch { return { home: explicit, store: null }; }
 }
 
 /** An absolute path to a directory that is there: `ps` cannot tell an argument from the environment, a store can be checked. */
@@ -482,7 +495,7 @@ export function sameDirectory(left: string, right: string): boolean {
 export function codexPeersIn(panes: readonly HerdrPane[], paneId: string, cwd: string): HerdrPane[] {
   // the agent first: sameDirectory can ask the file system, and only Codex panes need it
   return panes.filter((pane) => pane.pane_id !== paneId && (pane.agent ?? pane.agent_session?.agent) === "codex"
-    && pane.cwd != null && sameDirectory(pane.cwd, cwd));
+    && (pane.foreground_cwd ?? pane.cwd) != null && sameDirectory((pane.foreground_cwd ?? pane.cwd)!, cwd));
 }
 
 /**
@@ -1090,11 +1103,11 @@ const VALUELESS_OPTIONS = new Set([
 ]);
 
 /** A pane's Codex executables (or interpreter scripts), and their pids as one key. */
-async function codexProcessesOf(paneId: string): Promise<{ list: { pid: number; argv?: string[] }[]; key: string }> {
+async function codexProcessesOf(paneId: string): Promise<{ list: { pid: number; argv?: string[]; cwd?: string }[]; key: string }> {
   const processInfo = await paneProcessInfo(paneId);
   // herdr's schema allows `argv: null`; this reader has always read argv as absent or a list
   // (the cast is the inline result type herdrRpc was given before the typed seam)
-  const list = ((processInfo?.foreground_processes ?? []) as { pid: number; argv?: string[] }[])
+  const list = ((processInfo?.foreground_processes ?? []) as { pid: number; argv?: string[]; cwd?: string }[])
     .map((foreground) => {
       if (foreground.argv?.length || process.platform !== "linux") return foreground;
       // herdr can report only pid/name. Read this process, never infer argv from
@@ -1126,6 +1139,24 @@ async function codexProcessesOf(paneId: string): Promise<{ list: { pid: number; 
   return { list, key: list.map((process) => process.pid).sort((left, right) => left - right).join(",") };
 }
 
+/** A different, positively identified store cannot own this pane's conversation. */
+async function codexPeersInStore(panes: readonly HerdrPane[], paneId: string, cwd: string): Promise<HerdrPane[]> {
+  const candidates = [...codexPeersIn(panes, paneId, cwd), ...panes.filter((pane) =>
+    pane.pane_id !== paneId && (pane.agent ?? pane.agent_session?.agent) === "codex"
+    && (pane.foreground_cwd ?? pane.cwd) == null)];
+  const own = (await codexProcessesOf(paneId)).list[0];
+  const home = own ? (await processCodexHomeInfo(own.pid, own.argv)).store : null;
+  if (home === null) return candidates;
+  const peers = await Promise.all(candidates.map(async (pane) => {
+    try {
+      const first = (await codexProcessesOf(pane.pane_id)).list[0];
+      const store = first ? (await processCodexHomeInfo(first.pid, first.argv)).store : null;
+      return store !== null && !sameDirectory(store, home) ? null : pane;
+    } catch { return pane; }
+  }));
+  return peers.filter((pane): pane is HerdrPane => pane !== null);
+}
+
 /** When each pane last looked at the other Codex panes for a set of threads, and which panes those were. */
 const claimChecks = new Map<string, { panes: string; at: number }>();
 const CLAIM_CHECK_MS = 5000;
@@ -1146,7 +1177,7 @@ const CLAIM_CHECK_MS = 5000;
 async function claimedByOtherPanes(paneId: string, cwd: string, threads: string[], own: string[], firsts: ReadonlyMap<string, string>, home: string, sessionPanes?: HerdrPane[]): Promise<Set<string>> {
   const claimed = new Set<string>();
   const key = `${paneId}\0${[...threads].sort().join("\0")}`;
-  const panes = codexPeersIn(sessionPanes ?? (await sessionSnapshot()).panes, paneId, cwd).slice(0, 8);
+  const panes = (await codexPeersInStore(sessionPanes ?? (await sessionSnapshot()).panes, paneId, cwd)).slice(0, 8);
   // a pane that appeared since is looked at at once
   const last = claimChecks.get(key);
   const seen = panes.map((pane) => pane.pane_id).join();
@@ -1185,7 +1216,7 @@ async function claimedByOtherPanes(paneId: string, cwd: string, threads: string[
 
 /** Whether another Codex pane in this cwd was started as `codex resume <thread>`. */
 async function resumedElsewhere(paneId: string, cwd: string, thread: string, sessionPanes?: HerdrPane[]): Promise<boolean> {
-  const panes = codexPeersIn(sessionPanes ?? (await sessionSnapshot()).panes, paneId, cwd);
+  const panes = await codexPeersInStore(sessionPanes ?? (await sessionSnapshot()).panes, paneId, cwd);
   for (const pane of panes) {
     try {
       if (resumedThread((await codexProcessesOf(pane.pane_id)).list.map((process) => process.argv ?? [])) === thread) return true;
@@ -1279,8 +1310,8 @@ async function shortThreadFromProcess(
   let db: Database | undefined;
   try {
     const peers = panes ?? (await sessionSnapshot()).panes;
-    if (peers.some((pane) => pane.pane_id !== paneId
-      && (pane.agent ?? pane.agent_session?.agent) === "codex" && pane.cwd == null)) return null;
+    const storePeers = await codexPeersInStore(peers, paneId, cwd);
+    if (storePeers.some((pane) => (pane.foreground_cwd ?? pane.cwd) == null)) return null;
     db = new Database(join(home, "state_5.sqlite"), { readonly: true, create: false });
     const columns = new Set(db.query<{ name: string }, []>("SELECT name FROM pragma_table_info('threads')").all().map((column) => column.name));
     if (!columns.has("first_user_message") || !columns.has("source")) return null;
@@ -1299,7 +1330,7 @@ async function shortThreadFromProcess(
     if (candidates === null) return null;
     const path = matchCodexFirstExchange(screen, candidates, notBefore);
     if (path === null || theirs([path], paneId).length !== 1) return null;
-    const peerScreens = await Promise.all(codexPeersIn(peers, paneId, cwd).map((peer) =>
+    const peerScreens = await Promise.all(storePeers.map((peer) =>
       paneRead({ paneId: peer.pane_id, source: "recent", lines: 400, stripAnsi: true })));
     const own = candidates.filter((candidate) => candidate.path === path);
     for (const peer of peerScreens) {
@@ -1369,7 +1400,8 @@ async function openRollouts(paneId: string, home: string): Promise<{ codexProces
 export async function codexOpenRollout(paneId: string, cwd: string | null | undefined, home = defaultCodexHome()): Promise<string | null> {
   const session = (await agentGet(paneId)).agent_session;
   if (session?.kind === "path" && session.value) return codexRolloutPath(session.value, home);
-  const { processes, open } = await openRollouts(paneId, home);
+  const { codexProcesses, processes, open } = await openRollouts(paneId, home);
+  cwd = codexProcesses[0]?.cwd || cwd;
   if (open.size === 1) return [...open][0]!;
   const bound = boundRollouts.get(paneId);
   if (bound === undefined || bound.processes !== processes || processes === "" || !cwd || codexRolloutPath(bound.path, home) === null) return null;
@@ -1404,6 +1436,7 @@ export async function codexTranscriptPath(paneId: string, cwd: string, home = de
   if (session?.kind === "path" && session.value) return codexRolloutPath(session.value, home);
 
   const { codexProcesses, processes, open } = await openRollouts(paneId, home);
+  cwd = codexProcesses[0]?.cwd || cwd;
   if (open.size === 1) return [...open][0]!;
   const resumed = resumedThread(codexProcesses.map((process) => process.argv ?? []));
 

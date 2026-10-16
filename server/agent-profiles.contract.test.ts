@@ -220,3 +220,38 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("native
     if (workspaceId) await workspaceClose(workspaceId).catch(() => undefined);
   }
 });
+
+it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("shows an empty Codex conversation for a web-started launcher at its untouched composer", async () => {
+  const root = mkdtempSync(join(tmpdir(), "herdr-fresh-codex-launcher-"));
+  const executable = join(root, "codex"), marker = join(root, "ready.json"), recorder = join(root, "screen.cjs");
+  const command = join(stateDir, "codex-empty");
+  copyFileSync(process.execPath, executable); chmodSync(executable, 0o755);
+  writeFileSync(recorder, `process.stdout.write("OpenAI Codex (v0.163.0)\\n› Ask Codex to do anything\\n");require("node:fs").writeFileSync(process.argv[2],"ready");process.stdin.resume();`);
+  writeFileSync(command, `#!/bin/sh\nexec '${executable}' '${recorder}' '${marker}'\n`, { mode: 0o755 });
+  let workspaceId: string | undefined;
+  try {
+    const request = fetch(`${base}/api/workspace/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd: root, label: "herdr-web-ui-test-empty-codex-launcher", agent: { kind: "codex", launcher: "codex-empty" } }) });
+    let paneId: string | undefined;
+    for (const deadline = Date.now() + 15_000;;) {
+      const snapshot = await sessionSnapshot();
+      workspaceId = snapshot.workspaces.find((entry) => entry.label === "herdr-web-ui-test-empty-codex-launcher")?.workspace_id;
+      paneId = snapshot.panes.find((entry) => entry.workspace_id === workspaceId)?.pane_id;
+      if (paneId && existsSync(marker)) {
+        await herdrRpc("pane.report_agent", { pane_id: paneId, source: "fixture", agent: "codex", state: "idle" });
+        break;
+      }
+      if (Date.now() > deadline) throw new Error("launcher did not print its initial screen");
+      await Bun.sleep(50);
+    }
+    const created = await (await request).json() as WorkspaceCreated;
+    expect(created.agent_started).toBeTrue();
+    expect(launchedAgents.notBegun(created.pane_id, "idle")).not.toBeNull();
+    const conversation = await (await fetch(`${base}/api/pane/conversation?pane_id=${encodeURIComponent(created.pane_id)}`)).json();
+    expect(conversation.source).toBe("codex-transcript");
+    expect(conversation.turns).toEqual([]);
+  } finally {
+    rmSync(command, { force: true });
+    if (workspaceId) await workspaceClose(workspaceId).catch(() => undefined);
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 30_000);

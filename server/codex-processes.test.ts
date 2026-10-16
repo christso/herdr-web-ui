@@ -15,7 +15,8 @@ let home: string;
 let path: string;
 let screen: string;
 let peerScreens: Map<string, string | Error>;
-let foreground: { pid: number; name?: string; argv?: string[] }[];
+let foreground: { pid: number; name?: string; argv?: string[]; cwd?: string }[];
+let peerForeground: Map<string, typeof foreground>;
 let listener: ReturnType<typeof Bun.listen>;
 let socketBefore: string | undefined;
 const children: ReturnType<typeof Bun.spawn>[] = [];
@@ -36,6 +37,7 @@ beforeEach(() => {
   screen = "";
   peerScreens = new Map();
   foreground = [];
+  peerForeground = new Map();
   socketBefore = process.env["HERDR_SOCKET"];
   const socket = join(root, "herdr.sock");
   process.env["HERDR_SOCKET"] = socket;
@@ -53,7 +55,7 @@ beforeEach(() => {
           return;
         }
         const result = request.method === "agent.get" ? { agent: {} }
-          : request.method === "pane.process_info" ? { process_info: { foreground_processes: foreground } }
+          : request.method === "pane.process_info" ? { process_info: { foreground_processes: peerForeground.get(request.params?.pane_id ?? "") ?? foreground } }
           : request.method === "pane.read" ? { read: { text: peerScreen ?? screen } }
           : null;
         if (result === null) throw new Error(`unexpected RPC ${request.method}`);
@@ -86,7 +88,7 @@ async function runningCodex(resume = false): Promise<ReturnType<typeof Bun.spawn
   const child = Bun.spawn([
     "/bin/bash", "-c", 'exec -a "$1" "$2" -e \'process.stdout.write("READY\\n"); process.stdin.resume()\' "${@:3}"',
     "fixture", join(root, "codex"), node, ...(resume ? ["resume", thread] : []),
-  ], { stdin: "pipe", stdout: "pipe", stderr: "pipe" });
+  ], { stdin: "pipe", stdout: "pipe", stderr: "pipe", env: { ...process.env, CODEX_HOME: home } });
   children.push(child);
   const reader = child.stdout.getReader();
   const ready = await reader.read();
@@ -500,3 +502,77 @@ for (const executable of [
     expect(await resolve()).toBe(path);
   });
 }
+
+shortIt("ignores a same-directory peer that uses another Codex home", async () => {
+  await shortSession();
+  const otherHome = join(root, "other-codex-home");
+  mkdirSync(otherHome);
+  const peer = Bun.spawn(["/bin/sh", "-c", "read ignored"], { stdin: "pipe", env: { ...process.env, CODEX_HOME: otherHome } });
+  children.push(peer);
+  peerForeground.set("other-profile", [{ pid: peer.pid, argv: [join(root, "codex")] }]);
+  peerScreens.set("other-profile", "Working…");
+  expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("other-profile")])).toBe(path);
+});
+
+shortIt("ignores a default-home peer beside an isolated profile", async () => {
+  await shortSession();
+  const userHome = join(root, "default-user");
+  mkdirSync(join(userHome, ".codex"), { recursive: true });
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => name !== "CODEX_HOME"));
+  const peer = Bun.spawn(["/bin/sh", "-c", "read ignored"], { stdin: "pipe", env: { ...env, HOME: userHome } });
+  children.push(peer);
+  peerForeground.set("default-profile", [{ pid: peer.pid, argv: [join(root, "codex")] }]);
+  peerScreens.set("default-profile", shortScreen);
+  expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("default-profile")])).toBe(path);
+});
+
+shortIt("keeps an inaccessible peer ambiguous instead of assuming another profile", async () => {
+  await shortSession();
+  peerForeground.set("unknown-profile", [{ pid: 2147483647, argv: [join(root, "codex")] }]);
+  peerScreens.set("unknown-profile", "Working…");
+  expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("unknown-profile")])).toBeNull();
+});
+
+it("uses the native process directory after a launcher changes directory", async () => {
+  const project = join(root, "launcher-project");
+  mkdirSync(project);
+  foreground = [{ pid: 2147483647, argv: ["/usr/bin/codex"], cwd: project }];
+  const db = new Database(join(home, "state_5.sqlite"));
+  db.query("UPDATE threads SET cwd = ?").run(project);
+  db.close();
+  screen = answer;
+  expect(await resolve()).toBe(path);
+  screen = "";
+  expect(await codexOpenRollout(root, root, home)).toBe(path);
+});
+
+shortIt("ignores another store even when the peer directory is unavailable", async () => {
+  await shortSession();
+  const otherHome = join(root, "unknown-cwd-home");
+  mkdirSync(otherHome);
+  const peer = Bun.spawn(["/bin/sh", "-c", "read ignored"], { stdin: "pipe", env: { ...process.env, CODEX_HOME: otherHome } });
+  children.push(peer);
+  peerForeground.set("unknown-cwd", [{ pid: peer.pid, argv: [join(root, "codex")] }]);
+  const pane = { ...fixturePane("unknown-cwd"), cwd: null };
+  expect(await codexTranscriptPath(root, root, home, [fixturePane(root), pane])).toBe(path);
+});
+
+shortIt("keeps a peer using another spelling of the same store ambiguous", async () => {
+  await shortSession();
+  const peer = Bun.spawn(["/bin/sh", "-c", "read ignored"], { stdin: "pipe", env: { ...process.env, CODEX_HOME: home + "/" } });
+  children.push(peer);
+  peerForeground.set("same-store", [{ pid: peer.pid, argv: [join(root, "codex")] }]);
+  peerScreens.set("same-store", shortScreen);
+  expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("same-store")])).toBeNull();
+});
+
+shortIt("keeps a peer using a symlink to the same store ambiguous", async () => {
+  await shortSession();
+  const alias = join(root, "same-store-alias");
+  symlinkSync(home, alias, "dir");
+  const peer = Bun.spawn(["/bin/sh", "-c", "read ignored"], { stdin: "pipe", env: { ...process.env, CODEX_HOME: alias } });
+  children.push(peer);
+  peerForeground.set("aliased-store", [{ pid: peer.pid, argv: [join(root, "codex")] }]);
+  peerScreens.set("aliased-store", shortScreen);
+  expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("aliased-store")])).toBeNull();
+});

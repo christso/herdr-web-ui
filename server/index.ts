@@ -1,3 +1,4 @@
+import { codexEmptyComposer } from "./start-screen.ts";
 import { agentExecutable, discoverAgentLaunches, launchSummaries, selectedAgentLaunch, type AgentLaunch } from "./agent-profiles.ts";
 import { readHerdrProfiles, type HerdrMachineProfile } from "./herdr-profiles.ts";
 import { randomBytes } from "node:crypto";
@@ -328,7 +329,9 @@ async function agentLaunch(paneId: string, agent: AgentPayload, launch?: AgentLa
         }
       }
     }
-    if (!launch || "profile" in launch) launchedAgents.launched(paneId, kind);
+    const emptyLauncher = launch && "command" in launch && kind === "codex"
+      && await paneRead({ paneId, source: "visible", format: "text" }).then((read) => codexEmptyComposer(read.text), () => false);
+    if (!launch || "profile" in launch || emptyLauncher) launchedAgents.launched(paneId, kind);
     return { agent_started: true };
   } catch (error) {
     return {

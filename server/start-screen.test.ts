@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import { readsStartScreen, startScreenMetadata } from "./start-screen.ts";
+import { codexEmptyComposer, readsStartScreen, startScreenMetadata } from "./start-screen.ts";
 
 const CLAUDE = [
   " ▐▛███▛█   Claude Code v2.1.296",
@@ -62,5 +62,21 @@ describe("startScreenMetadata", () => {
     expect(readsStartScreen("opencode-transcript")).toBeFalse();
     expect(startScreenMetadata("omo-transcript", CODEX)).toEqual({ model: null, reasoning_effort: null });
     expect(startScreenMetadata("claude-transcript", CODEX)).toEqual({ model: null, reasoning_effort: null });
+  });
+});
+
+describe("codexEmptyComposer", () => {
+  it("recognizes the empty composer without depending on its suggested prompt", () => {
+    expect(codexEmptyComposer(CODEX)).toBeTrue();
+    expect(codexEmptyComposer(CODEX.replace("Ask Codex to do anything", "Find a bug"))).toBeTrue();
+    expect(codexEmptyComposer(CODEX.replace("› Ask Codex to do anything", "›"))).toBeTrue();
+    expect(codexEmptyComposer("wrapper setup output\n" + CODEX)).toBeTrue();
+  });
+  it("rejects an opaque launcher, a resume picker, submitted messages and existing answers", () => {
+    expect(codexEmptyComposer("waiting for input")).toBeFalse();
+    expect(codexEmptyComposer(CODEX.replace("› Ask Codex to do anything", "Resume a previous session\n› saved session"))).toBeFalse();
+    expect(codexEmptyComposer(CODEX.replace("› Ask Codex to do anything", "› hello\n• Hello again.\n› Ask Codex to do anything"))).toBeFalse();
+    expect(codexEmptyComposer(CODEX.replace("› Ask Codex to do anything", "• A saved answer.\n› Ask Codex to do anything"))).toBeFalse();
+    expect(codexEmptyComposer(CODEX.replace("› Ask Codex to do anything", "› submitted message\n› Ask Codex to do anything"))).toBeFalse();
   });
 });
