@@ -441,6 +441,22 @@ Claude has written up a plan and is ready to execute. Would you like to proceed?
     ]);
   });
 
+  test("leaves the Other row before advancing a current OMP multi question", () => {
+    const prompt = parseInteractivePrompt("omp", `
+╭─ Ask ───────────────────────────╮
+│ Which platforms should run?     │
+├────────────────────────────────┤
+│  ☑ Linux                         │
+│  ☐ macOS                         │
+│❯ ☐ Other (type your own)        │
+├────────────────────────────────┤
+│ ␠ toggle · ⏎ next · ↑/↓ move · Tab/←/→ question · ⎋ cancel │
+╰────────────────────────────────╯
+`);
+    expect(prompt).toMatchObject({ multi_select: true, custom_option_index: null });
+    expect(answerKeys(prompt!, { option_indices: [0] })).toEqual([{ keys: ["up"] }, { keys: ["enter"] }]);
+  });
+
   test("parses Codex continue, question, async question, and approval prompts", () => {
     const menu = parseInteractivePrompt("codex", `
 ✨ Update available! 0.146.0 -> 0.146.1

@@ -449,6 +449,8 @@ function parseOmpQuestion(screen: string): ParsedPrompt | null {
       }
       // Current OMP advances/finishes the active question on Enter. Tab changes
       // the active question and would make that Enter answer a different row.
+      // Enter on the Other row opens its text editor instead of advancing.
+      if (cursor === customIndex) keys.push(KEY.up);
       keys.push(KEY.enter);
       return keySteps(keys);
     } } : {}),
