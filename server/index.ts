@@ -1,3 +1,4 @@
+import { readAgentProfiles, profileSummaries, selectedAgentProfile, type AgentProfile } from "./agent-profiles.ts";
 import { readHerdrProfiles, type HerdrMachineProfile } from "./herdr-profiles.ts";
 import { randomBytes } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
@@ -35,7 +36,7 @@ import { codexOpenRollout, paneCodexHome } from "./codex.ts";
 import { CompletionTracker, type OmoRest } from "./completion.ts";
 import { freeAgentName } from "./agent-name.ts";
 import { launchedAgents } from "./launched-agents.ts";
-import { SHELL_AGENTS, isShellAgentKind, shellAgentExecutable, startShellAgent } from "./shell-agent.ts";
+import { SHELL_AGENTS, isShellAgentKind, shellAgentExecutable, startShellAgent, startAgentProfile } from "./shell-agent.ts";
 import { listDirectories } from "./directories.ts";
 import { claudeSessionTempDir } from "./claude-store.ts";
 import { fileResponse, locateFile, locateFileInFolder, crossSiteFileRead } from "./file-view.ts";
@@ -272,16 +273,18 @@ async function claudeTempFolder(paneId: string): Promise<string | null> {
   } catch { return null; /* herdr busy or the pane gone: the path stays not found */ }
 }
 
-type AgentPayload = { kind?: unknown; name?: unknown; args?: unknown };
+type AgentPayload = { kind?: unknown; name?: unknown; args?: unknown; profile?: unknown };
 
 /** What is wrong with a request's `agent`, in the API's words; null when it can be started. */
 function agentFault(agent: AgentPayload | undefined): string | null {
   if (agent === undefined) return null;
-  if (typeof agent !== "object" || typeof agent.kind !== "string" || agent.kind.length === 0) return "agent.kind is required";
+  if (agent === null || typeof agent !== "object" || typeof agent.kind !== "string" || agent.kind.length === 0) return "agent.kind is required";
   if ((agent.name !== undefined && typeof agent.name !== "string")
     || (agent.args !== undefined && (!Array.isArray(agent.args) || !agent.args.every((arg) => typeof arg === "string")))) {
     return "agent.name must be a string and agent.args must be an array of strings";
   }
+  if (agent.profile !== undefined && (typeof agent.profile !== "string" || agent.profile.length === 0)) return "agent.profile must be a nonempty string";
+  if (agent.profile !== undefined && (agent.args !== undefined || Object.keys(agent).some((key) => !["kind", "name", "profile"].includes(key)))) return "Named profiles accept only kind, name and profile; arguments are configured on this PC";
   return null;
 }
 
@@ -289,11 +292,12 @@ function agentFault(agent: AgentPayload | undefined): string | null {
  * Starts a checked `agent` in a pane herdr just made. A failure is answered, not thrown: the
  * workspace, tab or worktree around the pane is there either way.
  */
-async function agentLaunch(paneId: string, agent: AgentPayload): Promise<{ agent_started: true } | { agent_started: false; error: { code: string; message: string } }> {
+async function agentLaunch(paneId: string, agent: AgentPayload, profile?: AgentProfile): Promise<{ agent_started: true } | { agent_started: false; error: { code: string; message: string } }> {
   try {
     const kind = agent.kind as string;
     const args = agent.args as string[] | undefined;
-    if (isShellAgentKind(kind)) await startShellAgent(kind, paneId, args);
+    if (profile) await startAgentProfile(profile, paneId, typeof agent.name === "string" ? agent.name : undefined);
+    else if (isShellAgentKind(kind)) await startShellAgent(kind, paneId, args);
     else {
       const given = typeof agent.name === "string" && agent.name.length > 0 ? agent.name : null;
       // herdr refuses a name another agent holds. Two creations at once can pick the same
@@ -321,7 +325,7 @@ async function agentLaunch(paneId: string, agent: AgentPayload): Promise<{ agent
         }
       }
     }
-    launchedAgents.launched(paneId, kind);
+    if (!profile || profile.fresh === true) launchedAgents.launched(paneId, kind);
     return { agent_started: true };
   } catch (error) {
     return {
@@ -1994,14 +1998,20 @@ export function createServer(
       if (pathname === "/api/agents") {
         if (request.method !== "GET") return badRequest("method_not_allowed", "use GET");
         try {
+          const profiles = readAgentProfiles(options.stateDir ?? defaultStateDir());
           const kinds = new Set((await agentManifests()).manifests.map((manifest) => manifest.agent));
           kinds.add("omp");
           kinds.add("claude");
           // not herdr kinds: offered where this server can run them (see shell-agent.ts)
           for (const kind of Object.keys(SHELL_AGENTS)) if (shellAgentExecutable(kind)) kinds.add(kind);
+          for (const profile of profiles) kinds.add(profile.kind);
           const agents: AgentKind[] = [...kinds]
             // an agent's command is its kind; the pane's shell may carry another PATH, as for omo and gjc above
-            .map((kind) => ({ kind, label: AGENT_LABELS[kind] ?? kind, installed: Bun.which(kind, { PATH: process.env["PATH"] ?? "" }) !== null }))
+            .map((kind) => {
+              const named = profileSummaries(profiles, kind);
+              return { kind, label: AGENT_LABELS[kind] ?? kind, installed: Bun.which(kind, { PATH: process.env["PATH"] ?? "" }) !== null,
+                ...(named.length > 0 ? { profiles: named } : {}) };
+            })
             .sort((left, right) => left.label.localeCompare(right.label) || left.kind.localeCompare(right.kind));
           return jsonResponse({ agents });
         } catch (error) {
@@ -2085,7 +2095,7 @@ export function createServer(
       if (pathname === "/api/workspace/create" || pathname === "/api/tab/create") {
         const inWorkspace = pathname === "/api/tab/create";
         if (request.method !== "POST") return badRequest("method_not_allowed", "use POST");
-        let payload: { workspace_id?: unknown; cwd?: unknown; label?: unknown; agent?: { kind?: unknown; name?: unknown; args?: unknown } | null };
+        let payload: { workspace_id?: unknown; cwd?: unknown; label?: unknown; agent?: AgentPayload | null };
         try {
           payload = (await request.json()) as typeof payload;
         } catch {
@@ -2112,6 +2122,9 @@ export function createServer(
         }
         const fault = agentFault(payload.agent);
         if (fault !== null) return badRequest("invalid_agent", fault);
+        let profile: AgentProfile | undefined;
+        try { if (payload.agent?.profile !== undefined) profile = selectedAgentProfile(readAgentProfiles(options.stateDir ?? defaultStateDir()), payload.agent.kind as string, payload.agent.profile as string); }
+        catch (error) { return badRequest(error instanceof HerdrError ? error.code : "invalid_agent_profile", error instanceof Error ? error.message : "Profile unavailable"); }
         // agent.start can legitimately take a minute; Bun's default idle timeout is shorter.
         if (payload.agent) bunServer.timeout(request, 75);
         try {
@@ -2126,7 +2139,7 @@ export function createServer(
           if (!payload.agent) {
             return jsonResponse({ workspace_id: workspaceId, pane_id: created.root_pane.pane_id, agent_started: false });
           }
-          return jsonResponse({ workspace_id: workspaceId, pane_id: created.root_pane.pane_id, ...(await agentLaunch(created.root_pane.pane_id, payload.agent)) });
+          return jsonResponse({ workspace_id: workspaceId, pane_id: created.root_pane.pane_id, ...(await agentLaunch(created.root_pane.pane_id, payload.agent, profile)) });
         } catch (error) {
           return errorResponse(error);
         }
@@ -2209,6 +2222,9 @@ export function createServer(
         const agent = creating ? payload.agent ?? undefined : undefined;
         const fault = agentFault(agent);
         if (fault !== null) return badRequest("invalid_agent", fault);
+        let profile: AgentProfile | undefined;
+        try { if (agent?.profile !== undefined) profile = selectedAgentProfile(readAgentProfiles(options.stateDir ?? defaultStateDir()), agent.kind as string, agent.profile as string); }
+        catch (error) { return badRequest(error instanceof HerdrError ? error.code : "invalid_agent_profile", error instanceof Error ? error.message : "Profile unavailable"); }
         if (creating && branch === undefined) return badRequest("missing_branch", "branch is required");
         if (!creating && branch === undefined && path === undefined) return badRequest("missing_target", "path or branch is required");
         // a checkout of a large repository can take a while; Bun's default idle timeout is shorter.
@@ -2234,7 +2250,7 @@ export function createServer(
             already_open: opened.already_open === true,
             path: opened.worktree.path,
             branch: opened.worktree.branch,
-            ...(agent ? await agentLaunch(opened.root_pane.pane_id, agent) : {}),
+            ...(agent ? await agentLaunch(opened.root_pane.pane_id, agent, profile) : {}),
           });
         } catch (error) {
           // git's own words for a branch that has no commit yet (a folder just `git init`ed): with no

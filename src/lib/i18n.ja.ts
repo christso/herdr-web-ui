@@ -42,6 +42,8 @@ export const JA: Record<string, string> = {
   "Reserved": "予約済み",
   "Already assigned": "割り当て済み",
   "Send keys to terminal": "キーを端末に送る",
+  "Choose a profile to start {agent} on this PC.": "この PC で {agent} を起動するプロファイルを選択してください。",
+  "Profile": "プロファイル",
   "Default": "既定",
   "Password or PIN": "パスワードまたは PIN",
   "Enter a single-line password or PIN.": "改行を含まないパスワードまたは PIN を入力してください。",

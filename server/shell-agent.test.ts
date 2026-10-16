@@ -1,6 +1,7 @@
 import { expect, it, spyOn } from "bun:test";
+import * as herdr from "./herdr/client.ts";
 import { isGjcProcess } from "./gjc-runtime.ts";
-import { paneShell, shellAgentExecutable, shellCommandLine } from "./shell-agent.ts";
+import { paneShell, shellAgentExecutable, shellCommandLine, startAgentProfile } from "./shell-agent.ts";
 import { descendantArgv, descendantProcesses, parseProcessTable, windowsArgv, windowsProcessTable } from "./windows-processes.ts";
 
 it("tells a pane's shell from the program herdr reports in front", () => {
@@ -74,3 +75,33 @@ it("offers OmO on Windows when its launcher is on PATH", () => {
     which.mockRestore();
   }
 });
+
+it("only offers a shell with the native agent.start foreground ownership evidence", async () => {
+  const { availableProfileShell } = await import("./shell-agent.ts");
+  const info = { pane_id: "fixture", shell_pid: 123, foreground_process_group_id: 123, foreground_processes: [{ pid: 123, name: "-zsh" }] };
+  expect(availableProfileShell(info)).toBe("posix");
+  expect(availableProfileShell({ ...info, foreground_process_group_id: 456 })).toBeNull();
+  expect(availableProfileShell({ ...info, foreground_processes: [] })).toBeNull();
+  expect(availableProfileShell({ ...info, foreground_processes: [{ pid: 123, name: "zsh" }, { pid: 456, name: "vim" }] })).toBeNull();
+  expect(availableProfileShell({ ...info, foreground_processes: [{ pid: 123, name: "vim" }] })).toBeNull();
+  expect(availableProfileShell({ ...info, foreground_processes: [{ pid: 123, name: "pwsh" }] })).toBeNull();
+  expect(availableProfileShell(undefined)).toBeNull();
+});
+
+for (const state of ["active agent", "unreadable foreground", "foreign foreground job", "shell becomes busy"] as const) {
+  it.skipIf(process.platform !== "linux" && process.platform !== "darwin")(`refuses profile launch with ${state} without typing into the pane`, async () => {
+    const ready = { pane_id: "fixture", shell_pid: 123, foreground_process_group_id: 123, foreground_processes: [{ pid: 123, name: "zsh" }] };
+    const busy = { ...ready, foreground_process_group_id: 456, foreground_processes: [{ pid: 456, name: "vim" }] };
+    const agent = spyOn(herdr, "agentGet").mockRejectedValue(new herdr.HerdrError("agent_not_found", "No agent"));
+    const processes = spyOn(herdr, "paneProcessInfo").mockResolvedValue(state === "unreadable foreground" ? undefined : busy);
+    const input = spyOn(herdr, "paneSendText").mockResolvedValue(undefined);
+    if (state === "active agent") agent.mockResolvedValue({ agent: "codex" } as never);
+    if (state === "shell becomes busy") processes.mockResolvedValueOnce(ready);
+    try {
+      await expect(startAgentProfile({ id: "review", label: "Review", kind: "codex", command: "/fixture/launcher" }, "fixture", undefined, 30)).rejects.toMatchObject({ code: "agent_pane_busy" });
+      expect(input).not.toHaveBeenCalled();
+    } finally {
+      agent.mockRestore(); processes.mockRestore(); input.mockRestore();
+    }
+  });
+}

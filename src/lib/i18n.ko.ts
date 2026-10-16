@@ -40,6 +40,8 @@ export const KO: Record<string, string> = {
   "Reserved": "예약됨",
   "Already assigned": "이미 지정됨",
   "Send keys to terminal": "키를 터미널로 전달",
+  "Choose a profile to start {agent} on this PC.": "이 PC에서 {agent}을(를) 시작할 프로필을 선택하세요.",
+  "Profile": "프로필",
   "Default": "기본값",
   "Password or PIN": "비밀번호 또는 PIN",
   "Enter a single-line password or PIN.": "한 줄의 비밀번호 또는 PIN을 입력하세요.",

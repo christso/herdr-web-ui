@@ -44,6 +44,8 @@ export const ZH: Record<string, string> = {
   "Reserved": "系统保留",
   "Already assigned": "已分配",
   "Send keys to terminal": "将按键发送到终端",
+  "Choose a profile to start {agent} on this PC.": "选择一个配置以在此电脑上启动 {agent}。",
+  "Profile": "配置",
   "Default": "默认",
   "Password or PIN": "密码或 PIN",
   "Enter a single-line password or PIN.": "请输入不含换行的密码或 PIN。",

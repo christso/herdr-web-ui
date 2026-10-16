@@ -15,8 +15,9 @@ import "./WorktreeDialog.css";
 import type { AgentKind, WorkspaceInfo, WorktreeEntry, WorktreeOpened } from "../../shared/protocol.ts";
 import { MAX_LABEL_CHARS } from "../../shared/labels.ts";
 import { ApiError } from "../lib/api.ts";
+import { AgentProfilePicker } from "./AgentProfilePicker.tsx";
 import { AgentPicker, rememberAgent, rememberedAgent } from "./AgentPicker.tsx";
-import { useMachineApi } from "../lib/machineContext.tsx";
+import { useMachineApi, useMachineId } from "../lib/machineContext.tsx";
 import { useT } from "../lib/i18n.ts";
 import { suggestWorktreeBranch, worktreeLabel } from "../lib/worktreeName.ts";
 import { useSheetSwipe } from "../lib/sheets.ts";
@@ -37,8 +38,14 @@ const said = (reason: unknown): string => reason instanceof ApiError ? reason.de
 export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
   const t = useT();
   const id = useId();
+  const machineId = useMachineId();
   const { createWorktree, fetchAgentKinds, listWorktrees, openWorktree } = useMachineApi();
-  const [agents, setAgents] = useState<AgentKind[]>([]);
+  const [catalog, setCatalog] = useState<
+    { machineId: string; status: "ready"; agents: AgentKind[] }
+    | { machineId: string; status: "failed" }
+    | null
+  >(null);
+  const [profileChoice, setProfileChoice] = useState<{ machineId: string; kind: string; id: string } | null>(null);
   const [agentKind, setAgentKind] = useState(rememberedAgent);
   // the checkout whose agent did not start: it is there, and the button opens it
   const [made, setMade] = useState<WorktreeOpened | null>(null);
@@ -83,19 +90,21 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
     return () => window.removeEventListener("keydown", onKey, true);
   }, [onClose, pending]);
   useEffect(() => {
+    setCatalog(null);
+    setProfileChoice(null);
     if (mode !== "create") return;
     let cancelled = false;
     fetchAgentKinds().then(
       (next) => {
         if (cancelled) return;
-        setAgents(next);
+        setCatalog({ machineId, status: "ready", agents: next });
         // a remembered agent this PC cannot start falls back to a shell
         setAgentKind((kind) => (kind && !next.some((agent) => agent.kind === kind) ? "" : kind));
       },
-      (reason: unknown) => { if (!cancelled) setError(said(reason)); },
+      (reason: unknown) => { if (!cancelled) { setError(said(reason)); setAgentKind(""); setCatalog({ machineId, status: "failed" }); } },
     );
     return () => { cancelled = true; };
-  }, [mode, fetchAgentKinds]);
+  }, [mode, machineId, fetchAgentKinds]);
   useEffect(() => {
     if (mode !== "open") return;
     let cancelled = false;
@@ -128,9 +137,9 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
     event.preventDefault();
     if (made) { onOpened(made); return; }
     const name = branch.trim();
-    if (!name) return;
+    if (!name || loadingCatalog || missingProfile || (agentKind !== "" && !catalogReady)) return;
     void run(t("Creating the checkout…"), async () => {
-      const result = await createWorktree({ workspace_id: workspace.workspace_id, branch: name, base: base.trim() || null, label: label.trim() || null, agent: agentKind ? { kind: agentKind } : null });
+      const result = await createWorktree({ workspace_id: workspace.workspace_id, branch: name, base: base.trim() || null, label: label.trim() || null, agent: agentKind ? { kind: agentKind, ...(profile ? { profile } : {}) } : null });
       // the default follows what actually started: Shell after a plain checkout, an agent only once it runs
       if (!agentKind || result.agent_started === true) rememberAgent(agentKind);
       return result;
@@ -145,7 +154,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
   // modal: Tab and Shift+Tab stay among the dialog's own fields and buttons
   const onKeyDown = (event: ReactKeyboardEvent<HTMLFormElement>): void => {
     if (event.key !== "Tab" || !surface.current) return;
-    const stops = [...surface.current.querySelectorAll<HTMLElement>("input:not(:disabled), button:not(:disabled)")];
+    const stops = [...surface.current.querySelectorAll<HTMLElement>("input:not(:disabled), button:not(:disabled), select:not(:disabled)")];
     if (stops.length === 0) return;
     const index = stops.indexOf(document.activeElement as HTMLElement);
     const next = event.shiftKey ? (index <= 0 ? stops.length - 1 : index - 1) : (index < 0 || index === stops.length - 1 ? 0 : index + 1);
@@ -153,6 +162,12 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
     stops[next]?.focus();
   };
 
+  const catalogReady = catalog?.machineId === machineId && catalog.status === "ready";
+  const agents = catalogReady ? catalog.agents : [];
+  const selectedAgent = agents.find((agent) => agent.kind === agentKind);
+  const profile = profileChoice?.machineId === machineId && profileChoice.kind === agentKind && selectedAgent?.profiles?.some((entry) => entry.id === profileChoice.id) ? profileChoice.id : "";
+  const loadingCatalog = catalog?.machineId !== machineId;
+  const missingProfile = selectedAgent?.installed === false && !profile;
   const locked = pending !== null || made !== null;
   const title = mode === "create" ? t("New worktree · {name}", { name: workspace.label }) : t("Open worktree · {name}", { name: workspace.label });
   // the repository's own checkout is this workspace: the list is the other ones
@@ -188,8 +203,9 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
               </label>
               <div className="field">
                 <span className="field-label" id={`${id}-agent`}>{t("Agent")}</span>
-                <AgentPicker agents={agents} value={agentKind} disabled={locked} labelledBy={`${id}-agent`} onChange={setAgentKind} />
+                <AgentPicker agents={agents} value={agentKind} disabled={locked} labelledBy={`${id}-agent`} onChange={(kind) => { setAgentKind(kind); setProfileChoice(null); }} />
               </div>
+              <AgentProfilePicker agent={selectedAgent} value={profile} disabled={locked} onChange={(id) => setProfileChoice({ machineId, kind: agentKind, id })} />
             </>
           ) : others === null && !error ? (
             <p className="field-hint" role="status">{t("Reading worktrees…")}</p>
@@ -216,7 +232,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
         </div>
         <footer className="modal-footer">
           <button type="button" className="btn btn-ghost" disabled={pending !== null} onClick={onClose}>{t("Cancel")}</button>
-          {mode === "create" && <button type="submit" className="btn btn-primary" disabled={pending !== null || (!made && !branch.trim())}>{t(made ? "Open" : "Create worktree")}</button>}
+          {mode === "create" && <button type="submit" className="btn btn-primary" disabled={pending !== null || (!made && (!branch.trim() || loadingCatalog || missingProfile))}>{t(made ? "Open" : "Create worktree")}</button>}
         </footer>
       </form>
     </div>,
