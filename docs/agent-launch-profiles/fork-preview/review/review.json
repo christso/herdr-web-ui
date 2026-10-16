@@ -1,0 +1,312 @@
+{
+  "status": "complete",
+  "verdict": "Ready with fixes",
+  "scope": {
+    "base": "5f07e144a1c9940adaaf4adacdbf20dc8b69f116",
+    "branch": "feat/agent-launch-profiles",
+    "head_sha": "5f07e144a1c9940adaaf4adacdbf20dc8b69f116",
+    "pr_url": null,
+    "files_changed": 19,
+    "mode": "standalone",
+    "includes_untracked": true
+  },
+  "intent": "Users can select machine-local named Codex, OMP and Pi launch profiles in New workspace, New tab and New worktree while Default preserves native behavior. Host-only executable catalog supplies fixed commands/args, fails closed before creation for invalid selections, safely starts only into newly created idle interactive shells, and tracks fresh greetings only for explicit fresh profiles.",
+  "intent_confidence": "explicit",
+  "reviewers": [
+    "correctness",
+    "project-standards",
+    "testing",
+    "maintainability",
+    "security",
+    "api-contract",
+    "reliability",
+    "adversarial",
+    "julik-frontend-races"
+  ],
+  "findings": [
+    {
+      "#": 1,
+      "autofix_class": "gated_auto",
+      "confidence": 100,
+      "evidence": [
+        "docs/agent-profiles.md:8 -- On Linux or macOS, create `agent-profiles.json` in the bridge's state directory",
+        "docs/agent-profiles.md:9 -- (default `~/.config/herdr-web-ui`):",
+        "server/remote-entry.ts:98 -- const server = createServer({ port: 0, hostname: \"127.0.0.1\", token, machines: false, stateDir: descriptor + \".state\" });",
+        "server/bridge.ts:15 -- export function descriptorPath(socket = socketPath()): string { return join(bridgeRegistry(), createHash(\"sha256\").update(socket).digest(\"hex\") + \".json\"); }",
+        "server/bridge.ts:10 -- export function bridgeRegistry(): string { return join(homedir(), \".config/herdr-web-ui/bridges\"); }",
+        "server/agent-profiles.ts:21 -- try { raw = JSON.parse(readFileSync(join(stateDir, \"agent-profiles.json\"), \"utf8\")); }",
+        "server/agent-profiles.ts:22 -- catch (error) { if ((error as NodeJS.ErrnoException).code === \"ENOENT\") return []; throw invalid(); }"
+      ],
+      "file": "docs/agent-profiles.md",
+      "first_evidence": "docs/agent-profiles.md:8 -- On Linux or macOS, create `agent-profiles.json` in the bridge's state directory",
+      "independent_reviewers": [],
+      "line": 8,
+      "owner": "downstream-resolver",
+      "pre_existing": false,
+      "requires_verification": true,
+      "reviewers": [
+        "synthesis"
+      ],
+      "severity": "P2",
+      "suggested_fix": "Expand the configuration instructions to distinguish standalone stateDir (HERDR_WEB_STATE_DIR, XDG_CONFIG_HOME or ~/.config/herdr-web-ui) from app-managed SSH bridges, whose catalog belongs at ~/.config/herdr-web-ui/bridges/<socket-sha256>.json.state/agent-profiles.json. Explain that the matching bridges/<hash>.json descriptor identifies the selected herdr socket via socket_path; do not display its token. Reopening the dialog rereads the catalog.",
+      "title": "Document the managed remote bridge catalog directory",
+      "why_it_matters": "Users configuring an app-managed SSH PC cannot discover its profiles by following the documented default path. Managed remote bridges pass a socket-specific state directory to createServer, so a catalog placed at ~/.config/herdr-web-ui/agent-profiles.json is silently treated as absent on that PC. Document the managed remote path and how to identify the descriptor for the chosen herdr socket, while preserving the standalone-server instructions.",
+      "validation_status": "confirmed",
+      "validation_reason": "For an app-managed SSH PC configured at the newly documented default, docs/agent-profiles.md:8-9 directs the catalog to ~/.config/herdr-web-ui, but the reachable SSH launcher in server/remote-host.ts:130 runs remote-entry.ts, whose line 98 passes descriptor+'.state' from bridge.ts:10-15, and agent-profiles.ts:21-22 reads only that directory and treats the documented placement as absent; this new documentation defect is established by the caller chain, while user incidence was not measured.",
+      "protected_subject": "public-contract"
+    },
+    {
+      "#": 2,
+      "autofix_class": "gated_auto",
+      "confidence": 75,
+      "evidence": [
+        "server/shell-agent.ts:134 -- if (ready === null || await shell() !== ready) throw new HerdrError(\"agent_pane_busy\", \"The created pane has no available interactive shell. Open its terminal to continue.\");",
+        "server/shell-agent.ts:135 -- await paneSendText(paneId, shellCommandLine(ready, profile.command, profile.args ?? []) + \"\\n\");",
+        "server/shell-agent.test.ts:79 -- const { availableProfileShell } = await import(\"./shell-agent.ts\");",
+        "server/shell-agent.ts:124 -- if (agent && (agent.agent || agent.name || agent.launch_pending)) throw new HerdrError(\"agent_pane_busy\", \"The created pane is already running an agent. Open its terminal to continue.\");"
+      ],
+      "file": "server/shell-agent.ts",
+      "first_evidence": "server/shell-agent.ts:134 -- if (ready === null || await shell() !== ready) throw new HerdrError(\"agent_pane_busy\", \"The created pane has no available interactive shell. Open its terminal to continue.\");",
+      "independent_reviewers": [
+        "testing"
+      ],
+      "line": 134,
+      "owner": "downstream-resolver",
+      "pre_existing": false,
+      "requires_verification": true,
+      "reviewers": [
+        "testing"
+      ],
+      "severity": "P2",
+      "suggested_fix": "Add focused launcher tests using stubbed herdr RPC responses: active agent at first check, missing/foreign foreground ownership, and an initially available shell becoming busy at the second check. Call startAgentProfile with a short timeout and assert agent_pane_busy plus zero pane.send_text calls; retain the existing successful wrapper contract tests.",
+      "title": "Test launch refusal before any terminal input",
+      "why_it_matters": "The new launcher writes an executable command into a terminal, so refusing a busy or unreadable foreground job is a consequential safety contract. Current tests exercise only availableProfileShell in isolation; the HTTP startup tests cover successful and blocked-after-execution launches, so bypassing the pre-write checks would leave the suite green. Exercise startAgentProfile with an active agent, unavailable foreground ownership and a ready-to-busy transition, asserting agent_pane_busy and no pane.send_text.",
+      "validation_status": "confirmed",
+      "validation_reason": "The new safety gate in server/shell-agent.ts:118-135 needs an active agent, unreadable/foreign foreground ownership, or a ready-to-busy transition before paneSendText; inspected repository tests cover only availableProfileShell directly at shell-agent.test.ts:78-88 and successful or already-executed blocked launches at agent-profiles.contract.test.ts:46-146, with no startAgentProfile refusal test asserting agent_pane_busy and zero terminal writes, confirming the claimed regression coverage gap without alleging a demonstrated runtime bypass; incidence of these startup states was not measured.",
+      "protected_subject": "concurrency"
+    }
+  ],
+  "requirements_completeness": {
+    "plan_path": "/tmp/herdr-launch-profiles/brief.md",
+    "plan_source": "explicit",
+    "requirements": [
+      {
+        "id": "R1",
+        "requirement": "Preserve repository constraints and existing tests.",
+        "status": "met",
+        "evidence": "The 19-path scope adds no dependencies, version/schema/generated-wire changes or broad refactor; old test assertions remain."
+      },
+      {
+        "id": "R2",
+        "requirement": "Load a machine-local, validated POSIX executable catalog without exposing commands.",
+        "status": "met",
+        "evidence": "server/agent-profiles.ts and GET /api/agents validate the complete catalog and expose only id/label. Remote setup documentation needs correction under #1."
+      },
+      {
+        "id": "R3",
+        "requirement": "Add optional profile IDs and reject invalid selections before creation.",
+        "status": "met",
+        "evidence": "shared/protocol.ts, server/index.ts and HTTP contracts cover additive fields, unavailable/mismatched IDs and per-request argument rejection."
+      },
+      {
+        "id": "R4",
+        "requirement": "Launch safely in the newly created pane and preserve failed panes.",
+        "status": "met",
+        "evidence": "server/shell-agent.ts checks agent/foreground ownership before writing, quotes fixed arguments and bounds readiness waits. The pre-write refusal regression gap is #2; no runtime bypass was established."
+      },
+      {
+        "id": "R5",
+        "requirement": "Track fresh greetings only for explicitly fresh named profiles.",
+        "status": "met",
+        "evidence": "agentLaunch gates launchedAgents.launched on profile.fresh; contracts cover fresh and non-fresh profiles."
+      },
+      {
+        "id": "R6",
+        "requirement": "Offer scoped profile selection in all creation dialogs, translations, demo and documentation.",
+        "status": "met",
+        "evidence": "Both dialogs reset/scoped-check profile selection and block stale catalogs; the picker, translations, demo transport, guide and changelog are present. Optional profile persistence was not implemented; remote guide location is #1."
+      }
+    ],
+    "implementation_units": [],
+    "unaddressed_requirements": [],
+    "unrequested_behavior_rules": []
+  },
+  "actionable_findings": [
+    {
+      "#": 1,
+      "autofix_class": "gated_auto",
+      "confidence": 100,
+      "evidence": [
+        "docs/agent-profiles.md:8 -- On Linux or macOS, create `agent-profiles.json` in the bridge's state directory",
+        "docs/agent-profiles.md:9 -- (default `~/.config/herdr-web-ui`):",
+        "server/remote-entry.ts:98 -- const server = createServer({ port: 0, hostname: \"127.0.0.1\", token, machines: false, stateDir: descriptor + \".state\" });",
+        "server/bridge.ts:15 -- export function descriptorPath(socket = socketPath()): string { return join(bridgeRegistry(), createHash(\"sha256\").update(socket).digest(\"hex\") + \".json\"); }",
+        "server/bridge.ts:10 -- export function bridgeRegistry(): string { return join(homedir(), \".config/herdr-web-ui/bridges\"); }",
+        "server/agent-profiles.ts:21 -- try { raw = JSON.parse(readFileSync(join(stateDir, \"agent-profiles.json\"), \"utf8\")); }",
+        "server/agent-profiles.ts:22 -- catch (error) { if ((error as NodeJS.ErrnoException).code === \"ENOENT\") return []; throw invalid(); }"
+      ],
+      "file": "docs/agent-profiles.md",
+      "first_evidence": "docs/agent-profiles.md:8 -- On Linux or macOS, create `agent-profiles.json` in the bridge's state directory",
+      "independent_reviewers": [],
+      "line": 8,
+      "owner": "downstream-resolver",
+      "pre_existing": false,
+      "requires_verification": true,
+      "reviewers": [
+        "synthesis"
+      ],
+      "severity": "P2",
+      "suggested_fix": "Expand the configuration instructions to distinguish standalone stateDir (HERDR_WEB_STATE_DIR, XDG_CONFIG_HOME or ~/.config/herdr-web-ui) from app-managed SSH bridges, whose catalog belongs at ~/.config/herdr-web-ui/bridges/<socket-sha256>.json.state/agent-profiles.json. Explain that the matching bridges/<hash>.json descriptor identifies the selected herdr socket via socket_path; do not display its token. Reopening the dialog rereads the catalog.",
+      "title": "Document the managed remote bridge catalog directory",
+      "why_it_matters": "Users configuring an app-managed SSH PC cannot discover its profiles by following the documented default path. Managed remote bridges pass a socket-specific state directory to createServer, so a catalog placed at ~/.config/herdr-web-ui/agent-profiles.json is silently treated as absent on that PC. Document the managed remote path and how to identify the descriptor for the chosen herdr socket, while preserving the standalone-server instructions.",
+      "validation_status": "confirmed",
+      "validation_reason": "For an app-managed SSH PC configured at the newly documented default, docs/agent-profiles.md:8-9 directs the catalog to ~/.config/herdr-web-ui, but the reachable SSH launcher in server/remote-host.ts:130 runs remote-entry.ts, whose line 98 passes descriptor+'.state' from bridge.ts:10-15, and agent-profiles.ts:21-22 reads only that directory and treats the documented placement as absent; this new documentation defect is established by the caller chain, while user incidence was not measured.",
+      "protected_subject": "public-contract"
+    },
+    {
+      "#": 2,
+      "autofix_class": "gated_auto",
+      "confidence": 75,
+      "evidence": [
+        "server/shell-agent.ts:134 -- if (ready === null || await shell() !== ready) throw new HerdrError(\"agent_pane_busy\", \"The created pane has no available interactive shell. Open its terminal to continue.\");",
+        "server/shell-agent.ts:135 -- await paneSendText(paneId, shellCommandLine(ready, profile.command, profile.args ?? []) + \"\\n\");",
+        "server/shell-agent.test.ts:79 -- const { availableProfileShell } = await import(\"./shell-agent.ts\");",
+        "server/shell-agent.ts:124 -- if (agent && (agent.agent || agent.name || agent.launch_pending)) throw new HerdrError(\"agent_pane_busy\", \"The created pane is already running an agent. Open its terminal to continue.\");"
+      ],
+      "file": "server/shell-agent.ts",
+      "first_evidence": "server/shell-agent.ts:134 -- if (ready === null || await shell() !== ready) throw new HerdrError(\"agent_pane_busy\", \"The created pane has no available interactive shell. Open its terminal to continue.\");",
+      "independent_reviewers": [
+        "testing"
+      ],
+      "line": 134,
+      "owner": "downstream-resolver",
+      "pre_existing": false,
+      "requires_verification": true,
+      "reviewers": [
+        "testing"
+      ],
+      "severity": "P2",
+      "suggested_fix": "Add focused launcher tests using stubbed herdr RPC responses: active agent at first check, missing/foreign foreground ownership, and an initially available shell becoming busy at the second check. Call startAgentProfile with a short timeout and assert agent_pane_busy plus zero pane.send_text calls; retain the existing successful wrapper contract tests.",
+      "title": "Test launch refusal before any terminal input",
+      "why_it_matters": "The new launcher writes an executable command into a terminal, so refusing a busy or unreadable foreground job is a consequential safety contract. Current tests exercise only availableProfileShell in isolation; the HTTP startup tests cover successful and blocked-after-execution launches, so bypassing the pre-write checks would leave the suite green. Exercise startAgentProfile with an active agent, unavailable foreground ownership and a ready-to-busy transition, asserting agent_pane_busy and no pane.send_text.",
+      "validation_status": "confirmed",
+      "validation_reason": "The new safety gate in server/shell-agent.ts:118-135 needs an active agent, unreadable/foreign foreground ownership, or a ready-to-busy transition before paneSendText; inspected repository tests cover only availableProfileShell directly at shell-agent.test.ts:78-88 and successful or already-executed blocked launches at agent-profiles.contract.test.ts:46-146, with no startAgentProfile refusal test asserting agent_pane_busy and zero terminal writes, confirming the claimed regression coverage gap without alleging a demonstrated runtime bypass; incidence of these startup states was not measured.",
+      "protected_subject": "concurrency"
+    }
+  ],
+  "triage_groups": [],
+  "pre_existing_findings": [],
+  "learnings": [],
+  "agent_native_gaps": [],
+  "deployment_notes": [],
+  "residual_risks": [],
+  "testing_gaps": [
+    "The reviewed diff has no committed regression for a delayed old-machine catalog arriving after a machine switch. Passing launch/dialog proof does not establish that specific delayed-response sequence; add a focused lifecycle regression when extending these dialogs."
+  ],
+  "coverage": {
+    "depth": "full",
+    "reviewer_reasons": [
+      {
+        "reviewer": "correctness",
+        "tier": "session",
+        "reason": "always-on"
+      },
+      {
+        "reviewer": "project-standards",
+        "tier": "mid-tier",
+        "reason": "root/server/src instruction files govern changed source"
+      },
+      {
+        "reviewer": "testing",
+        "tier": "mid-tier",
+        "reason": "catalog/shell/API tests and consequential launch flow"
+      },
+      {
+        "reviewer": "maintainability",
+        "tier": "mid-tier",
+        "reason": "new coupled catalog and launcher module boundaries with over 200 executable lines including untracked feature source"
+      },
+      {
+        "reviewer": "security",
+        "tier": "session",
+        "reason": "public profile input selects host executable and terminal input"
+      },
+      {
+        "reviewer": "api-contract",
+        "tier": "mid-tier",
+        "reason": "additive agents summaries and create payload profile field"
+      },
+      {
+        "reviewer": "reliability",
+        "tier": "mid-tier",
+        "reason": "bounded startup waits and preserved-pane failures"
+      },
+      {
+        "reviewer": "adversarial",
+        "tier": "session",
+        "reason": "composition of catalog reload, process readiness and machine scope"
+      },
+      {
+        "reviewer": "julik-frontend-races",
+        "tier": "mid-tier",
+        "reason": "asynchronous selected-machine catalog transitions"
+      }
+    ],
+    "notes": [
+      "Full review covers all 19 feature paths, including six explicitly included untracked files; the tracked-only scope helper counted 13 paths, 197 executable non-test changed lines and 225 total changed lines.",
+      "Project standards used the instruction-file fallback: root AGENTS.md throughout, server/AGENTS.md on server paths and src/AGENTS.md on src paths; referenced CONTRIBUTING.md, .github/REVIEW.md and DESIGN.md were read.",
+      "All nine local persona outcomes were collected. Two bounded reviewer agents were reused across persona turns; no native cleanup primitive was exposed. No confidence promotion or different-family independence is claimed.",
+      "Cross-model pass: not run; attested Codex host has no installed different-family CLI route (Claude, Grok and Antigravity absent). Local adversarial fallback completed; no external egress.",
+      "One fresh validator batch returned both verdicts within the bound: #1 and #2 confirmed; none rejected, unresolved, malformed, failed or shortcut-skipped. Both reasons state incidence was not measured. #1 concerns the published configuration location; #2 concerns regression coverage, not a demonstrated runtime bypass.",
+      "No semantic duplicates, pre-existing findings, settlement conflicts or confidence promotions. First-evidence backfilled 0; quote-gate demotions 0; suppressed by confidence 0; mode-aware demotions 0. Both actionable findings retain full hydrated detail.",
+      "Finding #1 originated during synthesis from the caller-noted SSH state-directory concern and was independently validated. Finding #2 is one material umbrella test finding for pre-write refusal.",
+      "The project-standards artifact write failed initially; dispatch persisted its complete empty return. This recovered artifact issue is not a product risk.",
+      "No learnings corpus or declared Compound Packs. Agent-native review was not selected because no coding-agent tool, skill, prompt or MCP surface changed. No migrations, performance-sensitive fanout or prior PR comments were in scope.",
+      "Test discovery used text search across server, src, scripts and site; dynamic test generation was not exhaustively analyzed.",
+      "Caller evidence: /tmp/herdr-launch-profiles/native/report.json now PASSED against the final post-simplification build. Codex 0.163, OMP 18.11.1 and Pi 1.2 reached the correct native base kind at idle with zero-turn transcript sources and greetings without unavailable/sidebar errors. Actual UI New tab Codex and New worktree OMP submitted the selected profile IDs and reached Chat greetings; desktop and 390px phone evidence exists. The report records zero messages and zero paid model calls.",
+      "Caller evidence: final HTTP contracts passed 5/5 in final-contract.log. Final-fast.log passed generated-type freshness, typecheck, build, workflow syntax and 3809 unit tests with 0 failures and 8 skips across 294 files. This supersedes an initial environmental EDQUOT attempt and earlier pending-fast notes.",
+      "Latest caller evidence: SSH cases so far pass, but the SSH harness has not reached a terminal outcome; its initial setup failure 116 was being diagnosed. This review does not claim SSH verification passed.",
+      "The review inspected caller evidence files but did not rerun native, browser, integration, SSH or fast checks. Earlier native-driver failure and pending-dialog notes were superseded by the final passing native report.",
+      "Report-only run: no source edits, commits, push or deployment. All review artifacts remain outside the application branch. No detached cross-model peer job was started."
+    ],
+    "validation": {
+      "batches": 1,
+      "selected": 2,
+      "confirmed": 2,
+      "rejected": 0,
+      "unresolved": 0,
+      "malformed": 0,
+      "failed": 0,
+      "shortcut_skipped": 0,
+      "bound_exceeded": false,
+      "protected_subject_reclassifications": 0
+    },
+    "suppressed_by_confidence": {},
+    "first_evidence_backfilled": 0,
+    "quote_gate_demotions": 0,
+    "mode_aware_demotions": 0,
+    "failed_reviewers": [],
+    "timed_out_reviewers": [],
+    "cross_model": {
+      "selected": true,
+      "target": null,
+      "route": null,
+      "preference_source": "default",
+      "outcome": "in-process-fallback",
+      "artifact": null,
+      "coverage": "Cross-model pass: not run; attested Codex host has no installed different-family CLI route (Claude, Grok and Antigravity absent). Local adversarial fallback completed; no external egress."
+    },
+    "compound_packs": {
+      "roots": [],
+      "warnings": [],
+      "errors": []
+    }
+  },
+  "verdict_reason": "Two confirmed P2 fixes remain: document managed SSH catalog placement (#1) and add launch-refusal tests asserting zero terminal writes (#2). No P0/P1 defect or runtime bypass was established. Final SSH harness completion remains a caller-owned verification gate.",
+  "fix_order": [
+    1,
+    2
+  ],
+  "artifact_path": "/tmp/herdr-launch-profiles/review/launch-profiles-20261016",
+  "run_id": "launch-profiles-20261016"
+}

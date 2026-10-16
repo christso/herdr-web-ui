@@ -1,0 +1,35 @@
+{
+  "messages_sent": 0,
+  "sessions_created": 0,
+  "terminal_attach": false,
+  "screenshots_taken": false,
+  "cases": [
+    {
+      "pc": "Local",
+      "agent": "codex",
+      "profile_available": true,
+      "base_agent_change_resets_default": true
+    },
+    {
+      "pc": "WTG",
+      "agents": [
+        "omp",
+        "pi"
+      ],
+      "profile_available": true,
+      "base_agent_change_resets_default": true
+    },
+    {
+      "pc": "Local",
+      "viewport": "390x844",
+      "layout": {
+        "width": 390,
+        "overflow": false,
+        "buttonVisible": true,
+        "sidebarError": false
+      },
+      "profile_after_pc_navigation": "Default"
+    }
+  ],
+  "status": "passed"
+}

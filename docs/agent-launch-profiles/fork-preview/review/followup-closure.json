@@ -1,0 +1,36 @@
+{
+  "status": "complete",
+  "verdict": "Ready to merge",
+  "run_id": "launch-profiles-20261016-followup",
+  "artifact_path": "/tmp/herdr-launch-profiles/review/launch-profiles-20261016/followup-closure.json",
+  "original_review": "/tmp/herdr-launch-profiles/review/launch-profiles-20261016/review.json",
+  "scope": {
+    "files": [
+      "docs/agent-profiles.md",
+      "server/shell-agent.test.ts"
+    ],
+    "all_other_feature_paths_match_post_simplification_hashes": true,
+    "production_runtime_unchanged": true
+  },
+  "closed_findings": [
+    {
+      "#": 1,
+      "status": "closed",
+      "evidence": "docs/agent-profiles.md:8-17 now distinguishes HERDR_WEB_STATE_DIR/XDG defaults from managed SSH bridges/<socket-sha256>.json.state/agent-profiles.json, matches server/update-state.ts:7-10 and remote-entry.ts:98/bridge.ts:10-15, and notes descriptor token privacy."
+    },
+    {
+      "#": 2,
+      "status": "closed",
+      "evidence": "server/shell-agent.test.ts:92-111 invokes startAgentProfile for active agent, unreadable foreground, foreign foreground job and ready-to-busy transition, requires agent_pane_busy and zero paneSendText calls, and restores all three spies in finally. Existing seven tests/assertions retained."
+    }
+  ],
+  "findings": [],
+  "validation": {
+    "independent": "bun test server/shell-agent.test.ts: 11 pass,0 fail,43 assertions on Bun1.4.3; actual entry point exercised under stubbed RPC with no native/session mutation.",
+    "caller_reported": "Root typecheck passed; final SSH completed exit0/all cases passed. Reviewed final-ssh.log confirms named SSH cases passed; no harness rerun. Native/runtime feature files unchanged from tested build."
+  },
+  "residual_coverage": [
+    "Original nonblocking delayed machine-catalog response regression note remains a future test opportunity; neither followup path changes that UI flow."
+  ],
+  "completed_at": "2026-10-16T01:07:34.705148+00:00"
+}

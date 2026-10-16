@@ -1,0 +1,68 @@
+{
+  "messages_sent": 0,
+  "paid_model_calls": 0,
+  "codex_mode": "native 0.163.0 --no-daemon to avoid fixture background daemon quota",
+  "cases": [
+    {
+      "kind": "codex",
+      "native_kind": "codex",
+      "native_status": "idle",
+      "source": "codex-transcript",
+      "turns": 0,
+      "browser": {
+        "greeting": true,
+        "unavailable": false,
+        "sidebarError": false,
+        "turns": 0
+      }
+    },
+    {
+      "kind": "omp",
+      "native_kind": "omp",
+      "native_status": "idle",
+      "source": "omp-transcript",
+      "turns": 0,
+      "browser": {
+        "greeting": true,
+        "unavailable": false,
+        "sidebarError": false,
+        "turns": 0
+      }
+    },
+    {
+      "kind": "pi",
+      "native_kind": "pi",
+      "native_status": "idle",
+      "source": "pi-transcript",
+      "turns": 0,
+      "browser": {
+        "greeting": true,
+        "unavailable": false,
+        "sidebarError": false,
+        "turns": 0
+      }
+    }
+  ],
+  "ui_new_tab": {
+    "payload": {
+      "kind": "codex",
+      "profile": "compound"
+    },
+    "greeting": true
+  },
+  "ui_new_worktree": {
+    "payload": {
+      "kind": "omp",
+      "profile": "compound"
+    },
+    "greeting": true
+  },
+  "status": "passed",
+  "source_sha256": {
+    "server/index.ts": "adab23b2089fed30fedc8c0703c091e84a7f629fd8217b5417c20e4ae524920c",
+    "server/agent-profiles.ts": "131afec03b6e450a9fa33d694a0e47b664a3bd24ada1dccf7fd8c3be05f5d853",
+    "server/shell-agent.ts": "e3971078b3b0dcd01634bc61483fa8b6aba9d50714af289426718397c48fc3fb",
+    "src/components/NewSessionDialog.tsx": "af0a34f5051052e0228d501b62722a91f46c36502a577398f4f5d45bca5c8f5e",
+    "src/components/WorktreeDialog.tsx": "cf9f07a0bf5ff8ad3c8639122a51624449e4e6ad9dbb5398122d865a262e8b6a"
+  }
+}
