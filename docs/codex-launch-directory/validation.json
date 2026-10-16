@@ -1,0 +1,31 @@
+{
+  "revision": "70b4d4efb3e66a61592195f5b61366800d051a2f",
+  "unit_tests": {
+    "passed": 3905,
+    "failed": 0,
+    "skipped": 8,
+    "files": 300
+  },
+  "focused_codex_tests": {
+    "passed": 135,
+    "failed": 0
+  },
+  "codex_contract_tests": {
+    "passed": 15,
+    "failed": 0
+  },
+  "old_backend_binding_tests": {
+    "original_passed": 10,
+    "new_regression_failed_as_expected": 1
+  },
+  "original_assertions_preserved": 34,
+  "independent_review": {
+    "retained_findings": 0,
+    "source_hashes_verified": true,
+    "cross_model_completed": false,
+    "cross_model_transport_failed_before_code_submission": true
+  },
+  "browser_fixture": "red and green passed",
+  "production_browser": "desktop and phone passed",
+  "fixture_only_change_after_full_fast": "final typecheck, native contracts and browser rerun passed"
+}

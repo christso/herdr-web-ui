@@ -1,0 +1,31 @@
+{
+  "revision": "70b4d4efb3e66a61592195f5b61366800d051a2f",
+  "status": "passed",
+  "compound_controls": [
+    {
+      "source": "codex-transcript",
+      "turns": 78
+    },
+    {
+      "source": "codex-transcript",
+      "turns": 63
+    },
+    {
+      "source": "codex-transcript",
+      "turns": 42
+    },
+    {
+      "source": "codex-transcript",
+      "turns": 18
+    },
+    {
+      "source": "codex-transcript",
+      "turns": 2
+    },
+    {
+      "source": "codex-transcript",
+      "turns": 12
+    }
+  ],
+  "user_input_sent": false
+}

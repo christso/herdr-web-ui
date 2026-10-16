@@ -1,0 +1,15 @@
+{
+  "deployed_revision": "883f2b65add9b873b6f836c16299df2bcae2d526",
+  "controls": 6,
+  "source": "codex-transcript",
+  "turn_counts": [
+    78,
+    63,
+    42,
+    18,
+    2,
+    12
+  ],
+  "model_calls": 0,
+  "user_input_sent": false
+}

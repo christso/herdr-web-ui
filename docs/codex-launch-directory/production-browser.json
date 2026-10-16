@@ -1,0 +1,24 @@
+{
+  "desktop": {
+    "sidebar": true,
+    "workspaces": 33,
+    "sidebarError": false,
+    "errorCount": 0,
+    "webSocketsBlocked": 2,
+    "chatUserTurns": 5,
+    "chatUnavailable": false
+  },
+  "phone": {
+    "sidebar": true,
+    "workspaces": 33,
+    "sidebarError": false,
+    "errorCount": 0,
+    "webSocketsBlocked": 2,
+    "chatUserTurns": 5,
+    "chatUnavailable": false
+  },
+  "revision": "70b4d4efb3e66a61592195f5b61366800d051a2f",
+  "status": "passed",
+  "screenshots_taken": 0,
+  "terminal_attachments": 0
+}

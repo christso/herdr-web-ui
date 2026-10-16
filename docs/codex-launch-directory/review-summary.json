@@ -1,0 +1,17 @@
+{
+  "findings": [],
+  "closed_findings": [
+    "Unknown peers may veto ambiguity but cannot positively claim or persist a binding",
+    "Supported --yolo alias no longer discards launch directory",
+    "Directory flags after positional/resume tokens honored until explicit --; known option values skipped",
+    "Claim throttle runs before metadata fan-out and request-local full process promises are reused"
+  ],
+  "source_hashes": {
+    "server/codex.ts": "400e891a309de1ec573c47f5ead319e83bd550d779f12e2d7ffd093f3f116734",
+    "server/codex-processes.test.ts": "50ecde78097b27dff5aa8f9d1805d4ccb59e70cdb9b02d6f3e383b059d240b67",
+    "server/codex-binding.contract.test.ts": "d8abc4386239a4243abe07a744fcf96f84a3e81d2c1349c6569ff487c48cb1ac",
+    "changelog.d/codex-launch-directory.md": "885ba9cdb23c470ab7203564f06e22fce3e2ac63446aa21bd2018316de8b2086"
+  },
+  "original_tests_and_assertions_preserved": true,
+  "cross_model_review_completed": false
+}

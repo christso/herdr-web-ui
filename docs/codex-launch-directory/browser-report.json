@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "results": [
+    {
+      "variant": "red",
+      "source": "scrollback",
+      "turns": 0,
+      "unavailable": true,
+      "answer": false
+    },
+    {
+      "variant": "green",
+      "source": "codex-transcript",
+      "turns": 2,
+      "unavailable": false,
+      "answer": true
+    }
+  ],
+  "model_calls": 0,
+  "user_panes_touched": 0
+}

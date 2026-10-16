@@ -1,0 +1,19 @@
+{
+  "revision": "70b4d4efb3e66a61592195f5b61366800d051a2f",
+  "hosts": [
+    {
+      "host": "wtg",
+      "runtime": "remote-v29-christso-70b4d4e",
+      "source_files_verified": 120,
+      "new_bridge_pid_verified": true,
+      "native_socket_preserved": true
+    },
+    {
+      "host": "spectre",
+      "runtime": "remote-v29-christso-70b4d4e",
+      "source_files_verified": 120,
+      "new_bridge_pid_verified": true,
+      "native_socket_preserved": true
+    }
+  ]
+}
