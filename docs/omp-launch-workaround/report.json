@@ -1,0 +1,562 @@
+[
+  {
+    "run": "normal-18.11.1",
+    "omp": "18.11.1",
+    "upstream": "aa624cb56f550f9a7dd8bf4d59ed99ffc3921741",
+    "herdr": "0.9.5",
+    "provider": "offline fixed answer",
+    "metadata_fault": "none",
+    "status": "completed",
+    "offline_calls": 2,
+    "web_launch_body": {
+      "cwd": "/tmp/herdr-omp-launch-result-xShAPc/fictional-project",
+      "label": null,
+      "agent": {
+        "kind": "omp"
+      }
+    },
+    "web_launch_status": 200,
+    "cases": [
+      {
+        "label": "upstream-terminal-before-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "scrollback",
+        "turns": 0,
+        "ui": {
+          "greeting": false,
+          "unavailable": true,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-web-before-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 0,
+        "ui": {
+          "greeting": true,
+          "unavailable": false,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-terminal-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-web-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-terminal-after-bridge-restart",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-web-after-bridge-restart",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "fixed-terminal-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "fixed-web-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      }
+    ]
+  },
+  {
+    "run": "normal-18.4.2",
+    "omp": "18.4.2",
+    "upstream": "aa624cb56f550f9a7dd8bf4d59ed99ffc3921741",
+    "herdr": "0.9.5",
+    "provider": "offline fixed answer",
+    "metadata_fault": "none",
+    "status": "completed",
+    "offline_calls": 2,
+    "web_launch_body": {
+      "cwd": "/tmp/herdr-omp-launch-result-0D51WZ/fictional-project",
+      "label": null,
+      "agent": {
+        "kind": "omp"
+      }
+    },
+    "web_launch_status": 200,
+    "cases": [
+      {
+        "label": "upstream-terminal-before-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "scrollback",
+        "turns": 0,
+        "ui": {
+          "greeting": false,
+          "unavailable": true,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-web-before-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 0,
+        "ui": {
+          "greeting": true,
+          "unavailable": false,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-terminal-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-web-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-terminal-after-bridge-restart",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-web-after-bridge-restart",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "fixed-terminal-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "fixed-web-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      }
+    ]
+  },
+  {
+    "run": "missing-argv-18.11.1",
+    "omp": "18.11.1",
+    "upstream": "aa624cb56f550f9a7dd8bf4d59ed99ffc3921741",
+    "herdr": "0.9.5",
+    "provider": "offline fixed answer",
+    "metadata_fault": "Isolated RPC proxy removes argv only from pane.process_info; native processes and agent/session replies unchanged.",
+    "status": "completed",
+    "offline_calls": 2,
+    "web_launch_body": {
+      "cwd": "/tmp/herdr-omp-launch-result-ln4Zrr/fictional-project",
+      "label": null,
+      "agent": {
+        "kind": "omp"
+      }
+    },
+    "web_launch_status": 200,
+    "cases": [
+      {
+        "label": "upstream-terminal-before-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "scrollback",
+        "turns": 0,
+        "ui": {
+          "greeting": false,
+          "unavailable": true,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-web-before-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 0,
+        "ui": {
+          "greeting": true,
+          "unavailable": false,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-terminal-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "scrollback",
+        "turns": 0,
+        "ui": {
+          "greeting": false,
+          "unavailable": true,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-web-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 0,
+        "ui": {
+          "greeting": true,
+          "unavailable": false,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-terminal-after-bridge-restart",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "scrollback",
+        "turns": 0,
+        "ui": {
+          "greeting": false,
+          "unavailable": true,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-web-after-bridge-restart",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "scrollback",
+        "turns": 0,
+        "ui": {
+          "greeting": false,
+          "unavailable": true,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "fixed-terminal-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "fixed-web-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      }
+    ]
+  },
+  {
+    "run": "portable-harness-missing-argv-18.11.1",
+    "omp": "18.11.1",
+    "upstream": "aa624cb56f550f9a7dd8bf4d59ed99ffc3921741",
+    "herdr": "0.9.5",
+    "provider": "offline fixed answer",
+    "metadata_fault": "Isolated RPC proxy removes argv only from pane.process_info; native processes and agent/session replies unchanged.",
+    "status": "completed",
+    "offline_calls": 2,
+    "web_launch_body": {
+      "cwd": "/tmp/herdr-omp-launch-result-LJEdmd/fictional-project",
+      "label": null,
+      "agent": {
+        "kind": "omp"
+      }
+    },
+    "web_launch_status": 200,
+    "cases": [
+      {
+        "label": "upstream-terminal-before-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "scrollback",
+        "turns": 0,
+        "ui": {
+          "greeting": false,
+          "unavailable": true,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-web-before-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 0,
+        "ui": {
+          "greeting": true,
+          "unavailable": false,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-terminal-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "scrollback",
+        "turns": 0,
+        "ui": {
+          "greeting": false,
+          "unavailable": true,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-web-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 0,
+        "ui": {
+          "greeting": true,
+          "unavailable": false,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-terminal-after-bridge-restart",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "scrollback",
+        "turns": 0,
+        "ui": {
+          "greeting": false,
+          "unavailable": true,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "upstream-web-after-bridge-restart",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "scrollback",
+        "turns": 0,
+        "ui": {
+          "greeting": false,
+          "unavailable": true,
+          "turns": 0,
+          "answer": false,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "fixed-terminal-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      },
+      {
+        "label": "fixed-web-after-message",
+        "native_kind": "omp",
+        "native_status": "idle",
+        "native_session_reported": false,
+        "source": "omp-transcript",
+        "turns": 2,
+        "ui": {
+          "greeting": false,
+          "unavailable": false,
+          "turns": 2,
+          "answer": true,
+          "sidebarError": false
+        }
+      }
+    ]
+  }
+]
