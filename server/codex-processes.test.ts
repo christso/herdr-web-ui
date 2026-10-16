@@ -15,7 +15,10 @@ let home: string;
 let path: string;
 let screen: string;
 let peerScreens: Map<string, string | Error>;
-let foreground: { pid: number; name?: string; argv?: string[] }[];
+let foreground: { pid: number; name?: string; argv?: string[]; cwd?: string }[];
+let peerForeground: Map<string, typeof foreground>;
+let processReads: Map<string, number>;
+let reportedSession: string | undefined;
 let listener: ReturnType<typeof Bun.listen>;
 let socketBefore: string | undefined;
 const children: ReturnType<typeof Bun.spawn>[] = [];
@@ -36,6 +39,9 @@ beforeEach(() => {
   screen = "";
   peerScreens = new Map();
   foreground = [];
+  peerForeground = new Map();
+  processReads = new Map();
+  reportedSession = undefined;
   socketBefore = process.env["HERDR_SOCKET"];
   const socket = join(root, "herdr.sock");
   process.env["HERDR_SOCKET"] = socket;
@@ -47,13 +53,15 @@ beforeEach(() => {
         socket.data.buffer += chunk.toString();
         if (!socket.data.buffer.includes("\n")) return;
         const request = JSON.parse(socket.data.buffer) as { id: string; method: string; params?: { pane_id?: string } };
-        const peerScreen = peerScreens.get(request.params?.pane_id ?? "");
+        const peerId = request.params?.pane_id ?? "";
+        if (request.method === "pane.process_info") processReads.set(peerId, (processReads.get(peerId) ?? 0) + 1);
+        const peerScreen = peerScreens.get(peerId);
         if (request.method === "pane.read" && peerScreen instanceof Error) {
           socket.end(`${JSON.stringify({ id: request.id, error: { code: "pane_not_found", message: peerScreen.message } })}\n`);
           return;
         }
-        const result = request.method === "agent.get" ? { agent: {} }
-          : request.method === "pane.process_info" ? { process_info: { foreground_processes: foreground } }
+        const result = request.method === "agent.get" ? { agent: reportedSession === undefined ? {} : { agent_session: { agent: "codex", kind: "id", value: reportedSession } } }
+          : request.method === "pane.process_info" ? { process_info: { foreground_processes: peerForeground.get(request.params?.pane_id ?? "") ?? foreground } }
           : request.method === "pane.read" ? { read: { text: peerScreen ?? screen } }
           : null;
         if (result === null) throw new Error(`unexpected RPC ${request.method}`);
@@ -104,6 +112,59 @@ it.skipIf(process.platform !== "linux")("selects the resumed rollout when Linux 
 it("selects the resumed rollout for the observed native executable alias", async () => {
   foreground = [{ pid: 2147483647, argv: ["/home/user/.local/bin/codex.opencodex-real", "resume", thread] }];
   expect(await resolve()).toBe(path);
+});
+
+it.each([
+  ["--cd", "profile dir"], ["--cd=profile dir"], ["-C", "profile dir"], ["-Cprofile dir"],
+  ["--profile", "coding", "--cd", "profile dir"],
+  ["--yolo", "--cd", "profile dir"], ["--cd", "profile dir", "--yolo"],
+  ["resume", thread, "-C", "profile dir"], ["Explain --cd", "--cd", "profile dir"],
+].map((args) => ({ args })))("finds the conversation in Codex's launch directory: %j", async ({ args }) => {
+  const cwd = join(root, "profile dir");
+  mkdirSync(cwd);
+  const db = new Database(join(home, "state_5.sqlite"));
+  db.query("UPDATE threads SET cwd = ?").run(cwd);
+  db.close();
+  foreground = [{ pid: 2147483647, argv: ["/usr/bin/codex", ...args], cwd: root }];
+  screen = answer;
+  expect(await resolve()).toBe(path);
+});
+
+it.each([
+  ["--", "--cd", "profile dir"],
+  ["--config", "--cd", "profile dir"], ["--future-option", "--cd", "profile dir"],
+].map((args) => ({ args })))("does not take an option value or prompt as a launch directory: %j", async ({ args }) => {
+  const db = new Database(join(home, "state_5.sqlite"));
+  db.query("UPDATE threads SET cwd = ?").run(join(root, "profile dir"));
+  db.close();
+  foreground = [{ pid: 2147483647, argv: ["codex", ...args], cwd: root }];
+  screen = answer;
+  expect(await resolve()).toBeNull();
+});
+
+it("uses the foreground process directory to resolve a relative -C after interpreter options", async () => {
+  const cwd = join(root, "profile dir");
+  const db = new Database(join(home, "state_5.sqlite"));
+  db.query("UPDATE threads SET cwd = ?").run(cwd);
+  db.close();
+  foreground = [{ pid: 2147483647, argv: ["node", "--no-warnings", "/opt/codex.js", "-C", "../profile dir"], cwd: join(root, "shell") }];
+  screen = answer;
+  expect(await resolve()).toBe(path);
+});
+
+it("drops a background binding when a newer thread starts in the --cd directory", async () => {
+  const cwd = join(root, "profile dir");
+  const db = new Database(join(home, "state_5.sqlite"));
+  db.query("UPDATE threads SET cwd = ?").run(cwd);
+  foreground = [{ pid: 2147483647, argv: ["codex", "--cd", cwd], cwd: root }];
+  screen = answer;
+  expect(await resolve()).toBe(path);
+  screen = "";
+  expect(await codexOpenRollout(root, root, home)).toBe(path);
+  const now = Math.floor(Date.now() / 1000);
+  db.query("INSERT INTO threads VALUES (?, ?, ?, 0, NULL, ?, ?, 'cli')").run("new", join(home, "sessions", "missing.jsonl"), cwd, now, now);
+  db.close();
+  expect(await codexOpenRollout(root, root, home)).toBeNull();
 });
 
 it.skipIf(process.platform !== "linux")("keeps the screen binding with recovered argv while the same process runs", async () => {
@@ -256,6 +317,31 @@ shortIt("rejects unknown or matching peer screens when a header has scrolled awa
     peerScreens.set("peer", peer);
     expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("peer")])).toBeNull();
   }
+});
+
+shortIt("rejects the same short exchange in a peer launched from another directory with --cd", async () => {
+  await shortSession();
+  const ownShell = join(root, "shell-a");
+  const peerShell = join(root, "shell-b");
+  foreground[0]!.argv!.push("--cd", root);
+  foreground[0]!.cwd = ownShell;
+  peerForeground.set("peer", [{ pid: 2147483647, argv: ["codex", "-C", root], cwd: peerShell }]);
+  peerScreens.set("peer", shortScreen);
+  expect(await codexTranscriptPath(root, ownShell, home, [fixturePane(root, ownShell), fixturePane("peer", peerShell)])).toBeNull();
+});
+
+shortIt("does not let a peer's old shell directory hide its different --cd directory", async () => {
+  await shortSession();
+  peerForeground.set("peer", [{ pid: 2147483647, argv: ["codex", "--cd", join(root, "elsewhere")], cwd: root }]);
+  peerScreens.set("peer", "");
+  expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("peer")])).toBe(path);
+});
+
+shortIt("cannot rule out a peer's --cd directory when its process metadata is unavailable", async () => {
+  await shortSession();
+  peerForeground.set("peer", []);
+  peerScreens.set("peer", "");
+  expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("peer", join(root, "other-shell"))])).toBeNull();
 });
 
 shortIt("accepts a headerless peer only with a substantial match to a different conversation", async () => {
@@ -500,3 +586,46 @@ for (const executable of [
     expect(await resolve()).toBe(path);
   });
 }
+
+
+it("checks the resume-scoped --cd directory for a newer /new thread", async () => {
+  const cwd = join(root, "profile dir");
+  const db = new Database(join(home, "state_5.sqlite"));
+  db.query("UPDATE threads SET cwd = ?").run(cwd);
+  foreground = [{ pid: 2147483647, argv: ["codex", "resume", thread, "--cd", cwd], cwd: root }];
+  expect(await resolve()).toBe(path);
+  db.query("INSERT INTO threads VALUES (?, ?, ?, 0, NULL, 2, 2, 'cli')").run("new", join(home, "sessions", "missing.jsonl"), cwd);
+  db.close();
+  expect(await resolve()).toBeNull();
+});
+
+it("never gives an unknown-directory peer a positive binding and throttles repeat discovery", async () => {
+  foreground = [{ pid: 2147483647, argv: ["codex"], cwd: root }];
+  screen = answer;
+  expect(await resolve()).toBe(path);
+  const next = join(home, "sessions", "next.jsonl");
+  const reply = "This different substantial fictional response is repeated by a peer whose actual launch directory cannot be established.";
+  shortRollout(next, "A new fictional request", reply);
+  const db = new Database(join(home, "state_5.sqlite"));
+  const now = Math.floor(Date.now() / 1000) + 1;
+  db.query("INSERT INTO threads VALUES (?, ?, ?, 0, NULL, ?, ?, 'cli')").run("next", next, root, now, now);
+  db.close();
+  screen = "";
+  const elsewhere = join(root, "other-shell");
+  peerForeground.set("peer", [{ pid: 2147483647, argv: ["codex", "--future-option", "--cd", elsewhere], cwd: elsewhere }]);
+  peerScreens.set("peer", reply);
+  const panes = [fixturePane(root), fixturePane("peer", elsewhere)];
+  expect(await codexTranscriptPath(root, root, home, panes)).toBeNull();
+  expect(await codexTranscriptPath(root, root, home, panes)).toBeNull();
+  expect(processReads.get("peer")).toBe(1);
+  expect(await codexOpenRollout("peer", elsewhere, home)).toBeNull();
+});
+
+it("reuses peer process metadata between claim and resume checks in the same read", async () => {
+  foreground = [{ pid: 2147483647, argv: ["codex"], cwd: root }];
+  peerForeground.set("peer", [{ pid: 2147483646, argv: ["codex"], cwd: root }]);
+  peerScreens.set("peer", "");
+  reportedSession = thread;
+  expect(await codexTranscriptPath(root, root, home, [fixturePane(root), fixturePane("peer")])).toBe(path);
+  expect(processReads.get("peer")).toBe(1);
+});
