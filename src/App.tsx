@@ -189,7 +189,7 @@ export function App() {
     }
   }, [machines]);
   const [selectedMachineId, setSelectedMachineId] = useState(() => {
-    if (initialLink && (initialLink.pane || initialLink.workspace || fileFromLink(initialLink))) return initialLink.machine;
+    if (initialLink && (initialLink.pane || initialLink.workspace || fileFromLink(initialLink) || initialLink.create)) return initialLink.machine;
     return storedSelection()?.machine_id ?? "local";
   });
   const selectedMachine = machines.find((m) => m.id === selectedMachineId);
@@ -235,7 +235,7 @@ export function App() {
   const [selectedPaneId, setSelectedPaneId] = useState<string | null>(() => {
     if (initialLink?.pane) return initialLink.pane;
     // a link to a workspace opens the pane its row opens, once the roster is in (below)
-    if (initialLink && (initialLink.workspace || fileFromLink(initialLink))) return null;
+    if (initialLink && (initialLink.workspace || fileFromLink(initialLink) || initialLink.create)) return null;
     return storedSelection()?.pane_id ?? null;
   });
   const [notificationViewTarget, setNotificationViewTarget] = useState<NotificationTarget | null>(
@@ -1076,11 +1076,11 @@ export function App() {
   // Back or Forward landed somewhere other than its entry said: that place is written over the entry
   const poppedTo = useRef(false);
   const newSessionOpenRef = useRef(newSessionOpen); newSessionOpenRef.current = newSessionOpen;
-  const linkWorkspaceId = selectedPane?.workspace_id ?? (selectedPaneId === null ? null : undefined);
+  const linkWorkspaceId = selectedPane?.workspace_id ?? null;
   const linkSlug = slugOf(selectedWorkspace?.label) || null;
   const linkFile = viewing && viewing.machineId === selectedMachineId && (viewing.paneId === null || viewing.paneId === selectedPaneId) ? viewing.path : null;
   useEffect(() => {
-    if (locked !== false || machines.length === 0 || snapshot === null || linkWorkspaceId === undefined || !linkLanded) return;
+    if (locked !== false || machines.length === 0 || snapshot === null || !linkLanded) return;
     const link: AppLink = {
       machine: selectedMachineId, workspace: linkWorkspaceId, workspaceSlug: linkSlug, pane: selectedPaneId, view: selectedPaneId ? view : null, file: linkFile,
       settings: settingsOpen ? settingsPage : null, section: settingsOpen && settingsPage === settingsLinkPage ? settingsLinkSection : null,
@@ -1137,7 +1137,16 @@ export function App() {
       if (missing) setHeaderNote("machine-missing");
       else {
         const pane = machine?.snapshot ? resolveLink(machine.snapshot, link).pane : link.pane;
-        if (pane === null) return;
+        if (pane === null) {
+          if (link.pane) {
+            selectTargetRef.current(link.machine, link.pane, link.view ?? undefined);
+            pendingLink.current = link; pendingFile.current = null; setLinkLanded(false);
+            linkSince.current = rosterSeq.current;
+            poppedTo.current = true;
+            setLinkTick((tick) => tick + 1);
+          }
+          return;
+        }
         const current = selectionRef.current;
         // the entry's lens is drawn over the pane's own, as a tapped notification's is. Where it
         // lands is written over the entry, so Forward keeps the entries after it
@@ -1298,6 +1307,7 @@ export function App() {
     const since = linked ? linkSince.current : selectionSince.current;
     if (!machineGone(machines, rosterSeq.current, since, machineId)) return;
     pendingLink.current = null; pendingFile.current = null;
+    pendingCreate.current = null;
     setLinkLanded(true);
     setHeaderNote("machine-missing");
     // no pane: the link's pane id means nothing on another PC, so the pane herdr has in front opens
