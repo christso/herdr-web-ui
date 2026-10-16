@@ -14,21 +14,28 @@ import { chromePath } from "./chrome-path.ts";
 const root = mkdtempSync(join(tmpdir(), "herdr-web-ui-chat-browser-"));
 const codexHome = join(root, "codex");
 const rollout = join(codexHome, "sessions", "rollout.jsonl");
+const activityCwd = join(root, "activity");
+const activityRollout = join(codexHome, "sessions", "activity.jsonl");
 const answer = "The conversation is now clean. Native transcript records preserve the user request and final answer while internal instructions stay hidden.";
 const records: unknown[] = [];
+const activityRecords: unknown[] = [];
 const add = (payload: unknown, second: number) => records.push({ type: "response_item", timestamp: `2026-09-22T00:00:${String(second).padStart(2, "0")}Z`, payload });
 const message = (role: string, text: string, phase?: string) => ({ type: "message", role, content: [{ type: role === "user" ? "input_text" : "output_text", text }], ...(phase ? { phase } : {}) });
 const persist = () => writeFileSync(rollout, records.map((record) => JSON.stringify(record)).join("\n"));
+const persistActivity = () => writeFileSync(activityRollout, activityRecords.map((record) => JSON.stringify(record)).join("\n"));
 let workspaceId: string | undefined;
+let activityWorkspaceId: string | undefined;
 let server: ReturnType<typeof createServer> | undefined;
 let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
 let release: (() => void) | undefined;
 
 try {
   mkdirSync(join(codexHome, "sessions"), { recursive: true });
+  mkdirSync(activityCwd, { recursive: true });
   const db = new Database(join(codexHome, "state_5.sqlite"));
   db.exec("CREATE TABLE threads (rollout_path TEXT, cwd TEXT, archived INTEGER, agent_role TEXT, updated_at INTEGER)");
   db.query("INSERT INTO threads VALUES (?, ?, 0, NULL, 1)").run(rollout, root);
+  db.query("INSERT INTO threads VALUES (?, ?, 0, NULL, 2)").run(activityRollout, activityCwd);
   db.close();
   records.push({ type: "session_meta", payload: { id: "01a0c7a1-56d9-7e20-9f08-f7a2d973bcbb", cwd: root } });
   records.push({ type: "turn_context", payload: { model: "codex-test-model", effort: "xhigh" } });
@@ -42,6 +49,11 @@ try {
   add({ type: "function_call_output", call_id: "c2", output: "Process exited with code 1\n1 fail" }, 5);
   add(message("assistant", answer, "final_answer"), 8);
   persist();
+  activityRecords.push({ type: "session_meta", payload: { id: "01a0c7a1-56d9-7e20-9f08-f7a2d973bcbd", cwd: activityCwd } });
+  activityRecords.push({ type: "turn_context", payload: { model: "codex-activity-test-model", effort: "low" } });
+  const addActivity = (payload: unknown, second: number) => activityRecords.push({ type: "response_item", timestamp: `2026-09-22T00:01:${String(second).padStart(2, "0")}Z`, payload });
+  addActivity(message("user", "An OMP-shaped request."), 0);
+  persistActivity();
   // A detected fixture process keeps native descriptor evidence for the rollout;
   // the ignored path field of a manual lifecycle report is not a session binding.
   mkdirSync(join(root, "bin"));
@@ -59,6 +71,16 @@ try {
     await Bun.sleep(50);
   }
   await herdrRpc("pane.report_agent", { pane_id: paneId, source: "manual", agent: "codex", state: "idle" });
+  const activityWorkspace = await workspaceCreate({ cwd: activityCwd, label: "herdr-web-ui-test-chat-working" });
+  activityWorkspaceId = activityWorkspace.workspace.workspace_id;
+  const activityPaneId = activityWorkspace.root_pane.pane_id;
+  await herdrRpc("pane.send_text", { pane_id: activityPaneId, text: `${executable} ${activityRollout}\n` });
+  const activityDeadline = Date.now() + 10_000;
+  while ((await sessionSnapshot()).panes.find((pane) => pane.pane_id === activityPaneId)?.agent !== "codex") {
+    if (Date.now() >= activityDeadline) throw new Error("owned Codex activity fixture process was not detected");
+    await Bun.sleep(50);
+  }
+  const reportActivity = (state: "working" | "idle") => herdrRpc("pane.report_agent", { pane_id: activityPaneId, source: "manual", agent: "codex", state });
   // tailscaleOwner null: the plain-HTTP page below reaches the server under a name that is not
   // loopback, which a PC running Tailscale would otherwise send to pairing
   server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "push"), codexHome, tailscaleOwner: null });
@@ -84,6 +106,44 @@ try {
   // the level is drawn as one word; the sentence is the screen reader's
   await modelInfo.getByText("xhigh", { exact: true }).waitFor();
   await modelInfo.getByText("Reasoning xhigh", { exact: true }).waitFor({ state: "attached" });
+  // Native pane status is the activity source for Codex and OMP; their conversation responses do
+  // not carry `activity`. User-only and final-answer-only turns render no live work block, while a
+  // parsed tool call does. Keep this in a second owned pane so the existing Codex assertions stay
+  // on their original transcript and status sequence.
+  const activityPage = await context.newPage();
+  await activityPage.addInitScript((id) => localStorage.setItem(`herdr-web-ui:view:${id}`, "chat"), activityPaneId);
+  await activityPage.goto(`http://127.0.0.1:${server.port}/?pane=${encodeURIComponent(activityPaneId)}`);
+  await activityPage.locator(".conn-live").waitFor();
+  const activityLog = activityPage.getByRole("log", { name: `conversation of ${activityPaneId}` });
+  await activityLog.getByText("An OMP-shaped request.", { exact: true }).waitFor();
+  await reportActivity("working");
+  const activityPane = (await sessionSnapshot()).panes.find((pane) => pane.pane_id === activityPaneId);
+  assert.equal(activityPane?.agent_status, "working", "the owned pane reports native working status");
+  const activityApi = () => fetch(`http://127.0.0.1:${server!.port}/api/pane/conversation?pane_id=${encodeURIComponent(activityPaneId)}`).then((response) => response.json()) as Promise<{ activity?: unknown }>;
+  await activityPage.waitForFunction(async (pane) => {
+    const result = await fetch(`/api/pane/conversation?pane_id=${encodeURIComponent(pane)}`).then((response) => response.json()) as { activity?: unknown };
+    return result.activity === undefined;
+  }, activityPaneId);
+  assert.equal((await activityApi()).activity, undefined, "native working comes from pane status without conversation activity");
+  await activityLog.locator(".chat-activity").getByText("Working…", { exact: true }).waitFor();
+  assert.equal(await activityLog.locator(".work-block").count(), 0, "user-only turn has no rendered work block");
+  activityRecords.splice(0, activityRecords.length,
+    { type: "session_meta", payload: { id: "01a0c7a1-56d9-7e20-9f08-f7a2d973bcbd", cwd: activityCwd } },
+    { type: "turn_context", payload: { model: "codex-activity-test-model", effort: "low" } },
+  );
+  addActivity(message("assistant", "Text-only final answer.", "final_answer"), 1);
+  persistActivity();
+  await activityLog.getByText("Text-only final answer.", { exact: true }).waitFor();
+  await activityLog.locator(".chat-activity").getByText("Working…", { exact: true }).waitFor();
+  assert.equal(await activityLog.locator(".work-block").count(), 0, "text-only final answer has no rendered work block");
+  activityRecords.push({ type: "response_item", timestamp: "2026-09-22T00:01:02Z", payload: { type: "function_call", name: "exec_command", call_id: "activity-tool", arguments: '{"cmd":"pwd"}' } });
+  persistActivity();
+  await activityLog.getByRole("button", { name: "Ran pwd", exact: true }).waitFor();
+  assert.equal(await activityLog.locator(".chat-activity").count(), 0, "a parsed live tool work block owns the single Working label");
+  await reportActivity("idle");
+  assert.equal(await activityLog.locator(".chat-activity").count(), 0, "idle pane status stays quiet");
+  console.log("PASS native pane working without transcript activity for user-only/text-only turns; tool work deduplicates the label");
+  if (process.env["CHAT_ACTIVITY_ONLY"] !== "1") {
   assert.equal(await page.locator(".composer-surface > .composer-status").count(), 1, "the status content is inside the input card");
   assert.equal(await page.locator(".composer-surface").evaluate((card) => {
     const box = (selector: string): DOMRect => card.querySelector(selector)!.getBoundingClientRect();
@@ -287,10 +347,12 @@ try {
   assert.equal(await fallback.getAttribute("open"), null, "unmatched Codex output stays folded");
   assert.deepEqual(errors, []);
   console.log("PASS mobile layout, explicit collapsed fallback, no browser errors");
+  }
 } finally {
   release?.();
   await browser?.close();
   server?.stop();
   if (workspaceId) await workspaceClose(workspaceId);
+  if (activityWorkspaceId) await workspaceClose(activityWorkspaceId);
   rmSync(root, { recursive: true, force: true });
 }

@@ -29,11 +29,13 @@ beforeAll(async () => {
   workspaceId = created.workspace.workspace_id;
   paneId = created.root_pane.pane_id;
   await herdrRpc("pane.send_text", { pane_id: paneId, text: `${fakeOmp}\n` });
+  let detected = false;
   for (let attempt = 0; attempt < 100; attempt++) {
     const pane = (await sessionSnapshot()).panes.find((candidate) => candidate.pane_id === paneId);
-    if (pane?.agent === "omp") break;
+    if (pane?.agent === "omp") { detected = true; break; }
     await Bun.sleep(50);
   }
+  expect(detected).toBe(true);
   await herdrRpc("pane.report_agent", { pane_id: paneId, source: "herdr:omp", agent: "omp", state: "idle", seq: ++seq });
   await herdrRpc("pane.report_agent_session", { pane_id: paneId, source: "herdr:omp", agent: "omp", seq: ++seq, agent_session_path: fresh, session_start_source: "startup" });
   process.env["HOME"] = root;

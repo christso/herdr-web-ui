@@ -6,6 +6,9 @@ import { join, win32 } from "node:path";
 import type { HerdrPane, SessionSnapshot } from "../shared/protocol.ts";
 import { MAX_TURNS, parseOmpTranscript } from "./transcript-records.ts";
 import { toolVerb } from "../src/lib/toolVerbs.ts";
+import { hasLiveWorkBlock, splitTurn } from "../src/lib/workBlocks.ts";
+import { standaloneChatActivity } from "../src/lib/chatActivity.ts";
+import { parseCodexTranscript } from "./codex.ts";
 import type { ConversationTurn } from "../shared/protocol.ts";
 import { parseAgyTranscript } from "./agy.ts";
 import { agyStoreFromLocks } from "./agy-store.ts";
@@ -843,6 +846,38 @@ describe("parseOmpTranscript", () => {
       JSON.stringify({ type: "message", message: { role: "user", content: [{ type: "text", text: `m${i}` }] } }),
     ).join("\n");
     expect(parseOmpTranscript(many).length).toBe(MAX_TURNS);
+  });
+});
+
+describe("native transcript activity and rendered work blocks", () => {
+  it("shows OMP working for a user-only turn because there is no assistant work block", () => {
+    const turns = parseOmpTranscript(JSON.stringify({ type: "message", message: { role: "user", content: [{ type: "text", text: "Check this" }] } }));
+    const last = turns.at(-1)!;
+    expect(last.role).toBe("user");
+    expect(hasLiveWorkBlock(last, true, "working")).toBe(false);
+    expect(standaloneChatActivity("working", hasLiveWorkBlock(last, true, "working"))).toBe("working");
+  });
+
+  it("shows working for a text-only final answer when no work parts render", () => {
+    const turns = parseCodexTranscript(JSON.stringify({ type: "response_item", payload: {
+      type: "message", role: "assistant", phase: "final_answer", content: [{ type: "output_text", text: "Done." }],
+    } }));
+    const last = turns.at(-1)!;
+    expect(last.role).toBe("assistant");
+    expect(splitTurn(last.parts).work).toEqual([]);
+    expect(hasLiveWorkBlock(last, true, "working")).toBe(false);
+    expect(standaloneChatActivity("working", hasLiveWorkBlock(last, true, "working"))).toBe("working");
+  });
+
+  it("uses one label when actual parsed tool work renders a live block", () => {
+    const turns = parseOmpTranscript(JSON.stringify({ type: "message", message: { role: "assistant", content: [
+      { type: "toolCall", id: "call-1", name: "bash", arguments: { command: "pwd" } },
+    ] } }));
+    const last = turns.at(-1)!;
+    expect(splitTurn(last.parts).work).toHaveLength(1);
+    expect(hasLiveWorkBlock(last, true, "working")).toBe(true);
+    expect(standaloneChatActivity("working", hasLiveWorkBlock(last, true, "working"))).toBeNull();
+    expect(standaloneChatActivity("working", false, true)).toBeNull();
   });
 });
 
