@@ -1,0 +1,336 @@
+{
+  "kernel": "7.0.0-28-generic",
+  "offline_reply_delay_seconds": 15,
+  "model_calls": 0,
+  "cases": [
+    {
+      "official_integration": true,
+      "before": {
+        "agent": "omp",
+        "agent_status": "idle",
+        "state_change_seq": 3
+      },
+      "working_status_counts": {
+        "working": 48
+      },
+      "samples": [
+        {
+          "elapsed": 0.47,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 0.77,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 1.07,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 1.38,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 1.69,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 1.99,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 2.29,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 2.59,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 2.89,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 3.19,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 3.5,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 3.8,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 4.1,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 4.4,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 4.71,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 5.01,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 5.32,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 5.62,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 5.92,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 6.22,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 6.52,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 6.83,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 7.13,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 7.43,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 7.73,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 8.03,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 8.34,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 8.64,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 8.94,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 9.24,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 9.55,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 9.85,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 10.16,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 10.46,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 10.76,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 11.06,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 11.36,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 11.66,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 11.97,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 12.27,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 12.57,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 12.87,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 13.17,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 13.48,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 13.78,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 14.08,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 14.38,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        },
+        {
+          "elapsed": 14.69,
+          "status": "working",
+          "session_reported": true,
+          "seq": 4
+        }
+      ],
+      "after": {
+        "agent": "omp",
+        "agent_status": "idle",
+        "state_change_seq": 5
+      },
+      "session_reported_after": true
+    }
+  ],
+  "herdr": {
+    "type": "pong",
+    "version": "0.9.5",
+    "protocol": 22,
+    "capabilities": {
+      "live_handoff": true,
+      "detached_server_daemon": false,
+      "endpoint_protocol_generation": 1,
+      "surface_interest": true,
+      "health_check": true,
+      "ssh_agent_registration": true
+    }
+  },
+  "omp_version": "omp/18.4.2",
+  "browser_working": {
+    "activity": [
+      "Working\u2026"
+    ],
+    "workingWorkBlock": false,
+    "unavailable": false
+  },
+  "status": "completed"
+}
