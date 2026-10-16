@@ -1,0 +1,39 @@
+{
+  "surface": "Production UI with bundled fictional demo transport",
+  "messages_sent": 0,
+  "agents_started": 0,
+  "states": [
+    {
+      "label": "Default launcher exposes native Profile",
+      "launcher": "",
+      "profile": "",
+      "profileVisible": true,
+      "dialog": "New tab \u00b7 checkout-api"
+    },
+    {
+      "label": "Native OMP profile selected",
+      "launcher": "",
+      "profile": "compound-engineering",
+      "profileVisible": true,
+      "dialog": "New tab \u00b7 checkout-api"
+    },
+    {
+      "label": "Custom launcher hides Profile",
+      "launcher": "omp-compound",
+      "profileVisible": false,
+      "dialog": "New tab \u00b7 checkout-api"
+    },
+    {
+      "label": "Default launcher restores Profile at Default",
+      "launcher": "",
+      "profile": "",
+      "profileVisible": true,
+      "dialog": "New tab \u00b7 checkout-api"
+    }
+  ],
+  "timeline_start": 0,
+  "native_profile_at": 1.4471557531505823,
+  "custom_launcher_at": 3.4567521158605814,
+  "restored_at": 5.692123091779649,
+  "status": "passed"
+}
