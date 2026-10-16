@@ -1202,6 +1202,8 @@ interface CodexThreadRow {
 
 const SHORT_THREAD_LIMIT = 32;
 const SHORT_ROLLOUT_LIMIT = 1024 * 1024;
+// A chat polls every 2 s and nothing binds a short match, so an unchanged rollout is read once.
+const shortTexts = new Map<string, { ino: number; size: number; mtimeMs: number; text: string | null }>();
 
 /** Validate every record, retaining only messages: tool output cannot identify a conversation. */
 async function shortMatchingText(path: string, size: number): Promise<string | null> {
@@ -1247,9 +1249,19 @@ async function safeShortThreads(rows: readonly CodexThreadRow[], home: string): 
       const header = rolloutHeader(path);
       if (!stat.isFile() || stat.size <= 0 || header === null
         || Object.keys(record(header.history_base)).length > 0) return null;
-      const text = await shortMatchingText(path, stat.size);
-      const after = statSync(path);
-      if (text === null || after.size !== stat.size || after.ino !== stat.ino || after.mtimeMs !== stat.mtimeMs) return null;
+      const cached = shortTexts.get(path);
+      let text: string | null;
+      if (cached !== undefined && cached.ino === stat.ino && cached.size === stat.size && cached.mtimeMs === stat.mtimeMs) {
+        text = cached.text;
+      } else {
+        text = await shortMatchingText(path, stat.size);
+        const after = statSync(path);
+        if (after.size !== stat.size || after.ino !== stat.ino || after.mtimeMs !== stat.mtimeMs) return null;
+        shortTexts.delete(path);
+        shortTexts.set(path, { ino: stat.ino, size: stat.size, mtimeMs: stat.mtimeMs, text });
+        if (shortTexts.size > 128) shortTexts.delete(shortTexts.keys().next().value!);
+      }
+      if (text === null) return null;
       const exchanges = codexExchanges(text);
       const stored = normalizePrompt(row.firstUserMessage ?? "");
       if (stored !== "" && (exchanges[0] === undefined || normalizePrompt(exchanges[0].user) !== stored)) return null;

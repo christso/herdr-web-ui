@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, it } from "bun:test";
 import { Database } from "bun:sqlite";
-import { appendFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, closeSync, mkdirSync, mkdtempSync, openSync, rmSync, statSync, symlinkSync, utimesSync, writeFileSync, writeSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { codexOpenRollout, codexTranscriptPath } from "./codex.ts";
@@ -360,6 +360,23 @@ shortIt("checks every exchange in a tool-heavy older thread instead of rejecting
     { type: "event_msg", payload: { type: "agent_message", message: shortAnswer } },
   ].map((entry) => JSON.stringify(entry)).join("\n") + "\n");
   expect(await resolve()).toBeNull();
+});
+
+shortIt("reads an unchanged older rollout once across polls", async () => {
+  const created = await shortSession();
+  const old = join(home, "sessions", "tool-heavy.jsonl");
+  shortRollout(old, "Original request", "An unrelated original answer.");
+  const output = JSON.stringify({ type: "response_item", payload: { type: "function_call_output", call_id: "tool", output: "x".repeat(64 * 1024) } }) + "\n";
+  appendFileSync(old, output.repeat(20));
+  addShortThread("old", old, created - 60_000, "Original request");
+  utimesSync(old, 1_700_000_000, 1_700_000_000);
+  expect(await resolve()).toBe(path);
+  // Same inode, size and mtime: a second read would hit this broken line and give up.
+  const fd = openSync(old, "r+");
+  writeSync(fd, "\"", statSync(old).size - 100);
+  closeSync(fd);
+  utimesSync(old, 1_700_000_000, 1_700_000_000);
+  expect(await resolve()).toBe(path);
 });
 
 shortIt("rejects cumulative retained messages over the short matching limit", async () => {
