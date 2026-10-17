@@ -6,9 +6,9 @@
   ],
   "placement": "Remaining case after merged PR1155; independent from profile launch and pre-message greeting features.",
   "base": "95507e2ea66c53eefaed58dd923ec21111118a2e",
-  "candidate": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
-  "production": "007cb549139e23fa511c540041828c76509216e8",
-  "reader_sha256": "a0171d99d75c79515fe783874322833e0470913e13bfd0762ff8da36b510a38a",
-  "completion_matcher_sha256": "736f321ab56531c63cdde27f60b6d885238f0e1f707ee5158aeafd9c7691afef",
-  "production_reader_sha256": "f387174b0a89eeae291adbe807c5831ef5d086b6ef6b710e10f49cc4e063b37d"
+  "candidate": "c5accd5cfcd430a71afc5802f41489544448aa5e",
+  "production": "602750713227a424e55024b80730dad7333e26a8",
+  "reader_sha256": "f139814009ec568033d3531c06734331c7c9a24f7ec2c93dd71fe65c7a6bef1d",
+  "completion_matcher_sha256": "48e54fc9805e06a5177adb53c93be61dc3952df351ee8175299c2070e05a11bd",
+  "production_reader_sha256": "e56351fc6105c06f61292e3fb69fca2ab65538748dfbdf23e4492b561cf21a92"
 }

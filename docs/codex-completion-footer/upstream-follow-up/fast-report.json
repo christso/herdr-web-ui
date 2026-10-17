@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "runId": "81fec789-8810-4d7a-aa03-d52a308bf1ac",
+  "runId": "3df5703b-1b1d-409e-85c8-7107718b34bc",
   "status": "success",
   "exitCode": 0,
-  "startedAt": "2026-10-17T02:08:51.272Z",
-  "endedAt": "2026-10-17T02:10:01.714Z",
-  "durationMs": 70442,
+  "startedAt": "2026-10-17T02:22:48.245Z",
+  "endedAt": "2026-10-17T02:23:55.351Z",
+  "durationMs": 67106,
   "mode": [
     "fast"
   ],
   "revision": {
-    "head": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
-    "testedSha": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
-    "headSha": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+    "head": "c5accd5cfcd430a71afc5802f41489544448aa5e",
+    "testedSha": "c5accd5cfcd430a71afc5802f41489544448aa5e",
+    "headSha": "c5accd5cfcd430a71afc5802f41489544448aa5e",
     "headBranch": "fix/codex-short-reply-footer",
     "baseBranch": null,
     "baseSha": null,
@@ -29,25 +29,25 @@
   },
   "source": {
     "start": {
-      "head": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+      "head": "c5accd5cfcd430a71afc5802f41489544448aa5e",
       "branch": "fix/codex-short-reply-footer",
       "trackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "untrackedFiles": [],
       "untrackedFileCount": 0,
       "untrackedContentSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "untrackedFilesTruncated": false,
-      "fingerprint": "ad141d6e1f4eff52411d1d0deb8031d148b2a0271c62b972f6261cc4bf12373c",
+      "fingerprint": "1f204469340cfe01ec482e29ffcccecdb1d179636453d3f13317740429e4c031",
       "reason": null
     },
     "end": {
-      "head": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+      "head": "c5accd5cfcd430a71afc5802f41489544448aa5e",
       "branch": "fix/codex-short-reply-footer",
       "trackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "untrackedFiles": [],
       "untrackedFileCount": 0,
       "untrackedContentSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "untrackedFilesTruncated": false,
-      "fingerprint": "ad141d6e1f4eff52411d1d0deb8031d148b2a0271c62b972f6261cc4bf12373c",
+      "fingerprint": "1f204469340cfe01ec482e29ffcccecdb1d179636453d3f13317740429e4c031",
       "reason": null
     },
     "unchanged": true
@@ -70,11 +70,11 @@
       "status": "success",
       "exitCode": 0,
       "signal": null,
-      "durationMs": 44,
-      "startedAt": "2026-10-17T02:08:51.426Z",
-      "endedAt": "2026-10-17T02:08:51.470Z",
-      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/01-workflow-syntax.stdout.log",
-      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/01-workflow-syntax.stderr.log",
+      "durationMs": 100,
+      "startedAt": "2026-10-17T02:22:48.422Z",
+      "endedAt": "2026-10-17T02:22:48.522Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/01-workflow-syntax.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/01-workflow-syntax.stderr.log",
       "reason": null
     },
     {
@@ -89,11 +89,11 @@
       "status": "success",
       "exitCode": 0,
       "signal": null,
-      "durationMs": 20,
-      "startedAt": "2026-10-17T02:08:51.470Z",
-      "endedAt": "2026-10-17T02:08:51.490Z",
-      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/02-generated-types-are-fresh.stdout.log",
-      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/02-generated-types-are-fresh.stderr.log",
+      "durationMs": 31,
+      "startedAt": "2026-10-17T02:22:48.522Z",
+      "endedAt": "2026-10-17T02:22:48.553Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/02-generated-types-are-fresh.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/02-generated-types-are-fresh.stderr.log",
       "reason": null
     },
     {
@@ -107,11 +107,11 @@
       "status": "success",
       "exitCode": 0,
       "signal": null,
-      "durationMs": 3186,
-      "startedAt": "2026-10-17T02:08:51.490Z",
-      "endedAt": "2026-10-17T02:08:54.676Z",
-      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/03-typecheck.stdout.log",
-      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/03-typecheck.stderr.log",
+      "durationMs": 3157,
+      "startedAt": "2026-10-17T02:22:48.553Z",
+      "endedAt": "2026-10-17T02:22:51.710Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/03-typecheck.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/03-typecheck.stderr.log",
       "reason": null
     },
     {
@@ -125,11 +125,11 @@
       "status": "success",
       "exitCode": 0,
       "signal": null,
-      "durationMs": 9588,
-      "startedAt": "2026-10-17T02:08:54.679Z",
-      "endedAt": "2026-10-17T02:09:04.267Z",
-      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/04-build.stdout.log",
-      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/04-build.stderr.log",
+      "durationMs": 6153,
+      "startedAt": "2026-10-17T02:22:51.711Z",
+      "endedAt": "2026-10-17T02:22:57.864Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/04-build.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/04-build.stderr.log",
       "reason": null
     },
     {
@@ -143,11 +143,11 @@
       "status": "success",
       "exitCode": 0,
       "signal": null,
-      "durationMs": 57309,
-      "startedAt": "2026-10-17T02:09:04.405Z",
-      "endedAt": "2026-10-17T02:10:01.714Z",
-      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/05-unit-tests.stdout.log",
-      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/05-unit-tests.stderr.log",
+      "durationMs": 57351,
+      "startedAt": "2026-10-17T02:22:57.999Z",
+      "endedAt": "2026-10-17T02:23:55.350Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/05-unit-tests.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/05-unit-tests.stderr.log",
       "reason": null
     }
   ],
@@ -156,23 +156,23 @@
     "path": "dist",
     "buildAttempted": true,
     "buildThisRun": true,
-    "identity": "202820094d886bae74413a122108862eba18a9ba77c7d9b9228d2d1f85948d11",
-    "finalIdentity": "202820094d886bae74413a122108862eba18a9ba77c7d9b9228d2d1f85948d11",
+    "identity": "10af479fd151f486fe9d980996514d76cc45afaf71061faa2309cf7d34d81b52",
+    "finalIdentity": "10af479fd151f486fe9d980996514d76cc45afaf71061faa2309cf7d34d81b52",
     "unchangedAfterBuild": true,
     "provenance": "built-this-run"
   },
   "evidence": {
     "logs": [
-      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/01-workflow-syntax.stdout.log",
-      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/01-workflow-syntax.stderr.log",
-      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/02-generated-types-are-fresh.stdout.log",
-      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/02-generated-types-are-fresh.stderr.log",
-      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/03-typecheck.stdout.log",
-      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/03-typecheck.stderr.log",
-      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/04-build.stdout.log",
-      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/04-build.stderr.log",
-      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/05-unit-tests.stdout.log",
-      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/05-unit-tests.stderr.log"
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/01-workflow-syntax.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/01-workflow-syntax.stderr.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/02-generated-types-are-fresh.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/02-generated-types-are-fresh.stderr.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/03-typecheck.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/03-typecheck.stderr.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/04-build.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/04-build.stderr.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/05-unit-tests.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/3df5703b-1b1d-409e-85c8-7107718b34bc/report.json.logs/3df5703b-1b1d-409e-85c8-7107718b34bc/05-unit-tests.stderr.log"
     ],
     "artifacts": [
       "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/dist"

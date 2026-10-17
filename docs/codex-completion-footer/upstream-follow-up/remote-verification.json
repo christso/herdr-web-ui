@@ -1,9 +1,9 @@
 {
-  "revision": "007cb549139e23fa511c540041828c76509216e8",
+  "revision": "602750713227a424e55024b80730dad7333e26a8",
   "hosts": [
     {
       "host": "spectre",
-      "runtime": "remote-v29-christso-007cb54",
+      "runtime": "remote-v29-christso-6027507",
       "source_files_verified": 120,
       "new_bridge_pid_verified": true,
       "native_socket_preserved": true

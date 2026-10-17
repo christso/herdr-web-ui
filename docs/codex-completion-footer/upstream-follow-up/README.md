@@ -1,7 +1,7 @@
 # Codex short replies with completion footers
 
 A real Codex 0.163.0 process printed a short answer followed by its native
-`Worked for <1s • 13:13` footer. The unchanged upstream reader at
+`Worked for <1s • 13:24` footer. The unchanged upstream reader at
 `95507e2ea66c53eefaed58dd923ec21111118a2e` returned no conversation.
 The focused fix displays the saved user message and answer in Chat.
 
@@ -25,7 +25,7 @@ personal launcher, for `HERDR_FOOTER_CODEX_BIN` if needed.
 ```sh
 git clone https://github.com/christso/herdr-web-ui.git herdr-footer-repro
 cd herdr-footer-repro
-git checkout fix/codex-short-reply-footer
+git checkout c5accd5cfcd430a71afc5802f41489544448aa5e
 bun install --frozen-lockfile
 bun run build
 evidence=$(mktemp -d "$HOME/.cache/herdr-footer.XXXXXX")
@@ -59,3 +59,7 @@ existing directory-order assertion on disk. The unchanged upstream assertion fai
 same disk environment. The final full fast run used `TMPDIR=/dev/shm` and passed without
 changing those tests. This folder is evidence on the fork's orphan branch; it is absent
 from the upstream PR.
+
+Final PR head: `c5accd5cfcd430a71afc5802f41489544448aa5e`. Deployed fork: `602750713227a424e55024b80730dad7333e26a8`.
+The CodeRabbit readability comment was addressed and replied to. The final native replay
+also stops the app-server daemon belonging to its temporary Codex home.

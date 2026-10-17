@@ -7,5 +7,11 @@
     "findings": 0,
     "literal_paragraph_finding_fixed": true
   },
-  "reviewed_scope": "upstream/main...HEAD including the final literal-paragraph regression test"
+  "reviewed_scope": "upstream/main...HEAD including the final literal-paragraph regression test",
+  "coderabbit": {
+    "readability_nit": "addressed",
+    "commit": "c5accd5cfcd430a71afc5802f41489544448aa5e",
+    "reply": "https://github.com/devswha/herdr-web-ui/pull/1248#issuecomment-6228442825",
+    "inline_threads": 0
+  }
 }

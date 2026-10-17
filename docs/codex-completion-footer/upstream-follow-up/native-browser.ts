@@ -65,4 +65,7 @@ try{
  }
  writeFileSync(join(out,'native-screen.txt'),screen);writeFileSync(join(out,'native-report.json'),JSON.stringify({status:'passed',native_codex:'0.163.0',native_herdr:'0.9.5',footer_observed:true,results,local_canned_responses:requests,live_model_calls:0,user_panes_touched:0,temporary_codex_home:true},null,2)+'\n');
 }catch(error){writeFileSync(join(out,'fixture-error.json'),JSON.stringify({nativeCodex,screen:ownedPane?(await paneRead({paneId:ownedPane,source:'recent',lines:300,stripAnsi:true})).text:null,body:await evaluate('document.body.innerText').catch(()=>null)},null,2));throw error;
-}finally{try{await browser(['close'])}catch{};current.stop();before.stop();provider.stop();if(owned)await workspaceClose(owned);}
+}finally{try{await browser(['close'])}catch{};current.stop();before.stop();provider.stop();if(owned)await workspaceClose(owned);
+ const stopped=Bun.spawn([nativeCodex,'app-server','daemon','stop'],{env:{...process.env,CODEX_HOME:home},stdout:'ignore',stderr:'pipe'});
+ assert.equal(await stopped.exited,0,'Could not stop the daemon for the temporary fixture home');
+}

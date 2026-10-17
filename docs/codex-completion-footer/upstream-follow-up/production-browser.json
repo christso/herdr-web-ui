@@ -4,7 +4,7 @@
     "workspaces": 33,
     "sidebarError": false,
     "errorCount": 0,
-    "webSocketsBlocked": 2,
+    "webSocketsBlocked": 1,
     "chatUserTurns": 7,
     "chatUnavailable": false
   },
@@ -17,7 +17,7 @@
     "chatUserTurns": 7,
     "chatUnavailable": false
   },
-  "revision": "007cb549139e23fa511c540041828c76509216e8",
+  "revision": "602750713227a424e55024b80730dad7333e26a8",
   "status": "passed",
   "screenshots_taken": 0,
   "terminal_attachments": 0
