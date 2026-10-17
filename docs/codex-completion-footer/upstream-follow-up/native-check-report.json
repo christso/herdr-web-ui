@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "runId": "63fc2e3f-fb29-4249-89e4-6f8ca4bd2d0f",
+  "status": "success",
+  "exitCode": 0,
+  "startedAt": "2026-10-17T02:12:58.701Z",
+  "endedAt": "2026-10-17T02:13:11.472Z",
+  "durationMs": 12771,
+  "mode": [
+    "run"
+  ],
+  "revision": {
+    "head": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+    "testedSha": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+    "headSha": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+    "headBranch": "fix/codex-short-reply-footer",
+    "baseBranch": null,
+    "baseSha": null,
+    "branch": "fix/codex-short-reply-footer"
+  },
+  "toolchain": {
+    "bunVersion": "1.4.3",
+    "nodeVersion": "v26.7.0",
+    "herdrVersion": "herdr 0.9.5",
+    "herdrTestShards": 1,
+    "platform": "linux",
+    "arch": "x64",
+    "ci": false
+  },
+  "source": {
+    "start": {
+      "head": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+      "branch": "fix/codex-short-reply-footer",
+      "trackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "untrackedFiles": [],
+      "untrackedFileCount": 0,
+      "untrackedContentSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "untrackedFilesTruncated": false,
+      "fingerprint": "ad141d6e1f4eff52411d1d0deb8031d148b2a0271c62b972f6261cc4bf12373c",
+      "reason": null
+    },
+    "end": {
+      "head": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+      "branch": "fix/codex-short-reply-footer",
+      "trackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "untrackedFiles": [],
+      "untrackedFileCount": 0,
+      "untrackedContentSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "untrackedFilesTruncated": false,
+      "fingerprint": "ad141d6e1f4eff52411d1d0deb8031d148b2a0271c62b972f6261cc4bf12373c",
+      "reason": null
+    },
+    "unchanged": true
+  },
+  "verification": {
+    "scope": "source-state-and-step-results",
+    "browserCurrentSource": "not-claimed",
+    "status": "verified",
+    "reason": null
+  },
+  "currentStep": null,
+  "steps": [
+    {
+      "name": "run",
+      "command": [
+        "bun",
+        "/home/christso/.cache/herdr-profile-qa/footer-upstream/native-browser.ts"
+      ],
+      "cwd": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer",
+      "status": "success",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 12256,
+      "startedAt": "2026-10-17T02:12:58.860Z",
+      "endedAt": "2026-10-17T02:13:11.116Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/63fc2e3f-fb29-4249-89e4-6f8ca4bd2d0f/report.json.logs/63fc2e3f-fb29-4249-89e4-6f8ca4bd2d0f/01-run.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/63fc2e3f-fb29-4249-89e4-6f8ca4bd2d0f/report.json.logs/63fc2e3f-fb29-4249-89e4-6f8ca4bd2d0f/01-run.stderr.log",
+      "reason": null
+    }
+  ],
+  "errors": [],
+  "browserArtifact": {
+    "path": "dist",
+    "buildAttempted": false,
+    "buildThisRun": false,
+    "identity": "202820094d886bae74413a122108862eba18a9ba77c7d9b9228d2d1f85948d11",
+    "finalIdentity": "202820094d886bae74413a122108862eba18a9ba77c7d9b9228d2d1f85948d11",
+    "unchangedAfterBuild": null,
+    "provenance": "pre-existing-unknown"
+  },
+  "evidence": {
+    "logs": [
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/63fc2e3f-fb29-4249-89e4-6f8ca4bd2d0f/report.json.logs/63fc2e3f-fb29-4249-89e4-6f8ca4bd2d0f/01-run.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/63fc2e3f-fb29-4249-89e4-6f8ca4bd2d0f/report.json.logs/63fc2e3f-fb29-4249-89e4-6f8ca4bd2d0f/01-run.stderr.log"
+    ],
+    "artifacts": [
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/dist"
+    ]
+  }
+}

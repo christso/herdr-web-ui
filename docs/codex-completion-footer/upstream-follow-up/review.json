@@ -1,0 +1,11 @@
+{
+  "standards": {
+    "findings": 0,
+    "original_tests_preserved": true
+  },
+  "spec": {
+    "findings": 0,
+    "literal_paragraph_finding_fixed": true
+  },
+  "reviewed_scope": "upstream/main...HEAD including the final literal-paragraph regression test"
+}

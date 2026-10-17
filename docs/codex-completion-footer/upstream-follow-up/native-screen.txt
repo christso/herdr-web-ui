@@ -1,0 +1,20 @@
+codex
+ubuntu-m900-1% codex
+
+  >_ OpenAI Codex (v0.163.0)
+     ~/.cache/hf-p0QuWI/fictional-project
+
+  Tip: Maximize usage with GPT-6.1 Sol. Try it on complex work for near-Astra performance at a lower cost.
+
+
+› hi
+
+
+• Hi! What would you like to work on?
+
+  Worked for <1s • 13:13
+ 
+ 
+› Ask Codex to do anything
+ 
+  fixture default · ~/.cache/hf-p0QuWI/fictional-project · ← for agents                       ⚠ 1 warning · f2 to view

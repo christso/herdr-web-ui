@@ -1,0 +1,14 @@
+{
+  "umbrella": "Short completed Codex replies appear in Chat despite native completion footers.",
+  "claims": [
+    "Native <1s/time and duration variants resolve.",
+    "Literal answer text and competing-candidate guards remain intact."
+  ],
+  "placement": "Remaining case after merged PR1155; independent from profile launch and pre-message greeting features.",
+  "base": "95507e2ea66c53eefaed58dd923ec21111118a2e",
+  "candidate": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+  "production": "007cb549139e23fa511c540041828c76509216e8",
+  "reader_sha256": "a0171d99d75c79515fe783874322833e0470913e13bfd0762ff8da36b510a38a",
+  "completion_matcher_sha256": "736f321ab56531c63cdde27f60b6d885238f0e1f707ee5158aeafd9c7691afef",
+  "production_reader_sha256": "f387174b0a89eeae291adbe807c5831ef5d086b6ef6b710e10f49cc4e063b37d"
+}

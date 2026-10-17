@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "runId": "81fec789-8810-4d7a-aa03-d52a308bf1ac",
+  "status": "success",
+  "exitCode": 0,
+  "startedAt": "2026-10-17T02:08:51.272Z",
+  "endedAt": "2026-10-17T02:10:01.714Z",
+  "durationMs": 70442,
+  "mode": [
+    "fast"
+  ],
+  "revision": {
+    "head": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+    "testedSha": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+    "headSha": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+    "headBranch": "fix/codex-short-reply-footer",
+    "baseBranch": null,
+    "baseSha": null,
+    "branch": "fix/codex-short-reply-footer"
+  },
+  "toolchain": {
+    "bunVersion": "1.4.3",
+    "nodeVersion": "v26.7.0",
+    "herdrVersion": null,
+    "herdrTestShards": null,
+    "platform": "linux",
+    "arch": "x64",
+    "ci": false
+  },
+  "source": {
+    "start": {
+      "head": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+      "branch": "fix/codex-short-reply-footer",
+      "trackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "untrackedFiles": [],
+      "untrackedFileCount": 0,
+      "untrackedContentSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "untrackedFilesTruncated": false,
+      "fingerprint": "ad141d6e1f4eff52411d1d0deb8031d148b2a0271c62b972f6261cc4bf12373c",
+      "reason": null
+    },
+    "end": {
+      "head": "5d05a673a6316a7c7281977e02577b3a2e4bd89d",
+      "branch": "fix/codex-short-reply-footer",
+      "trackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "untrackedFiles": [],
+      "untrackedFileCount": 0,
+      "untrackedContentSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "untrackedFilesTruncated": false,
+      "fingerprint": "ad141d6e1f4eff52411d1d0deb8031d148b2a0271c62b972f6261cc4bf12373c",
+      "reason": null
+    },
+    "unchanged": true
+  },
+  "verification": {
+    "scope": "source-state-and-step-results",
+    "browserCurrentSource": "not-claimed",
+    "status": "verified",
+    "reason": null
+  },
+  "currentStep": null,
+  "steps": [
+    {
+      "name": "workflow syntax",
+      "command": [
+        "node_modules/.cache/actionlint-1.7.12/actionlint",
+        "-shellcheck="
+      ],
+      "cwd": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer",
+      "status": "success",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 44,
+      "startedAt": "2026-10-17T02:08:51.426Z",
+      "endedAt": "2026-10-17T02:08:51.470Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/01-workflow-syntax.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/01-workflow-syntax.stderr.log",
+      "reason": null
+    },
+    {
+      "name": "generated types are fresh",
+      "command": [
+        "/home/christso/.bun/bin/bun",
+        "run",
+        "generate:types",
+        "--check"
+      ],
+      "cwd": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer",
+      "status": "success",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 20,
+      "startedAt": "2026-10-17T02:08:51.470Z",
+      "endedAt": "2026-10-17T02:08:51.490Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/02-generated-types-are-fresh.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/02-generated-types-are-fresh.stderr.log",
+      "reason": null
+    },
+    {
+      "name": "typecheck",
+      "command": [
+        "/home/christso/.bun/bin/bun",
+        "run",
+        "typecheck"
+      ],
+      "cwd": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer",
+      "status": "success",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 3186,
+      "startedAt": "2026-10-17T02:08:51.490Z",
+      "endedAt": "2026-10-17T02:08:54.676Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/03-typecheck.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/03-typecheck.stderr.log",
+      "reason": null
+    },
+    {
+      "name": "build",
+      "command": [
+        "/home/christso/.bun/bin/bun",
+        "run",
+        "build"
+      ],
+      "cwd": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer",
+      "status": "success",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 9588,
+      "startedAt": "2026-10-17T02:08:54.679Z",
+      "endedAt": "2026-10-17T02:09:04.267Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/04-build.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/04-build.stderr.log",
+      "reason": null
+    },
+    {
+      "name": "unit tests",
+      "command": [
+        "/home/christso/.bun/bin/bun",
+        "run",
+        "test:unit"
+      ],
+      "cwd": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer",
+      "status": "success",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 57309,
+      "startedAt": "2026-10-17T02:09:04.405Z",
+      "endedAt": "2026-10-17T02:10:01.714Z",
+      "stdout": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/05-unit-tests.stdout.log",
+      "stderr": "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/05-unit-tests.stderr.log",
+      "reason": null
+    }
+  ],
+  "errors": [],
+  "browserArtifact": {
+    "path": "dist",
+    "buildAttempted": true,
+    "buildThisRun": true,
+    "identity": "202820094d886bae74413a122108862eba18a9ba77c7d9b9228d2d1f85948d11",
+    "finalIdentity": "202820094d886bae74413a122108862eba18a9ba77c7d9b9228d2d1f85948d11",
+    "unchangedAfterBuild": true,
+    "provenance": "built-this-run"
+  },
+  "evidence": {
+    "logs": [
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/01-workflow-syntax.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/01-workflow-syntax.stderr.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/02-generated-types-are-fresh.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/02-generated-types-are-fresh.stderr.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/03-typecheck.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/03-typecheck.stderr.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/04-build.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/04-build.stderr.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/05-unit-tests.stdout.log",
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/81fec789-8810-4d7a-aa03-d52a308bf1ac/report.json.logs/81fec789-8810-4d7a-aa03-d52a308bf1ac/05-unit-tests.stderr.log"
+    ],
+    "artifacts": [
+      "/home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/dist"
+    ]
+  }
+}

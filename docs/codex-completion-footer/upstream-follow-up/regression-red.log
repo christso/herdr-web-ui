@@ -1,0 +1,159 @@
+bun test v1.4.3 (c6da4a4d3)
+
+../../../../.cache/herdr-profile-qa/footer-upstream/before/server/codex.test.ts:
+(pass) a Codex process's own store > reads CODEX_HOME from the process's environment, and nothing from one without it [6.68ms]
+(pass) a Codex process's own store > keeps a process's store under its pid and argv, and reads it again for other arguments [5.65ms]
+(pass) CODEX_HOME in a ps -E line > takes the last assignment, keeps spaces in it, and ends it at the next variable [0.23ms]
+(pass) Codex conversation records > hides memory citations before pairing display/model answers in either order [1.45ms]
+(pass) Codex conversation records > hides multiple and unfinished memory blocks without dropping surrounding prose [0.14ms]
+(pass) Codex conversation records > preserves memory markup quoted by a user or returned by a tool [0.73ms]
+(pass) Codex conversation records > preserves literal memory tags in inline code and code fences [0.63ms]
+(pass) Codex conversation records > removes metadata around code examples before pairing their display records [0.60ms]
+(pass) Codex conversation records > preserves fences inside quotes and lists only within their containers [0.59ms]
+(pass) Codex conversation records > does not let escaped, unmatched or cross-paragraph backticks hide metadata [0.21ms]
+(pass) Codex conversation records > bounds citation parsing with many unmatched backtick lengths [7.60ms]
+(pass) Codex conversation records > hides injected context, metadata and developer messages while preserving the real request [0.35ms]
+(pass) Codex conversation records > hides complete directory-less AGENTS envelopes in event and model records [0.41ms]
+(pass) Codex conversation records > preserves incomplete, similar and user-extended AGENTS messages [0.29ms]
+(pass) Codex conversation records > pairs duplicate display/model records in either order but keeps genuine repeated prompts [0.37ms]
+(pass) Codex conversation records > does not deduplicate identical messages in separate turns [0.08ms]
+(pass) Codex conversation records > folds matched function/freeform tool output and commentary, keeping only the final answer outside [0.62ms]
+(pass) Codex conversation records > retains reasoning summaries as thinking without decoding encrypted context [0.14ms]
+(pass) Codex conversation records > uses task timestamps rather than idle time before the next user prompt [0.13ms]
+(pass) Codex conversation records > bounds tool output and history and tolerates malformed or partially written records [1.62ms]
+(pass) Codex queued questions (request_user_input_async) > shows only what was answered, and the questions asked as the tool's summary [0.77ms]
+(pass) Codex queued questions (request_user_input_async) > scans a rollout once however many ask at the same time [1.68ms]
+(pass) Codex queued questions (request_user_input_async) > lists the questions still unanswered, reading only what the rollout appends [1.12ms]
+(pass) Codex rollout resolution > reads the thread a TUI was resumed on from its command line [0.19ms]
+(pass) Codex rollout resolution > accepts files inside the store and rejects traversal, external symlinks, missing files and directories [1.58ms]
+(pass) Codex rollout resolution > reads the Windows paths Codex stores with the \\?\ prefix as the plain ones herdr reports (#518) [0.21ms]
+(pass) Codex rollout resolution > keeps a rollout inside a store whose root alone carries the \\?\ prefix, or whose rollout alone does (#587) [0.18ms]
+(pass) Codex rollout resolution > finds the threads of a Windows cwd stored with another drive-letter case, never another directory's (#587) [2.32ms]
+(pass) Codex rollout resolution > looks threads up on Codex's binary cwd index, not by a scan of every thread (#587) [0.70ms]
+(pass) Codex rollout resolution > counts a Codex pane in another spelling of the same Windows directory as a peer, by the same rule as the queries (#587) [0.20ms]
+(pass) Codex rollout resolution > reads a paginated rollout through the history it continues, without the turns a backtrack discarded [26.42ms]
+(pass) Codex rollout resolution > follows each backtrack to the rollout that holds its cut, however many there were [14.52ms]
+(pass) Codex rollout resolution > reads a remembered chain again once a rollout in it is archived, instead of failing the read [5.26ms]
+(pass) Codex rollout resolution > shows less history, never the wrong one, when no rollout holds a cut, and finds it once one does [5.95ms]
+(pass) Codex rollout resolution > requires a unique substantial rendered assistant match and handles terminal wrapping [1.56ms]
+(pass) Codex rollout resolution > matches an answer that links a file, which Codex shows as the label and a path relative to the cwd [0.40ms]
+(pass) Codex rollout resolution > reads a session whose answers are all short by its newest answers shown together, in order [3.06ms]
+(pass) Codex rollout resolution > does not read short answers that two rollouts share, or ones above the welcome card [1.26ms]
+(pass) Codex rollout resolution > does not take a fork's inherited answers for its parent [1.37ms]
+(pass) Codex rollout resolution > does not count the links of one answer as several answers, wherever they point [0.18ms]
+(pass) Codex rollout resolution > keeps a unique long-answer match when another rollout shares its short answers [0.21ms]
+(pass) Codex rollout resolution > needs 64 letters and digits together, 16 in each answer and 12 distinct [0.60ms]
+(pass) Codex rollout resolution > does not read short answers another rollout said inside longer ones [0.33ms]
+(pass) Codex rollout resolution > does not take a fork for its parent however many turns ago it inherited the answers [1.80ms]
+(pass) Codex rollout resolution > takes no answer with a link for evidence: the screen shows its target its own way [0.43ms]
+(pass) Codex rollout resolution > reads no short answers that another rollout's linked answers show as [4.89ms]
+(pass) Codex rollout resolution > reads no short answers when a rollout was not read whole, the one that shows them included [0.12ms]
+(pass) Codex rollout resolution > does not read short answers when two rollouts show that way, sharing nothing [0.38ms]
+(pass) Codex rollout resolution > reads short answers in bounded time however many unclosed links the answers hold [98.96ms]
+(pass) Codex rollout resolution > reads short answers in bounded time however many links a large answer has [202.19ms]
+(pass) Codex rollout resolution > does not bind using user context, tool output or a previous session above the welcome card [0.29ms]
+(pass) Codex submitted first exchange > matches a complete first prompt and one answer, including whitespace wrapping [1.04ms]
+(pass) Codex submitted first exchange > matches a short greeting only when the complete exchange is unique [0.20ms]
+(pass) Codex submitted first exchange > requires exact prompt punctuation and the full answer [0.22ms]
+(pass) Codex submitted first exchange > rejects composers, indented quotes, later turns and a missing welcome card [0.20ms]
+(pass) Codex submitted first exchange > keeps older later exchanges and longer answers as competing evidence [0.32ms]
+(pass) Codex submitted first exchange > does not admit pre-start timestamps or missing prompt metadata (control) [0.20ms]
+(pass) Codex submitted first exchange > matches tiny first answers only with the exact submitted exchange (regression) [0.37ms]
+843 |   });
+844 | 
+845 |   it("matches the first short reply before Codex's completed-turn footer", () => {
+846 |     for (const footer of ["Worked for <1s • 11:19", "Worked for 1s • 11:11 AM", "Worked for 2m 14s • 16:11", "Worked for 0s"]) {
+847 |       const completed = screen.replace(answer, answer + "\n\n  " + footer);
+848 |       expect(matchCodexFirstExchange(completed, [row()], started)).toBe("new");
+                                                                         ^
+error: expect(received).toBe(expected)
+
+Expected: "new"
+Received: null
+
+      at <anonymous> (/home/christso/.cache/herdr-profile-qa/footer-upstream/before/server/codex.test.ts:848:68)
+(fail) Codex submitted first exchange > matches the first short reply before Codex's completed-turn footer [0.42ms]
+(pass) Codex submitted first exchange > does not discard answer text or an unrecognized completion footer [0.51ms]
+(pass) Codex submitted first exchange > skips known Codex notices before the submitted prompt (regression) [0.34ms]
+(pass) Codex tool calls that failed, and patches > reads a failure from the output Codex records, judging a completed script as a whole [0.06ms]
+(pass) Codex tool calls that failed, and patches > marks the failed call and sums a patch up by its files [0.24ms]
+(pass) incremental Codex records > pairs citation-bearing answers across writes and previews without changing earlier snapshots [0.41ms]
+(pass) incremental Codex records > pairs duplicates and tool results across writes without mutating earlier snapshots [0.57ms]
+
+../../../../.cache/herdr-profile-qa/footer-upstream/before/server/codex-processes.test.ts:
+(pass) selects the resumed rollout when Linux foreground metadata omits argv [46.46ms]
+(pass) selects the resumed rollout for the observed native executable alias [2.42ms]
+(pass) keeps the screen binding with recovered argv while the same process runs [37.58ms]
+(pass) drops the recovered binding when its process has exited [43.90ms]
+(pass) finds the threads of a Windows cwd that Codex stored with the \\?\ prefix (#518) [2.08ms]
+(pass) gives a background reader the chat's binding only while no newer thread may have replaced it, and binds nothing itself [4.44ms]
+(pass) does not guess a session when argv and proc data are unavailable [1.77ms]
+(pass) does not trust the Codex name when recovered argv belongs to another executable [1.52ms]
+(pass) does not use an alias resume after a newer interactive thread starts [3.12ms]
+(pass) resolves one submitted short exchange without keeping a screenless binding [47.52ms]
+(pass) resolves a submitted hello and short reply without requiring a longer answer [46.92ms]
+(pass) resolves its exact first exchange beside a different same-directory conversation [44.71ms]
+(pass) rejects unknown or matching peer screens when a header has scrolled away [48.28ms]
+(pass) accepts a headerless peer only with a substantial match to a different conversation [50.97ms]
+(pass) resolves a seconds-only schema when creation is provably after process start [44.48ms]
+(pass) rejects a pre-start thread but accepts one 542 ms after its precise start bound [44.02ms]
+(pass) handles a Windows stored cwd prefix using a Linux fixture process [49.54ms]
+(pass) requires a submitted first prompt and exact answer, not a composer or quote (control) [56.84ms]
+(pass) retains older resumed later turns as competitors to a new first prompt [47.13ms]
+(pass) allows a readable older thread whose exchange cannot explain the screen [45.10ms]
+(pass) checks every exchange in a tool-heavy older thread instead of rejecting its file size [58.20ms]
+(pass) reads an older rollout once, then only what is appended to it [58.73ms]
+(pass) rejects cumulative retained messages over the short matching limit [68.92ms]
+(pass) does not erase unreadable older or new threads to manufacture uniqueness [67.23ms]
+(pass) rejects two new readable threads even when only one exchange matches [73.52ms]
+(pass) rejects candidate overflow instead of hiding ambiguity past the limit [104.55ms]
+(pass) excludes exec, subagent and archived rows from interactive uniqueness [65.91ms]
+(pass) rejects unsafe, incomplete, malformed and history-derived rollouts [71.94ms]
+(pass) does not borrow another same-directory pane's thread, even without a binding [76.24ms]
+(pass) rejects a thread already bound to another pane outside this directory [54.76ms]
+(pass) rejects unavailable process starts and timestamps before the actual process [58.91ms]
+(pass) ignores unrelated executable or command arguments: echo /usr/bin/codex resume [2.22ms]
+(pass) ignores unrelated executable or command arguments: node -e /usr/bin/codex [1.87ms]
+(pass) ignores unrelated executable or command arguments: python /usr/bin/codex.js resume [1.91ms]
+(pass) ignores unrelated executable or command arguments: /bin/sh -c /usr/bin/codex [1.85ms]
+(pass) ignores unrelated executable or command arguments: node --eval /usr/bin/codex [1.91ms]
+(pass) ignores unrelated executable or command arguments: node --require /usr/bin/codex [2.32ms]
+(pass) ignores unrelated executable or command arguments: node --no-warnings -e [2.44ms]
+(pass) ignores unrelated executable or command arguments: node --eval=setInterval(()=>{},1000) /usr/bin/codex [2.97ms]
+(pass) ignores unrelated executable or command arguments: node --title /usr/bin/codex [2.49ms]
+(pass) ignores unrelated executable or command arguments: node --import=./hook.mjs /usr/bin/codex [1.79ms]
+(pass) ignores unrelated executable or command arguments: /usr/bin/not-codex resume 01a0c7a1-56d9-7e20-9f08-f7a2d973bc01 [1.34ms]
+(pass) preserves resume selection for /usr/bin/codex [2.15ms]
+(pass) preserves resume selection for node /usr/lib/codex.js [1.88ms]
+(pass) preserves resume selection for /bin/sh /usr/bin/codex [1.84ms]
+(pass) preserves resume selection for bun /usr/lib/codex.js [1.80ms]
+(pass) preserves resume selection for node --no-warnings /usr/bin/codex [1.97ms]
+(pass) preserves resume selection for bash -- /usr/bin/codex [2.27ms]
+(pass) preserves resume selection for zsh /usr/bin/codex [2.07ms]
+(pass) preserves resume selection for node --max-old-space-size=4096 --no-warnings /usr/lib/codex.js [1.93ms]
+(pass) preserves resume selection for node --title=codex --enable-source-maps /usr/lib/codex.js [2.18ms]
+(pass) preserves resume selection for C:\tools\codex.exe [2.10ms]
+(pass) preserves resume selection for C:\tools\node.exe C:\tools\codex.js [1.95ms]
+537 |     { type: "event_msg", payload: { type: "agent_message", message: "Hi again! How can I help?" } },
+538 |   ].map((entry) => JSON.stringify(entry)).join("\n") + "\n");
+539 |   screen = "OpenAI Codex (v0.163.0)\n• Model changed to gpt-6-luna medium\n\n"
+540 |     + "› hi\n\n• Hi! What would you like to work on?\n\n  Worked for 1s • 11:11 AM\n\n"
+541 |     + "› hi\n\n• Hi again! How can I help?\n\n  Worked for 2s • 11:11 AM\n\n› Ask Codex to do anything";
+542 |   expect(await resolve()).toBe(path);
+                                ^
+error: expect(received).toBe(expected)
+
+Expected: "/tmp/herdr-web-ui-codex-processes-MCKmwu/codex/sessions/rollout-01a0c7a1-56d9-7e20-9f08-f7a2d973bc01.jsonl"
+Received: null
+
+      at <anonymous> (/home/christso/.cache/herdr-profile-qa/footer-upstream/before/server/codex-processes.test.ts:542:27)
+(fail) finds a profile's short conversation after native completion footers [99.78ms]
+
+2 tests failed:
+(fail) Codex submitted first exchange > matches the first short reply before Codex's completed-turn footer [0.42ms]
+(fail) finds a profile's short conversation after native completion footers [99.78ms]
+
+ 117 pass
+ 2 fail
+ 377 expect() calls
+Ran 119 tests across 2 files. [2.25s]

@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "native_codex": "0.163.0",
+  "native_herdr": "0.9.5",
+  "footer_observed": true,
+  "results": [
+    {
+      "variant": "red",
+      "source": "scrollback",
+      "turns": 0,
+      "unavailable": true,
+      "answer": false,
+      "userTurns": 0,
+      "phone": {
+        "unavailable": true,
+        "answer": false
+      }
+    },
+    {
+      "variant": "green",
+      "source": "codex-transcript",
+      "turns": 2,
+      "unavailable": false,
+      "answer": true,
+      "userTurns": 1,
+      "phone": {
+        "unavailable": false,
+        "answer": true
+      }
+    }
+  ],
+  "local_canned_responses": 2,
+  "live_model_calls": 0,
+  "user_panes_touched": 0,
+  "temporary_codex_home": true
+}

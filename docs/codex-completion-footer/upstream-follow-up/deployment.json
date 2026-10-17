@@ -1,0 +1,22 @@
+{
+  "previous_revision": "e56c5f7fe8c100fbf71abaf720e97c6ca9389997",
+  "revision": "007cb549139e23fa511c540041828c76509216e8",
+  "existing_codex_controls": [
+    {
+      "source": "codex-transcript",
+      "turns_before": 78
+    },
+    {
+      "source": "codex-transcript",
+      "turns_before": 63
+    }
+  ],
+  "config_preserved": {
+    "env": true,
+    "agent-profiles.json": true,
+    "push-subscriptions.json": true
+  },
+  "machines_preserved": true,
+  "native_socket_preserved": true,
+  "user_codex_process_preserved": true
+}
