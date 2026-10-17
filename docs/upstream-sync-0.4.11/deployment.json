@@ -1,0 +1,19 @@
+{
+  "previous_revision": "602750713227a424e55024b80730dad7333e26a8",
+  "revision": "5d6e91a71647b9ad5eb20c9f846689bbfac54778",
+  "package_version": "0.4.11",
+  "bundle_version": "30",
+  "existing_codex_controls": 2,
+  "config_preserved": {
+    "env": true,
+    "agent-profiles.json": true,
+    "push-subscriptions.json": true,
+    "devices.json": true
+  },
+  "machine_registration_preserved_except_wtg_paused": true,
+  "wtg_auto_connection": "paused locally, no remote access",
+  "native_socket_preserved": true,
+  "existing_agent_processes_preserved": 38,
+  "recorded_processes_already_exited": 0,
+  "spectre_connected": true
+}

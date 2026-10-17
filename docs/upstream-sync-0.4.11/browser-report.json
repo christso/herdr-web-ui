@@ -1,0 +1,95 @@
+{
+  "status": "passed",
+  "model_calls": 0,
+  "user_panes_touched": 0,
+  "results": [
+    {
+      "variant": "green",
+      "profile": "default",
+      "phase": "before",
+      "source": "codex-transcript",
+      "turns": 0,
+      "unavailable": false,
+      "greeting": true,
+      "composer": true,
+      "answer": false
+    },
+    {
+      "variant": "green",
+      "profile": "default",
+      "phase": "after",
+      "source": "codex-transcript",
+      "turns": 2,
+      "unavailable": false,
+      "greeting": false,
+      "composer": true,
+      "answer": true
+    },
+    {
+      "variant": "green",
+      "profile": "native",
+      "phase": "before",
+      "source": "codex-transcript",
+      "turns": 0,
+      "unavailable": false,
+      "greeting": true,
+      "composer": true,
+      "answer": false
+    },
+    {
+      "variant": "green",
+      "profile": "native",
+      "phase": "after",
+      "source": "codex-transcript",
+      "turns": 2,
+      "unavailable": false,
+      "greeting": false,
+      "composer": true,
+      "answer": true
+    },
+    {
+      "variant": "green",
+      "profile": "compound",
+      "phase": "before",
+      "source": "codex-transcript",
+      "turns": 0,
+      "unavailable": false,
+      "greeting": true,
+      "composer": true,
+      "answer": false
+    },
+    {
+      "variant": "green",
+      "profile": "compound",
+      "phase": "after",
+      "source": "codex-transcript",
+      "turns": 2,
+      "unavailable": false,
+      "greeting": false,
+      "composer": true,
+      "answer": true
+    },
+    {
+      "variant": "green",
+      "profile": "tsoyang",
+      "phase": "before",
+      "source": "codex-transcript",
+      "turns": 0,
+      "unavailable": false,
+      "greeting": true,
+      "composer": true,
+      "answer": false
+    },
+    {
+      "variant": "green",
+      "profile": "tsoyang",
+      "phase": "after",
+      "source": "codex-transcript",
+      "turns": 2,
+      "unavailable": false,
+      "greeting": false,
+      "composer": true,
+      "answer": true
+    }
+  ]
+}
