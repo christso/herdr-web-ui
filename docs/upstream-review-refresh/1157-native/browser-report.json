@@ -1,0 +1,67 @@
+{
+  "status": "passed",
+  "native": {
+    "pr_head": "53051d4b13fea09798de4fb91cc1d920ed647aa1",
+    "baseline_omp_sha256": "c79459330b9ba6f830f9da73cbc544b90820f04d6555b52d6e1cea679f5c11d2",
+    "fixed_omp_sha256": "7ff49bbfae78fddffef062472b95391f64a5403ddc221ae39f51b6775130ed66",
+    "kernel": "6.18.40.1-microsoft-standard-WSL2",
+    "metadata_injected": false,
+    "model_calls": 0,
+    "resume_only": true,
+    "herdr": {
+      "type": "pong",
+      "version": "0.9.5",
+      "protocol": 22,
+      "capabilities": {
+        "live_handoff": true,
+        "detached_server_daemon": false,
+        "endpoint_protocol_generation": 1,
+        "surface_interest": true,
+        "health_check": true,
+        "ssh_agent_registration": true
+      }
+    },
+    "omp_version": "omp/18.11.1",
+    "native_session_reported": false,
+    "processes": [
+      {
+        "name": "omp",
+        "reported_argc": 0
+      }
+    ],
+    "status": "passed",
+    "native_user_socket_preserved": true
+  },
+  "results": [
+    {
+      "unavailable": true,
+      "turns": 0,
+      "answer": false,
+      "errors": 0,
+      "variant": "red",
+      "source": "scrollback",
+      "saved_turns": 0,
+      "phone": {
+        "unavailable": true,
+        "answer": false,
+        "errors": 0
+      }
+    },
+    {
+      "unavailable": false,
+      "turns": 1,
+      "answer": true,
+      "errors": 0,
+      "variant": "green",
+      "source": "omp-transcript",
+      "saved_turns": 2,
+      "phone": {
+        "unavailable": false,
+        "answer": true,
+        "errors": 0
+      }
+    }
+  ],
+  "live_model_calls": 0,
+  "user_panes_touched": 0
+}

@@ -1,0 +1,25 @@
+$ bun scripts/check.ts run bun "/home/christso/.cache/herdr-pr-assessment/1248-split-only.ts"
+check: report /home/christso/projects/christso/herdr-web-ui__worktrees/codex-short-reply-footer/node_modules/.cache/check/96565ce6-9fcb-425d-8812-1c5b472edbe6/report.json
+
+check: herdr session check-3f852c, config and state in /tmp/hwc-eynshq
+
+=== run: bun /home/christso/.cache/herdr-pr-assessment/1248-split-only.ts
+PASS the other half's pane is spared alerts only while that half is drawn
+PASS a Tab into the inactive half makes it active and keeps the focus where it went
+PASS an upload finishing in the half the user left does not take the keyboard back
+PASS closing the other half leaves the active pane mounted on its connection
+PASS split preview starts early, survives child leaves, cancels cleanly and matches the drop side
+PASS a tab dragged out of its strip opens in a half, at herdr's layout, and in both when picked there
+PASS a press on a sibling pane in the other half activates it with that pane selected
+PASS a real mouse drag from a two-pane tab's title opens that pane in the other half
+PASS a narrow window keeps the split, and a pick there changes the shown half alone
+PASS an inactive Chat-to-Terminal lens keeps the shared xterm grid 34x34
+PASS a split drawing one tab in both halves types into it, and closing the duplicate keeps the survivor attached
+PASS split state is isolated per page in a shared browser context
+PASS right, middle and macOS Control-click presses leave the other half active
+PASS an inactive-half lens choice works and survives activation when storage writes fail
+PASS a drop on a node that replaced the hovered one still opens the half
+PASS phone glass-header selectors follow pane-slot nesting without covering notices or tabs
+PASS a saved split on a removed PC closes after the roster arrives
+PASS unchanged split-view regression on PR1248 head c5accd5
+herdr events: pane_not_found: pane wT:p1 not found
