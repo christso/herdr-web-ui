@@ -4,7 +4,6 @@ import { Database } from "bun:sqlite";
 import { closeSync, openSync, readdirSync, readFileSync, readlinkSync, readSync, realpathSync, statSync } from "node:fs";
 import { open, readFile, realpath, stat } from "node:fs/promises";
 import { homedir } from "node:os";
-import { StringDecoder } from "node:string_decoder";
 import nodePath, { isAbsolute, join, type PlatformPath } from "node:path";
 import type { ConversationPart, ConversationTurn, HerdrPane } from "../shared/protocol.ts";
 import { patchFiles, patchText } from "../shared/patch.ts";
@@ -1240,36 +1239,49 @@ interface CodexThreadRow {
 
 const SHORT_THREAD_LIMIT = 32;
 const SHORT_ROLLOUT_LIMIT = 1024 * 1024;
+/** How far a rollout was validated: `offset` bytes of whole lines; `dead` once a line can never pass. */
+interface ShortScan { offset: number; retained: number; text: string; dead: boolean }
+
+// A chat polls every 2 s and nothing binds a short match. Rollouts only grow, so an unchanged
+// one is not read again and a grown one is read from where the last read stopped.
+const shortScans = new Map<string, { ino: number; size: number; mtimeMs: number; scan: ShortScan }>();
+const strictUtf8 = new TextDecoder("utf-8", { fatal: true });
 
 /** Validate every record, retaining only messages: tool output cannot identify a conversation. */
-async function shortMatchingText(path: string, size: number): Promise<string | null> {
+async function scanShortText(path: string, size: number, from: ShortScan): Promise<ShortScan> {
   const fd = await open(path, "r");
-  const decoder = new StringDecoder("utf8");
   const buffer = Buffer.alloc(64 * 1024);
-  let carry = "", text = "", position = 0, retained = 0;
+  let { offset, retained, text } = from;
+  let carry = Buffer.alloc(0), position = offset;
+  const dead = (): ShortScan => ({ offset, retained, text, dead: true });
   try {
     while (position < size) {
       const { bytesRead: length } = await fd.read(buffer, 0, Math.min(buffer.length, size - position), position);
-      if (length === 0) return null;
+      if (length === 0) break;
       position += length;
-      carry += decoder.write(buffer.subarray(0, length));
-      let newline: number;
-      while ((newline = carry.indexOf("\n")) >= 0) {
-        const line = carry.slice(0, newline);
-        carry = carry.slice(newline + 1);
-        if (Buffer.byteLength(line) > SHORT_ROLLOUT_LIMIT) return null;
-        const entry = record(JSON.parse(line));
+      carry = Buffer.concat([carry, buffer.subarray(0, length)]);
+      let start = 0, newline: number;
+      while ((newline = carry.indexOf(10, start)) >= 0) {
+        if (newline - start > SHORT_ROLLOUT_LIMIT) return dead();
+        let line: string, entry: Record<string, unknown>;
+        try {
+          line = strictUtf8.decode(carry.subarray(start, newline));
+          entry = record(JSON.parse(line));
+        } catch { return dead(); }
         const payload = record(entry.payload);
         if (entry.type === "response_item" && payload.type === "message"
           || entry.type === "event_msg" && (payload.type === "user_message" || payload.type === "agent_message")) {
-          retained += Buffer.byteLength(line) + 1;
-          if (retained > SHORT_ROLLOUT_LIMIT) return null;
+          retained += newline - start + 1;
+          if (retained > SHORT_ROLLOUT_LIMIT) return dead();
           text += line + "\n";
         }
+        offset += newline - start + 1;
+        start = newline + 1;
       }
-      if (Buffer.byteLength(carry) > SHORT_ROLLOUT_LIMIT) return null;
+      carry = carry.subarray(start);
+      if (carry.length > SHORT_ROLLOUT_LIMIT) return dead();
     }
-    return carry === "" && decoder.end() === "" ? text : null;
+    return { offset, retained, text, dead: false };
   } finally { await fd.close(); }
 }
 
@@ -1285,9 +1297,24 @@ async function safeShortThreads(rows: readonly CodexThreadRow[], home: string): 
       const header = rolloutHeader(path);
       if (!stat.isFile() || stat.size <= 0 || header === null
         || Object.keys(record(header.history_base)).length > 0) return null;
-      const text = await shortMatchingText(path, stat.size);
-      const after = statSync(path);
-      if (text === null || after.size !== stat.size || after.ino !== stat.ino || after.mtimeMs !== stat.mtimeMs) return null;
+      const cached = shortScans.get(path);
+      const sameFile = cached !== undefined && cached.ino === stat.ino;
+      let scan: ShortScan;
+      if (sameFile && cached.size === stat.size && cached.mtimeMs === stat.mtimeMs) {
+        scan = cached.scan;
+      } else {
+        const grown = sameFile && stat.size > cached.size;
+        scan = grown && cached.scan.dead ? cached.scan
+          : await scanShortText(path, stat.size, grown ? cached.scan : { offset: 0, retained: 0, text: "", dead: false });
+        const after = statSync(path);
+        if (after.size !== stat.size || after.ino !== stat.ino || after.mtimeMs !== stat.mtimeMs) return null;
+        shortScans.delete(path);
+        shortScans.set(path, { ino: stat.ino, size: stat.size, mtimeMs: stat.mtimeMs, scan });
+        if (shortScans.size > 128) shortScans.delete(shortScans.keys().next().value!);
+      }
+      // a line still being written leaves the rollout unread to its end
+      if (scan.dead || scan.offset !== stat.size) return null;
+      const text = scan.text;
       const exchanges = codexExchanges(text);
       const stored = normalizePrompt(row.firstUserMessage ?? "");
       if (stored !== "" && (exchanges[0] === undefined || normalizePrompt(exchanges[0].user) !== stored)) return null;

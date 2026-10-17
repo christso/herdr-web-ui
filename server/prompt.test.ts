@@ -12,6 +12,14 @@ const labels = (prompt: InteractivePrompt | null) => prompt?.options.map((option
 const omoPendingFixture = (name: string) => readFileSync(new URL(`./fixtures/omo-pending-5.1.30-${name}`, import.meta.url), "utf8");
 const omoExtensionTail = omoPendingFixture("extension-tail.txt");
 const withOmoExtensionTail = (screen: string) => screen.replace(/(❯\n─+\n)/, `$1${omoExtensionTail}`);
+// OmO's omo-task widget rows under the input box, as a live pane shows them: a live row wrapped onto a
+// second line, a live row, a finished row and the `+N more` line
+const omoTaskRows = ` ⠦ AdversarialVerify todo 2... · agent:omo-native-gate-reviewer(openai/gpt-6-astra:high) · turn 10 (47 tools) · $3.2103 · 26779 tok/s · running · 6m
+ 0s
+ ⠋ Map the implementation surface · category:quick · running · 41s
+ Review diff|agent:explore background completed
+ +2 more
+`;
 const CLAUDE_BACKGROUND_APPROVAL_FOOTER = "Esc to cancel · ctrl+x ctrl+k twice to stop background agents";
 const claudeBackgroundApproval = (selected: number, footer = CLAUDE_BACKGROUND_APPROVAL_FOOTER) => {
   const row = (index: number, label: string) => `${index === selected ? " ❯ " : "   "}${index + 1}. ${label}`;
@@ -217,6 +225,7 @@ ${rows.map((row) => `│ ${row.padEnd(52)}│`).join("\n")}
     expect(parseInteractivePrompt("omp", screen(undefined, ["   ❯ ○ Local socket", "     ○ Remote relay", "     ○ Other (type your own)"]))).not.toBeNull();
     expect(parseInteractivePrompt("omp", screen(undefined, undefined, "\nUnrelated output\n"))).toBeNull();
   });
+
 
   test("parses current OMP question hints and keeps descriptions out of the answer rows", () => {
     const screen = `
@@ -479,6 +488,22 @@ ${rows.map((row) => `│ ${row.padEnd(52)}│`).join("\n")}
     expect(answerKeys(prompt!, { option_indices: [0, 1] })).toEqual([
       { keys: ["space"] }, { keys: ["enter"] },
     ]);
+  });
+
+  test("leaves the Other row before advancing a current OMP multi question", () => {
+    const prompt = parseInteractivePrompt("omp", `
+╭─ Ask ───────────────────────────╮
+│ Which platforms should run?     │
+├────────────────────────────────┤
+│  ☑ Linux                         │
+│  ☐ macOS                         │
+│❯ ☐ Other (type your own)        │
+├────────────────────────────────┤
+│ ␠ toggle · ⏎ next · ↑/↓ move · Tab/←/→ question · ⎋ cancel │
+╰────────────────────────────────╯
+`);
+    expect(prompt).toMatchObject({ multi_select: true, custom_option_index: null });
+    expect(answerKeys(prompt!, { option_indices: [0] })).toEqual([{ keys: ["up"] }, { keys: ["enter"] }]);
   });
 
   test("parses Codex continue, question, async question, and approval prompts", () => {
@@ -767,6 +792,32 @@ Enter to select · ↑/↓ to navigate · Esc to cancel
     expect(trust).toMatchObject({ kind: "approval", title: "Trust this folder?", body: "Codex can read, edit, and run files here, subject to your permission settings." });
     expect(labels(trust)).toEqual(["Trust and continue", "Back to Agent Command Center"]);
     expect(answerKeys(trust!, { option_index: 0 })).toEqual([{ keys: ["enter"] }]);
+  });
+
+  test("parses Codex's folder trust prompt when its hint ends with esc quit", () => {
+    const trust = parseInteractivePrompt("codex", `
+  Folder access
+  /tmp/prompt-lab-codex
+  Trust this folder? Codex can read, edit, and run files here, subject to your permission settings.
+› 1. Trust and continue
+  2. Open restricted
+  enter continue · esc quit
+`);
+    expect(trust).toMatchObject({ kind: "approval", title: "Trust this folder?" });
+    expect(labels(trust)).toEqual(["Trust and continue", "Open restricted"]);
+    expect(answerKeys(trust!, { option_index: 0 })).toEqual([{ keys: ["enter"] }]);
+  });
+
+  test("does not read Codex's update prompt as an approval under a question-like line", () => {
+    expect(parseInteractivePrompt("codex", `
+• Would you like to continue with the tests next?
+
+  Update available! 0.162.1 -> 0.163.0
+› 1. Update now
+  2. Skip
+  3. Skip until next version
+  enter continue · esc skip
+`)).toBeNull();
   });
 
   test("ignores unknown agents, stale transcript menus, and ordinary output", () => {
@@ -1907,6 +1958,37 @@ ${rule60}
     });
   }
 
+  for (const count of ["one", "two"]) for (const width of ["wide", "narrow"]) {
+    test(`reads the real 5.1.30 ${count}-question ${width} widget with task rows below the box`, () => {
+      const open = openOmoAsks(omoPendingFixture(`${count}.jsonl`));
+      const screen = omoPendingFixture(`${count}-${width}.txt`).replace(/(❯\n─+\n)/, `$1${omoTaskRows}`);
+      expect(screen).toContain(omoTaskRows);
+      expect(parseInteractivePrompt("pi", screen, null, false, open)).toMatchObject({ agent: "omo", kind: "question" });
+      expect(parseInteractivePrompt("pi", `${screen}$ echo after\n`, null, false, open)).toBeNull();
+      expect(parseInteractivePrompt("pi", screen.replace(omoTaskRows, `${omoTaskRows}${" ordinary output\n".repeat(4)}`), null, false, open)).toBeNull();
+    });
+  }
+
+  test("keeps a form dead under output that only looks like OmO task rows", () => {
+    const open = openOmoAsks(omoPendingFixture("one.jsonl"));
+    const screen = omoPendingFixture("one-wide.txt");
+    const under = (rows: string) => parseInteractivePrompt("pi", screen.replace(/(❯\n─+\n)/, `$1${rows}`), null, false, open);
+    const liveRow = omoTaskRows.split("\n")[0]!;
+    expect(under(omoTaskRows)).not.toBeNull();
+    // a spinner line without a task route is another program's output
+    expect(under(" ⠦ compiling…\n")).toBeNull();
+    // a shell prompt is never a task row, whatever follows it
+    expect(under(" $ echo x|agent:explore background completed\n")).toBeNull();
+    // two unknown lines and the native footer overflow the footer budget
+    expect(under(`${liveRow}\n${" ordinary output\n".repeat(2)}`)).toBeNull();
+    expect(under(`${liveRow}\n $ echo after\n`)).toBeNull();
+  });
+
+  test("reads an OmO waiting form with task rows under its rule", () => {
+    const extended = first.replace(footer, footer.replace(`${rule}\n`, `${rule}\n${omoTaskRows}`));
+    expect(parseInteractivePrompt("pi", extended)).toMatchObject({ agent: "omo", kind: "question", title: "Question 1 of 2" });
+  });
+
   test("reads an OmO waiting form with extension status under its rule", () => {
     const extended = first.replace(footer, footer.replace(`${rule}\n`, `${rule}\n${omoExtensionTail}`));
     expect(parseInteractivePrompt("pi", extended)).toMatchObject({ agent: "omo", kind: "question", title: "Question 1 of 2" });
@@ -1940,6 +2022,10 @@ ${rule60}
       const extended = screen.replace(footer, footer.replace(`${rule}\n`, `${rule}\n${omoExtensionTail}`));
       expect(parseInteractivePrompt("pi", extended)).toEqual(expected);
       expect(parseInteractivePrompt("pi", `${extended}$ `)).toBeNull();
+      // the same forms with OmO's task rows under the rule
+      const withTasks = screen.replace(footer, footer.replace(`${rule}\n`, `${rule}\n${omoTaskRows}`));
+      expect(parseInteractivePrompt("pi", withTasks)).toEqual(expected);
+      expect(parseInteractivePrompt("pi", `${withTasks}$ `)).toBeNull();
     }
   });
 
@@ -3319,6 +3405,46 @@ ${"─".repeat(120)}
     for (const agent of ["codex", "omp", "pi", "omo", ""]) expect(parseInteractivePrompt(agent, captured)).toBeNull();
   });
 
+  test("reads 2.1.301's slider, which describes the level between the names and the hint", () => {
+    // captures from Claude Code 2.1.301: one line under the names at low, two at max
+    const rule = "▔".repeat(120);
+    const low = `❯ /effort
+${rule}
+   Effort
+
+                             Faster                             Smarter
+                             ─▲────────────────────────────────────────      Ultracode  off
+                             low     medium     high     xhigh      max      Tab to toggle
+
+                                    ~0.7x the estimated cost of medium (the default)
+
+
+   ←/→ to adjust · Enter to confirm · s for this session only · Esc to cancel
+`;
+    const max = `❯ /effort
+${rule}
+   Effort
+
+                             Faster                             Smarter
+                             ────────────────────────────────────────▲─      Ultracode  off
+                             low     medium     high     xhigh      max      Tab to toggle
+
+    May use excessive tokens resulting in long response times or overthinking. Use sparingly for the hardest tasks.
+    (~5.2x)
+
+   ←/→ to adjust · Enter to confirm · s for this session only · Esc to cancel
+`;
+    const atLow = parseInteractivePrompt("claude", low)!;
+    expect(labels(atLow)).toEqual(["low", "medium", "high", "xhigh", "max"]);
+    expect(answerKeys(atLow, { option_index: 2 })).toEqual([{ keys: ["right"] }, { keys: ["right"] }, { text: "s" }]);
+    const atMax = parseInteractivePrompt("claude", max)!;
+    expect(atMax.id).toBe(atLow.id);
+    expect(answerKeys(atMax, { option_index: 3 })).toEqual([{ keys: ["left"] }, { text: "s" }]);
+    // the description a narrow pane wrapped over more lines is still between the names and the hint
+    const wrapped = max.replace("Use sparingly for the hardest tasks.", "\n    Use sparingly\n    for the hardest tasks.");
+    expect(labels(parseInteractivePrompt("claude", wrapped)!)).toEqual(["low", "medium", "high", "xhigh", "max"]);
+  });
+
   test("moves with ←/→ from the level ▲ is over and picks with s, never with Enter", () => {
     const prompt = parseInteractivePrompt("claude", claudeEffort(2))!;
     expect(answerKeys(prompt, { option_index: 2 })).toEqual([{ text: "s" }]);
@@ -3673,6 +3799,16 @@ ${omoRule}
       pane.agent = "pi";
       pane.status = "blocked";
       expect(await card()).toMatchObject({ agent: "omo", kind: "question", multi_select: true });
+    });
+  });
+
+  test.skipIf(process.platform !== "linux")("discovers a pending question with task rows below the input box", async () => {
+    await withOmo(async (pane) => {
+      appendFileSync(pane.omo!.path, JSON.stringify({ type: "custom", customType: "ask-user:settlement", data: { requestId: "q1" } }) + "\n" + omoPendingFixture("one.jsonl"));
+      pane.screen = omoPendingFixture("one-wide.txt").replace(/(❯\n─+\n)/, `$1${omoTaskRows}`);
+      pane.agent = "pi";
+      pane.status = "blocked";
+      expect(await card()).toMatchObject({ agent: "omo", kind: "question" });
     });
   });
 

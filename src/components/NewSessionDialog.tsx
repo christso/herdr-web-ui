@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
 import { FolderOpen, X } from "lucide-react";
 
 import "./NewSessionDialog.css";
@@ -86,7 +86,8 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
   const prefillRef = useRef(prefill);
   prefillRef.current = prefill;
 
-  useEffect(() => {
+  // The previous launch may have left disabled fields: reset them before the opening paint.
+  useLayoutEffect(() => {
     setCatalog(null);
     setLaunchChoice(null);
     if (!open) return;

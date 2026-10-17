@@ -75,6 +75,17 @@ const OMO_OWN_ANSWER = "Type your own answer...";
 const OMO_HINT_LINES = 5;
 /** lines of OmO's footer under the form's rule, at most: cwd and context, then model (one may wrap) */
 const OMO_FOOTER_LINES = 3;
+/**
+ * A row of OmO's omo-task widget under the input box (omo-ai plugin/extensions/omo-task.js): a live row
+ * `<spinner> <task> · <route> · <state>[ · <elapsed>]` with the route `agent:X`, `category:X` or `task`,
+ * a finished row `<task>|<route> <mode> <status>`, or the `+N more` line after five rows.
+ */
+const OMO_TASK_ROW_RE = /^(?:[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏‖] .+? · (?:agent:|category:|task(?: ·|$))|[^|]+\|(?:agent:|category:|task\b)|\+\d+ more$)/u;
+/** a spinner row with no task route: another program's output, never the widget */
+const OMO_SPINNER_ROW_RE = /^[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏‖] /u;
+/** a narrow pane wraps a task row's last fields (ending in the elapsed time) onto one more short line */
+const OMO_TASK_TAIL_RE = /^(?:[^\u00b7]+ \u00b7 )*\d+[hms](?: \d+[hms])*$/u;
+const OMO_TASK_WRAP_MAX = 32;
 /** where each of the form's hints ends, however a narrow pane wraps it */
 const OMO_HINT_END_RE = /\besc (?:cancel|back|discard)$/;
 /** never a line of OmO's footer: an input box (`>`, `❯`) or a shell's prompt */
@@ -469,6 +480,8 @@ function parseOmpQuestion(screen: string): ParsedPrompt | null {
       }
       // Current OMP advances/finishes the active question on Enter. Tab changes
       // the active question and would make that Enter answer a different row.
+      // Enter on the Other row opens its text editor instead of advancing.
+      if (cursor === customIndex) keys.push(KEY.up);
       keys.push(KEY.enter);
       return keySteps(keys);
     } } : {}),
@@ -1941,27 +1954,35 @@ function parseClaudeModel(screen: string): ParsedPrompt | null {
  *
  * ▲ stands over the level the slider is on. The levels are the card's options, picked with ←/→
  * and `s`, never Enter. Ultracode is left to the terminal.
+ *
+ * 2.1.301 describes the level ▲ is over between the names and the hint, after a blank line:
+ * "~1.5x the estimated cost of medium (the default)", or two lines at max.
  */
 const CLAUDE_EFFORT_LEVEL_RE = /\b(?:low|medium|high|xhigh|max)\b/g;
 /** how far ▲ may stand from the middle of a level's name and still be over it */
 const CLAUDE_EFFORT_ALIGN = 3;
-/** blank lines between the level names and the hint, at most */
-const CLAUDE_EFFORT_UNDER_LINES = 3;
+/** lines between the level names and the hint, at most: blank ones, or the level's description that a narrow pane wrapped */
+const CLAUDE_EFFORT_UNDER_LINES = 8;
+/** a line of level names and nothing else (the toggle's hint aside) */
+const claudeEffortLevelsOnly = (line: string): boolean =>
+  line.trim() !== "" && line.replace(CLAUDE_EFFORT_LEVEL_RE, "").replace(/Tab to toggle/i, "").trim() === "";
 
 function parseClaudeEffort(screen: string): ParsedPrompt | null {
   const lines = screen.replace(ANSI_RE, "").split(/\r?\n/).map((line) => line.trimEnd());
   const hintIndex = findLastIndex(lines, (_, index) => CLAUDE_EFFORT_HINT_RE.test(wrapped(lines, index)));
   if (hintIndex < 0) return null;
-  let labelsIndex = hintIndex - 1;
-  while (labelsIndex > 0 && lines[labelsIndex]!.trim() === "") labelsIndex -= 1;
-  const labels = lines[labelsIndex] ?? "";
+  // the names: the nearest line of them above the hint with a blank line under it, which also
+  // passes over a level's description. Names cut or wrapped by a narrow pane are not read
+  let labelsIndex = -1;
+  for (let index = hintIndex - 1; index > 0 && hintIndex - index <= CLAUDE_EFFORT_UNDER_LINES + 1; index -= 1) {
+    if (claudeEffortLevelsOnly(lines[index]!) && lines[index + 1]!.trim() === "") { labelsIndex = index; break; }
+  }
+  if (labelsIndex < 0) return null;
+  const labels = lines[labelsIndex]!;
   const track = lines[labelsIndex - 1] ?? "";
   const scale = /^\s*[─▲]+/.exec(track)?.[0] ?? "";
   const titled = lines.slice(Math.max(0, labelsIndex - 4), Math.max(0, labelsIndex - 1)).some((line) => line.trim() === "Effort");
-  // a line of level names and nothing else (the toggle's hint aside), cut or wrapped by a narrow pane: not read
-  const onlyLevels = labels.replace(CLAUDE_EFFORT_LEVEL_RE, "").replace(/Tab to toggle/i, "").trim() === "";
-  // two blank lines stand between the level names and the hint as Claude draws it
-  if (hintIndex - labelsIndex > CLAUDE_EFFORT_UNDER_LINES + 1 || !titled || !onlyLevels || scale.split("▲").length !== 2) return null;
+  if (!titled || scale.split("▲").length !== 2) return null;
   const arrow = track.indexOf("▲");
   const levels = [...labels.matchAll(CLAUDE_EFFORT_LEVEL_RE)].map((match) => ({ name: match[0], middle: match.index + match[0].length / 2 }));
   if (levels.length < 2 || new Set(levels.map(({ name }) => name)).size !== levels.length) return null;
@@ -2032,8 +2053,10 @@ function omoFooterIsActive(lines: string[]): boolean {
   let rules = 0;
   let footer = 0;
   let widget = false;
+  let tail = false;
   for (const line of lines) {
     if (!line) continue;
+    if (OMO_SPINNER_ROW_RE.test(line) && !OMO_TASK_ROW_RE.test(line)) return false;
     if (SOLID_RULE_RE.test(line)) {
       if (rules > 0 || footer > 0) return false;
       rules = 1;
@@ -2041,9 +2064,16 @@ function omoFooterIsActive(lines: string[]): boolean {
       /^(?:[▶◌✗✓] .*\bcategory:|▶ .* \bwave \d+\/\d+\b)/.test(line)
       || (widget && /^(?:\d+[hms]\s*)+$/.test(line))
     )) {
+      tail = false;
       // A duration may wrap off the task row. Only these status rows precede the native footer;
       // arbitrary output, a second rule, or another program's input still invalidates the form.
       widget = true;
+    } else if (rules > 0 && footer === 0 && !OMO_NOT_FOOTER_RE.test(line) && (
+      OMO_TASK_ROW_RE.test(line)
+      || (tail && line.length <= OMO_TASK_WRAP_MAX && OMO_TASK_TAIL_RE.test(line))
+    )) {
+      // a task row, or the one short line it wrapped onto
+      tail = OMO_TASK_ROW_RE.test(line);
     } else if (rules === 0 || ++footer > OMO_FOOTER_LINES || OMO_NOT_FOOTER_RE.test(line)) return false;
   }
   return rules === 1;
@@ -2072,7 +2102,9 @@ function promptTailIsActive(prompt: ParsedPrompt, screen: string): boolean {
   if (prompt.responder === "claude-question") return ends(CLAUDE_ASK_HINT_RE);
   if (prompt.responder === "claude-submit") return CLAUDE_SUBMIT_TAIL_RE.test(last);
   // the last row carries the cursor once a move has put it there
-  if (prompt.responder === "codex-approval") return ends(/press enter to confirm|esc to cancel|enter continue.*esc back|^(?:[›>❯]\s*)?\d+\.\s+(?:No|Reject|Cancel|Deny)\b/i);
+  // Codex's folder trust prompt ends "enter continue · esc back" or, from 0.163, "· esc quit".
+  // Only those two: its update prompt ends "· esc skip" and must not read as an approval.
+  if (prompt.responder === "codex-approval") return ends(/press enter to confirm|esc to cancel|enter continue\s*·\s*esc (?:back|quit)$|^(?:[›>❯]\s*)?\d+\.\s+(?:No|Reject|Cancel|Deny)\b/i);
   if (prompt.responder === "omp-approval") return ends(/^(?:[›>❯•]\s*)?(?:Approve|Deny)$|esc.*cancel/i);
   // Claude Code 2.1.29x ends with "Esc to cancel", optionally followed by its stop-agents
   // chord. Anchor that suffix so arbitrary trailing text cannot keep an old approval live.
