@@ -1,3 +1,5 @@
+> Follow-up: the simulated screens here omitted Codex completion footers. These checks cover greetings and store isolation; [native Codex footer checks](../codex-completion-footer/README.md) reproduce and fix the remaining failure after a short reply.
+
 # Codex profiles in Chat
 
 Fresh Codex sessions launched through the web UI now show the greeting before the first message, including custom launchers such as codex-compound and codex-tsoyang. A short first exchange can also be found when another profile in the same project is busy.

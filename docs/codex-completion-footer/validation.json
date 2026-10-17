@@ -1,0 +1,45 @@
+{
+  "base": "424dcde2ae3e44a90ed0aa8317ff274617aa55e7",
+  "fast": {
+    "unit_pass": 3897,
+    "unit_fail": 0,
+    "unit_skip": 8,
+    "unit_files": 300,
+    "typecheck": true,
+    "generated_types": true,
+    "build": true,
+    "workflow_syntax": true
+  },
+  "focused_before_subsecond_variant": {
+    "pass": 155,
+    "fail": 0,
+    "assertions": 588
+  },
+  "existing_test_lines_removed": 0,
+  "production_file": "server/codex.ts",
+  "production_sha256": "1f1858a67795ce9211a1552e3062a268a39bcb204fa25374c2c8ed5ddd29fbe0",
+  "native_codex": "0.163.0",
+  "native_herdr": "0.9.5",
+  "local_canned_responses": 2,
+  "live_model_calls": 0,
+  "user_panes_mutated": 0,
+  "review": "Focused correctness plus independent adversarial review; no outstanding findings. Cross-model transport unavailable before egress (npm ETARGET).",
+  "revision": "e56c5f7fe8c100fbf71abaf720e97c6ca9389997",
+  "contracts": {
+    "pass": 22,
+    "fail": 0,
+    "assertions": 173
+  },
+  "final_native_browser": {
+    "passed": true,
+    "fresh_greeting": true,
+    "red_source": "scrollback",
+    "green_source": "codex-transcript",
+    "green_turns": 2,
+    "desktop": true,
+    "phone": true,
+    "phone_drawer_closed": true
+  },
+  "source_unchanged_during_final_checks": true,
+  "committed_code_matches_tested_file_sha256": true
+}

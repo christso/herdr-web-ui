@@ -1,0 +1,52 @@
+{
+  "status": "complete",
+  "verdict": "Ready to merge",
+  "scope": {
+    "base": "424dcde2ae3e44a90ed0aa8317ff274617aa55e7",
+    "branch": "fix/codex-completion-footer",
+    "head_sha": "424dcde2ae3e44a90ed0aa8317ff274617aa55e7",
+    "pr_url": null,
+    "files_changed": 3
+  },
+  "intent": "Exclude native completed-turn footer from exact first-answer comparison while preserving conservative conversation ownership.",
+  "intent_confidence": "explicit",
+  "reviewers": [
+    "correctness",
+    "adversarial"
+  ],
+  "findings": [],
+  "actionable_findings": [],
+  "triage_groups": [],
+  "pre_existing_findings": [],
+  "requirements_completeness": null,
+  "learnings": [],
+  "agent_native_gaps": [],
+  "deployment_notes": [],
+  "residual_risks": [],
+  "testing_gaps": [],
+  "coverage": {
+    "depth": "focused",
+    "criteria": [
+      "AGENTS.md",
+      "server/AGENTS.md",
+      "CONTRIBUTING.md",
+      ".github/REVIEW.md"
+    ],
+    "excluded_untracked": [
+      "changelog.d/codex-completion-footer.md"
+    ],
+    "not_assessed": [
+      "Compound Packs",
+      "learnings",
+      "agent-native gaps",
+      "deployment notes"
+    ],
+    "validator_run": false
+  },
+  "peer": {
+    "outcome": "in-process-fallback",
+    "coverage": "adversarial lens: in-process fallback (cross-model peer not run: shared transport unavailable before egress, npm ETARGET for acpx@0.19.5)"
+  },
+  "artifact_path": "/home/christso/.cache/herdr-profile-qa/footer/review-footer",
+  "run_id": "review-footer"
+}
