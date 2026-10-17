@@ -1040,11 +1040,12 @@ export function matchCodexFirstExchange(
   const first = codexExchanges(match.candidate.text)[0];
   const storedPrompt = normalizePrompt(match.candidate.firstUserMessage ?? "");
   const shown = displayedFirstExchange(screen);
-  if (match.index !== 0 || first === undefined || shown === null
+  const shownWithFooter = displayedFirstExchange(screen, true);
+  if (match.index !== 0 || first === undefined || shown === null || shownWithFooter === null
     || storedPrompt === ""
     || normalizePrompt(first.user) !== storedPrompt
     || (normalizePrompt(first.assistant) !== normalizePrompt(shown.assistant)
-      && normalizePrompt(first.assistant) !== normalizePrompt(displayedFirstExchange(screen, true)!.assistant))
+      && normalizePrompt(first.assistant) !== normalizePrompt(shownWithFooter.assistant))
     || typeof match.candidate.createdAtMs !== "number"
     || !Number.isFinite(match.candidate.createdAtMs) || match.candidate.createdAtMs < startedAtMs) return null;
   return match.candidate.path;
