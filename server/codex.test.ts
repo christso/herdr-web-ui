@@ -866,6 +866,15 @@ describe("Codex submitted first exchange", () => {
     ], started)).toBeNull();
   });
 
+  it("preserves a literal footer-shaped final paragraph without native chrome", () => {
+    const literal = answer + "\n\nWorked for 1s • 11:11 AM";
+    const completed = screen.replace(answer, literal);
+    expect(matchCodexFirstExchange(completed, [row("new", started, prompt, literal)], started)).toBe("new");
+    expect(matchCodexFirstExchange(completed, [
+      row("new", started, prompt, literal), row("old", started - 1),
+    ], started)).toBeNull();
+  });
+
   it("skips known Codex notices before the submitted prompt (regression)", () => {
     for (const notice of ["Model changed to gpt-5", "Unrecognized command '/wat'", "Working directory changed to /tmp"]) {
       expect(matchCodexFirstExchange(screen.replace(`› ${prompt}`, `• ${notice}\n\n› ${prompt}`), [row()], started)).toBe("new");
