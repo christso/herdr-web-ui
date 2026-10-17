@@ -981,7 +981,12 @@ function displayedFirstExchange(screen: string): CodexExchange | null {
   if (answerAt < 0) return null;
   const user = lines.slice(promptAt, answerAt).map((line, index) => index === 0 ? line.slice(1) : line).join("\n");
   const nextPrompt = lines.findIndex((line, index) => index > answerAt && /^›(?:[ \t]|$)/.test(line));
-  const response = lines.slice(answerAt, nextPrompt < 0 ? undefined : nextPrompt)
+  const responseLines = lines.slice(answerAt, nextPrompt < 0 ? undefined : nextPrompt);
+  // Codex's completed-turn footer is terminal chrome, after a blank line and before the composer.
+  const footer = responseLines.findIndex((line, index) => index > 0 && responseLines[index - 1]!.trim() === ""
+    && /^[ \t]*Worked for <?\d+(?:ms|s|m|h)(?: \d+(?:ms|s|m|h))*(?: • \d{1,2}:\d{2}(?: [AP]M)?)?[ \t]*$/.test(line)
+    && responseLines.slice(index + 1).every((after) => after.trim() === ""));
+  const response = (footer < 0 ? responseLines : responseLines.slice(0, footer))
     .map((line) => /^•/.test(line) ? line.slice(1) : line).join("\n");
   return { user, assistant: response };
 }
