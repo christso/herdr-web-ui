@@ -974,7 +974,7 @@ function codexExchanges(text: string): CodexExchange[] {
 }
 
 /** The first top-level prompt and its following assistant output, after this TUI's header. */
-function displayedFirstExchange(screen: string): CodexExchange | null {
+function displayedFirstExchange(screen: string, keepCompletionFooter = false): CodexExchange | null {
   const header = screen.lastIndexOf("OpenAI Codex (v");
   if (header < 0) return null;
   const lines = screen.slice(header).split(/\r?\n/);
@@ -1000,7 +1000,7 @@ function displayedFirstExchange(screen: string): CodexExchange | null {
   const footer = responseLines.findIndex((line, index) => index > 0 && responseLines[index - 1]!.trim() === ""
     && /^[ \t]*Worked for <?\d+(?:ms|s|m|h)(?: \d+(?:ms|s|m|h))*(?: • \d{1,2}:\d{2}(?: [AP]M)?)?[ \t]*$/.test(line)
     && responseLines.slice(index + 1).every((after) => after.trim() === ""));
-  const response = (footer < 0 ? responseLines : responseLines.slice(0, footer))
+  const response = (footer < 0 || keepCompletionFooter ? responseLines : responseLines.slice(0, footer))
     .map((line) => /^•/.test(line) ? line.slice(1) : line).join("\n");
   return { user, assistant: response };
 }
@@ -1043,7 +1043,8 @@ export function matchCodexFirstExchange(
   if (match.index !== 0 || first === undefined || shown === null
     || storedPrompt === ""
     || normalizePrompt(first.user) !== storedPrompt
-    || normalizePrompt(first.assistant) !== normalizePrompt(shown.assistant)
+    || (normalizePrompt(first.assistant) !== normalizePrompt(shown.assistant)
+      && normalizePrompt(first.assistant) !== normalizePrompt(displayedFirstExchange(screen, true)!.assistant))
     || typeof match.candidate.createdAtMs !== "number"
     || !Number.isFinite(match.candidate.createdAtMs) || match.candidate.createdAtMs < startedAtMs) return null;
   return match.candidate.path;
