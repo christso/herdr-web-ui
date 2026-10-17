@@ -1,0 +1,39 @@
+{
+  "desktop": {
+    "sidebar": true,
+    "workspaces": 30,
+    "sidebarError": false,
+    "errorCount": 0,
+    "webSocketsBlocked": 2,
+    "chatUserTurns": 4,
+    "chatUnavailable": false
+  },
+  "phone": {
+    "sidebar": true,
+    "workspaces": 30,
+    "sidebarError": false,
+    "errorCount": 0,
+    "webSocketsBlocked": 2,
+    "chatUserTurns": 4,
+    "chatUnavailable": false
+  },
+  "omp_launch_form": {
+    "machine": "WTG",
+    "profiles": [
+      "",
+      "agcon",
+      "agent-conductor",
+      "compound-engineering",
+      "omp-compound"
+    ],
+    "profile_selectable": true,
+    "launcher_hides_profile": true,
+    "default_restores_profile": true,
+    "started_agent": false
+  },
+  "revision": "5d6e91a71647b9ad5eb20c9f846689bbfac54778",
+  "status": "passed",
+  "screenshots_taken": 0,
+  "terminal_attachments": 0,
+  "user_input_sent": 0
+}

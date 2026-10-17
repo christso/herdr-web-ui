@@ -1,0 +1,62 @@
+{
+  "commit": "5d6e91a71647b9ad5eb20c9f846689bbfac54778",
+  "bundle_version": "30",
+  "connected": true,
+  "previous_roster": {
+    "workspaces": 22,
+    "panes": 25
+  },
+  "panes_preserved": 25,
+  "existing_conversations_preserved": 3,
+  "choices": [
+    {
+      "kind": "codex",
+      "launchers": [
+        {
+          "id": "codex-eng",
+          "label": "codex-eng"
+        }
+      ]
+    },
+    {
+      "kind": "omp",
+      "profiles": [
+        {
+          "id": "agcon",
+          "label": "agcon"
+        },
+        {
+          "id": "agent-conductor",
+          "label": "agent-conductor"
+        },
+        {
+          "id": "compound-engineering",
+          "label": "compound-engineering"
+        },
+        {
+          "id": "omp-compound",
+          "label": "omp-compound"
+        }
+      ],
+      "launchers": [
+        {
+          "id": "omp-compound",
+          "label": "omp-compound"
+        }
+      ]
+    },
+    {
+      "kind": "pi",
+      "launchers": [
+        {
+          "id": "pi-compound",
+          "label": "pi-compound"
+        },
+        {
+          "id": "pi-rpiv",
+          "label": "pi-rpiv"
+        }
+      ]
+    }
+  ]
+}
