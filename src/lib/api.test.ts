@@ -100,7 +100,7 @@ it("offers a profile-only installed kind while preserving its unavailable Defaul
 
 it("offers a supported launcher-only kind without making its unavailable Default installed", async () => {
   const launchers = [{ id: "pi-review", label: "pi-review" }];
-  globalThis.fetch = (async () => Response.json({ agents: [
+  globalThis.fetch = (async (_url: string) => Response.json({ agents: [
     { kind: "pi", label: "Pi", installed: false, launchers },
     { kind: "claude", label: "Claude Code", installed: false },
     { kind: "unsupported", label: "Unsupported", installed: false, launchers },
