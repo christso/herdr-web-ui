@@ -8,7 +8,7 @@ import nodePath, { join, type PlatformPath } from "node:path";
 import { paneProcessInfo } from "./herdr/client.ts";
 import { heldTranscript, runsAgent } from "./gjc-runtime.ts";
 import { processEnviron } from "./omo.ts";
-import { ompProcessMemory } from "./omp-process.ts";
+import { isWsl, ompProcessMemory } from "./omp-process.ts";
 
 const OMP_EXECUTABLE = /(^|[\\/])omp(?:\.exe|\.[cm]?js)?$/i;
 
@@ -45,19 +45,30 @@ export async function ompHeldTranscript(paneId: string, cwd: string, home = proc
   const info = await paneProcessInfo(paneId).catch(() => null);
   let agentDir: string | null = null;
   const pids: number[] = [];
+  const environs = new Map<number, readonly string[]>();
   for (const foreground of info?.foreground_processes ?? []) {
     if (typeof foreground.pid !== "number") continue;
     let argv = Array.isArray(foreground.argv) ? foreground.argv.map(String) : [];
     if (argv.length > 0 && !isOmpProcess(argv)) continue;
-    const memory = process.platform === "linux" ? await ompProcessMemory(foreground.pid, argv.length === 0) : null;
-    if (process.platform === "linux" && memory === null) continue;
-    if (argv.length === 0) argv = memory?.argv ?? [];
+    // Herdr omits a recognized agent's argv on WSL; there, and only there, procfs memory reads
+    // may block, so they go through the helper. Elsewhere herdr's argv and a direct read hold.
+    const probe = process.platform === "linux" && (argv.length === 0 || isWsl());
+    let environ: readonly string[] | undefined;
+    if (probe) {
+      const memory = await ompProcessMemory(foreground.pid, argv.length === 0);
+      if (memory === null) continue;
+      if (argv.length === 0) argv = memory.argv;
+      environ = memory.environ;
+    }
     if (!isOmpProcess(argv)) continue;
-    const dir = ompAgentDir(argv, memory?.environ ?? processEnviron(foreground.pid), home);
+    const dir = ompAgentDir(argv, environ ?? processEnviron(foreground.pid), home);
     // a moved store, or two omp processes keeping different ones: nothing says which the pane shows
     if (dir === null || agentDir !== null && dir !== agentDir) return null;
     agentDir = dir;
     pids.push(foreground.pid);
+    if (environ !== undefined) environs.set(foreground.pid, environ);
   }
-  return agentDir === null ? null : heldTranscript(agentDir, cwd, pids).path;
+  if (agentDir === null) return null;
+  // a probed process's environment stands in for gjcTerminal's /proc read, which could block too
+  return heldTranscript(agentDir, cwd, pids, (pid) => environs.get(pid)).path;
 }

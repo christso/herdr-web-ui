@@ -117,9 +117,9 @@ export function isLiveWorkTurn(turn: ConversationTurn, last: boolean, status?: s
   return last && turn.role === "assistant" && (status === "working" || status === "blocked");
 }
 
-/** A live assistant answer is only a visible live work block when it has work parts to render. */
-export function hasLiveWorkBlock(turn: ConversationTurn, last: boolean, status?: string, sentOver?: ConversationTurn | null): boolean {
-  return isLiveWorkTurn(turn, last, status, sentOver) && splitTurn(turn.parts).work.length > 0;
+/** The rows a work block draws: skills are chips beside the prompt, thinking only when shown. */
+export function visibleWorkParts(parts: ConversationPart[], showThinking: boolean): ConversationPart[] {
+  return parts.filter((part) => part.kind !== "skill" && (showThinking || part.kind !== "thinking"));
 }
 
 /**
