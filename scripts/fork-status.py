@@ -154,6 +154,8 @@ def render(data):
               "", "Excluded paths that differ in this snapshot: " + (", ".join(f"`{cell(entry['path'])}`" for entry in data["scope"]["excluded_changed_files"]) or "none") + ".",
               "", "## Retained fork changes", "", "| Area | Type | Difference from pinned upstream | Files | Upstream context |", "| --- | --- | --- | ---: | --- |"]
     for group in data["groups"]:
+        if not group["files"]:
+            continue
         links = [f"PR [#{number}](https://github.com/devswha/herdr-web-ui/pull/{number})" for number in group["related_upstream_prs"]]
         links += [f"Issue [#{number}](https://github.com/devswha/herdr-web-ui/issues/{number})" for number in group["related_upstream_issues"]]
         lines.append(f"| {cell(group['title'])} | {cell(group['kind'])} | {cell(group['summary'])} | {len(group['files'])} | {', '.join(links) or '—'} |")
