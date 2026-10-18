@@ -1782,9 +1782,13 @@ try {
     });
     observer.observe(document.body, { childList: true, subtree: true });
   });
+  const reopenedCatalog = page.waitForResponse((response) => response.url().endsWith("/api/agents") && response.request().method() === "GET");
   await openAgentTab();
   await tabDialog.waitFor();
   assert.equal(await tabDialog.getAttribute("data-focus-at-open"), "true", "the dialog owns focus before its first paint, not the terminal restored by its menu");
+  assert.equal(await tabDialog.getByRole("combobox", { name: "Agent", exact: true }).isDisabled(), false, "a reopened dialog immediately enables the agent picker");
+  await (await reopenedCatalog).finished();
+  await until(async () => !(await tabDialog.getByRole("button", { name: "Start", exact: true }).isDisabled()), "the reopened dialog commits its loaded agent catalog");
   assert.equal(await tabDialog.getByRole("button", { name: "Start", exact: true }).isDisabled(), false, "a reopened dialog is not left pending");
   await page.keyboard.press("Escape");
   await tabDialog.waitFor({ state: "hidden" });
