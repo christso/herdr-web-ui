@@ -114,7 +114,7 @@ try {
   await activityPage.addInitScript((id) => localStorage.setItem(`herdr-web-ui:view:${id}`, "chat"), activityPaneId);
   await activityPage.goto(`http://127.0.0.1:${server.port}/?pane=${encodeURIComponent(activityPaneId)}`);
   await activityPage.locator(".conn-live").waitFor();
-  const activityLog = activityPage.getByRole("log", { name: `conversation of ${activityPaneId}` });
+  const activityLog = activityPage.locator(`.pane-frame[data-layout-pane="${activityPaneId}"]`).getByRole("log");
   await activityLog.getByText("An OMP-shaped request.", { exact: true }).waitFor();
   await reportActivity("working");
   const activityPane = (await sessionSnapshot()).panes.find((pane) => pane.pane_id === activityPaneId);
