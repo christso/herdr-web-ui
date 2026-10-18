@@ -27,6 +27,28 @@
 
 ---
 
+## christso fork
+
+This is [christso/herdr-web-ui](https://github.com/christso/herdr-web-ui), tracking
+[devswha/herdr-web-ui](https://github.com/devswha/herdr-web-ui) while retaining native
+profile and launcher discovery and launch selection, custom OMP config roots,
+correct Codex custom session stores, and pane and PC navigation improvements.
+It also retains extra regression coverage; the merged upstream Codex footer and
+OMP Working fixes are already upstream, not exclusive fork features.
+
+See [native profiles and launchers](docs/agent-profiles.md) for the separate
+**Profile** and **Launcher** choices. Profile appears only when native discoveries
+are available with the Default launcher; a custom launcher owns its configuration.
+The [dated, pinned comparison](docs/fork/status.md) lists every product delta from
+upstream, with [canonical JSON](docs/fork/status.json) and a
+[portable refresh/render tool](scripts/fork-status.py).
+
+The website, demo, releases and installation commands below belong to upstream.
+They install upstream, not this fork. For source development, use this fork's
+checkout with the [development guide](docs/development.md).
+
+---
+
 https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b
 
 <p align="center"><sub>One Claude Code session: in herdr's terminal, then the browser's Terminal and Chat, then the phone, where a new worktree starts beside it · recorded live, no cuts</sub></p>
@@ -86,6 +108,9 @@ A browser and phone client for [herdr](https://github.com/herdrdev/herdr). Read 
 ---
 
 ## install
+
+These are the **upstream** installation instructions; they install
+[devswha/herdr-web-ui](https://github.com/devswha/herdr-web-ui).
 
 ```bash
 curl -fsSL https://herdrweb.dev/install.sh | sh

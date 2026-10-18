@@ -1,0 +1,538 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-18T05:37:13.110012+00:00",
+  "fork": {
+    "repository": "christso/herdr-web-ui",
+    "ref": "origin/christso/main",
+    "sha": "4e8eaf3241568c51289185cc570ca7621f8c3e47"
+  },
+  "upstream": {
+    "repository": "devswha/herdr-web-ui",
+    "ref": "upstream/main",
+    "sha": "f1491383275c11d37d1f11bbd826009972d72f4d"
+  },
+  "scope": {
+    "method": "Git tree diff, no renames; binary numstats are null",
+    "excluded_paths": [
+      "README.md",
+      "docs/fork/status.json",
+      "docs/fork/status.md",
+      "scripts/fork-status.py"
+    ],
+    "reason": "Exclude the whole English README (including the fork introduction) and the fork reporting files/tool, so reporting does not count itself as product work. All other changed paths, including documentation, tests and changelog fragments, count.",
+    "excluded_changed_files": []
+  },
+  "comparison": {
+    "fork_only_commits": 39,
+    "upstream_only_commits": 0,
+    "upstream_included": true,
+    "product_files": 46,
+    "unclassified_paths": []
+  },
+  "upstream_context": "PR/issue links are context, not proof of coverage. Issue #1197 was open on 2026-10-18; this report does not claim it resolved.",
+  "pull_requests": {
+    "status": "complete",
+    "state": "open",
+    "pagination": "all pages",
+    "queries": [
+      {
+        "repository": "devswha/herdr-web-ui",
+        "author": "christso",
+        "queried_at": "2026-10-18T05:37:13.622135+00:00",
+        "pull_requests": []
+      },
+      {
+        "repository": "christso/herdr-web-ui",
+        "author": null,
+        "queried_at": "2026-10-18T05:37:14.128829+00:00",
+        "pull_requests": []
+      }
+    ]
+  },
+  "groups": [
+    {
+      "id": "omp-custom-root",
+      "title": "OMP custom config roots",
+      "kind": "Retained functionality",
+      "summary": "Resolve PI_CONFIG_DIR from the pane's process for default and named profiles, retaining upstream's bounded WSL probes.",
+      "classified_paths": [
+        "server/omp-process.test.ts",
+        "server/omp-process.ts",
+        "server/omp.contract.test.ts",
+        "server/omp.test.ts",
+        "server/omp.ts"
+      ],
+      "related_upstream_prs": [],
+      "related_upstream_issues": [],
+      "files": [
+        "server/omp-process.test.ts",
+        "server/omp-process.ts",
+        "server/omp.contract.test.ts",
+        "server/omp.test.ts",
+        "server/omp.ts"
+      ]
+    },
+    {
+      "id": "codex-profile-stores",
+      "title": "Codex custom session stores",
+      "kind": "Retained functionality",
+      "summary": "Bind chats to the native process's custom store and distinguish peers sharing a working directory. Merged upstream footer fixes are not counted as fork-exclusive functionality.",
+      "classified_paths": [
+        "server/codex-processes.test.ts",
+        "server/codex.ts",
+        "server/conversation.test.ts",
+        "server/conversation.ts",
+        "changelog.d/codex-profile-chat-start.md"
+      ],
+      "related_upstream_prs": [
+        1155,
+        1248
+      ],
+      "related_upstream_issues": [],
+      "files": [
+        "changelog.d/codex-profile-chat-start.md",
+        "server/codex-processes.test.ts",
+        "server/codex.ts",
+        "server/conversation.test.ts",
+        "server/conversation.ts"
+      ]
+    },
+    {
+      "id": "selection-navigation",
+      "title": "Pane and PC navigation",
+      "kind": "Retained functionality",
+      "summary": "Keep new worktree and PC selections through roster refreshes, deep links and browser navigation, including worktree-selection regression registration and assertions in the browser lane.",
+      "classified_paths": [
+        "src/App.tsx",
+        "scripts/deep-link-demo-regression.ts",
+        "scripts/palette-machines-demo-regression.ts",
+        "scripts/worktree-selection-demo-regression.ts",
+        "scripts/ci-browser.sh",
+        "scripts/ci-browser.test.ts",
+        "changelog.d/creation-link-machine.md",
+        "changelog.d/worktree-phone-selection.md"
+      ],
+      "related_upstream_prs": [],
+      "related_upstream_issues": [],
+      "files": [
+        "changelog.d/creation-link-machine.md",
+        "changelog.d/worktree-phone-selection.md",
+        "scripts/ci-browser.sh",
+        "scripts/ci-browser.test.ts",
+        "scripts/deep-link-demo-regression.ts",
+        "scripts/palette-machines-demo-regression.ts",
+        "scripts/worktree-selection-demo-regression.ts",
+        "src/App.tsx"
+      ]
+    },
+    {
+      "id": "working-regression",
+      "title": "Native Working regression and history",
+      "kind": "Manual regression + historical fragment",
+      "summary": "scripts/chat-browser-qa.ts retains a manual browser regression. changelog.d/native-working-chat.md is a historical fork fragment, not new functionality or QA coverage. The live Working implementation is already upstream, including the merged OMP fixes.",
+      "classified_paths": [
+        "scripts/chat-browser-qa.ts",
+        "changelog.d/native-working-chat.md"
+      ],
+      "related_upstream_prs": [
+        1307,
+        1322
+      ],
+      "related_upstream_issues": [],
+      "files": [
+        "changelog.d/native-working-chat.md",
+        "scripts/chat-browser-qa.ts"
+      ]
+    },
+    {
+      "id": "native-launch-profiles",
+      "title": "Native profiles and launchers",
+      "kind": "Retained functionality",
+      "summary": "Discover and revalidate native profiles and installed shell launchers in workspace, tab and worktree dialogs. Keep separate Profile and Launcher fields; Profile is conditional on native choices with Default selected.",
+      "classified_paths": [
+        "server/agent-launch.ts",
+        "server/agent-profiles.contract.test.ts",
+        "server/agent-profiles.test.ts",
+        "server/agent-profiles.ts",
+        "server/shell-agent.test.ts",
+        "server/shell-agent.ts",
+        "server/start-screen.test.ts",
+        "server/start-screen.ts",
+        "server/workspace-routes.ts",
+        "server/index.ts",
+        "server/api.contract.test.ts",
+        "shared/protocol.ts",
+        "src/components/AgentLaunchPicker.tsx",
+        "src/components/NewSessionDialog.tsx",
+        "src/components/WorktreeDialog.tsx",
+        "src/lib/api.test.ts",
+        "src/lib/api.ts",
+        "src/lib/i18n.ja.ts",
+        "src/lib/i18n.ko.ts",
+        "src/lib/i18n.zh.ts",
+        "site/demo/transport.ts",
+        "scripts/demo-agent-launch.test.ts",
+        "scripts/ui-regression.ts",
+        "docs/agent-profiles.md",
+        "docs/development.md",
+        "changelog.d/agent-launch-profiles.md"
+      ],
+      "related_upstream_prs": [],
+      "related_upstream_issues": [
+        1197
+      ],
+      "files": [
+        "changelog.d/agent-launch-profiles.md",
+        "docs/agent-profiles.md",
+        "docs/development.md",
+        "scripts/demo-agent-launch.test.ts",
+        "scripts/ui-regression.ts",
+        "server/agent-launch.ts",
+        "server/agent-profiles.contract.test.ts",
+        "server/agent-profiles.test.ts",
+        "server/agent-profiles.ts",
+        "server/api.contract.test.ts",
+        "server/index.ts",
+        "server/shell-agent.test.ts",
+        "server/shell-agent.ts",
+        "server/start-screen.test.ts",
+        "server/start-screen.ts",
+        "server/workspace-routes.ts",
+        "shared/protocol.ts",
+        "site/demo/transport.ts",
+        "src/components/AgentLaunchPicker.tsx",
+        "src/components/NewSessionDialog.tsx",
+        "src/components/WorktreeDialog.tsx",
+        "src/lib/api.test.ts",
+        "src/lib/api.ts",
+        "src/lib/i18n.ja.ts",
+        "src/lib/i18n.ko.ts",
+        "src/lib/i18n.zh.ts"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "changelog.d/agent-launch-profiles.md",
+      "status": "A",
+      "added": 8,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "changelog.d/codex-profile-chat-start.md",
+      "status": "A",
+      "added": 4,
+      "removed": 0,
+      "group": "codex-profile-stores"
+    },
+    {
+      "path": "changelog.d/creation-link-machine.md",
+      "status": "A",
+      "added": 3,
+      "removed": 0,
+      "group": "selection-navigation"
+    },
+    {
+      "path": "changelog.d/native-working-chat.md",
+      "status": "A",
+      "added": 2,
+      "removed": 0,
+      "group": "working-regression"
+    },
+    {
+      "path": "changelog.d/worktree-phone-selection.md",
+      "status": "A",
+      "added": 2,
+      "removed": 0,
+      "group": "selection-navigation"
+    },
+    {
+      "path": "docs/agent-profiles.md",
+      "status": "A",
+      "added": 59,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "docs/development.md",
+      "status": "M",
+      "added": 2,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "scripts/chat-browser-qa.ts",
+      "status": "M",
+      "added": 62,
+      "removed": 0,
+      "group": "working-regression"
+    },
+    {
+      "path": "scripts/ci-browser.sh",
+      "status": "M",
+      "added": 1,
+      "removed": 0,
+      "group": "selection-navigation"
+    },
+    {
+      "path": "scripts/ci-browser.test.ts",
+      "status": "M",
+      "added": 2,
+      "removed": 1,
+      "group": "selection-navigation"
+    },
+    {
+      "path": "scripts/deep-link-demo-regression.ts",
+      "status": "M",
+      "added": 17,
+      "removed": 0,
+      "group": "selection-navigation"
+    },
+    {
+      "path": "scripts/demo-agent-launch.test.ts",
+      "status": "A",
+      "added": 48,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "scripts/palette-machines-demo-regression.ts",
+      "status": "M",
+      "added": 21,
+      "removed": 1,
+      "group": "selection-navigation"
+    },
+    {
+      "path": "scripts/ui-regression.ts",
+      "status": "M",
+      "added": 4,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "scripts/worktree-selection-demo-regression.ts",
+      "status": "A",
+      "added": 79,
+      "removed": 0,
+      "group": "selection-navigation"
+    },
+    {
+      "path": "server/agent-launch.ts",
+      "status": "M",
+      "added": 17,
+      "removed": 8,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "server/agent-profiles.contract.test.ts",
+      "status": "A",
+      "added": 257,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "server/agent-profiles.test.ts",
+      "status": "A",
+      "added": 108,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "server/agent-profiles.ts",
+      "status": "A",
+      "added": 118,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "server/api.contract.test.ts",
+      "status": "M",
+      "added": 8,
+      "removed": 2,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "server/codex-processes.test.ts",
+      "status": "M",
+      "added": 80,
+      "removed": 3,
+      "group": "codex-profile-stores"
+    },
+    {
+      "path": "server/codex.ts",
+      "status": "M",
+      "added": 51,
+      "removed": 18,
+      "group": "codex-profile-stores"
+    },
+    {
+      "path": "server/conversation.test.ts",
+      "status": "M",
+      "added": 47,
+      "removed": 0,
+      "group": "codex-profile-stores"
+    },
+    {
+      "path": "server/conversation.ts",
+      "status": "M",
+      "added": 7,
+      "removed": 6,
+      "group": "codex-profile-stores"
+    },
+    {
+      "path": "server/index.ts",
+      "status": "M",
+      "added": 9,
+      "removed": 1,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "server/omp-process.test.ts",
+      "status": "M",
+      "added": 2,
+      "removed": 2,
+      "group": "omp-custom-root"
+    },
+    {
+      "path": "server/omp-process.ts",
+      "status": "M",
+      "added": 1,
+      "removed": 1,
+      "group": "omp-custom-root"
+    },
+    {
+      "path": "server/omp.contract.test.ts",
+      "status": "M",
+      "added": 3,
+      "removed": 1,
+      "group": "omp-custom-root"
+    },
+    {
+      "path": "server/omp.test.ts",
+      "status": "M",
+      "added": 8,
+      "removed": 0,
+      "group": "omp-custom-root"
+    },
+    {
+      "path": "server/omp.ts",
+      "status": "M",
+      "added": 12,
+      "removed": 6,
+      "group": "omp-custom-root"
+    },
+    {
+      "path": "server/shell-agent.test.ts",
+      "status": "M",
+      "added": 32,
+      "removed": 1,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "server/shell-agent.ts",
+      "status": "M",
+      "added": 58,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "server/start-screen.test.ts",
+      "status": "M",
+      "added": 17,
+      "removed": 1,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "server/start-screen.ts",
+      "status": "M",
+      "added": 11,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "server/workspace-routes.ts",
+      "status": "M",
+      "added": 10,
+      "removed": 3,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "shared/protocol.ts",
+      "status": "M",
+      "added": 7,
+      "removed": 3,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "site/demo/transport.ts",
+      "status": "M",
+      "added": 22,
+      "removed": 2,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "src/App.tsx",
+      "status": "M",
+      "added": 15,
+      "removed": 5,
+      "group": "selection-navigation"
+    },
+    {
+      "path": "src/components/AgentLaunchPicker.tsx",
+      "status": "A",
+      "added": 26,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "src/components/NewSessionDialog.tsx",
+      "status": "M",
+      "added": 24,
+      "removed": 8,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "src/components/WorktreeDialog.tsx",
+      "status": "M",
+      "added": 28,
+      "removed": 10,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "src/lib/api.test.ts",
+      "status": "M",
+      "added": 23,
+      "removed": 1,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "src/lib/api.ts",
+      "status": "M",
+      "added": 1,
+      "removed": 1,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "src/lib/i18n.ja.ts",
+      "status": "M",
+      "added": 3,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "src/lib/i18n.ko.ts",
+      "status": "M",
+      "added": 3,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    },
+    {
+      "path": "src/lib/i18n.zh.ts",
+      "status": "M",
+      "added": 3,
+      "removed": 0,
+      "group": "native-launch-profiles"
+    }
+  ]
+}
