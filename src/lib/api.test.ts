@@ -97,3 +97,13 @@ it("offers a profile-only installed kind while preserving its unavailable Defaul
   expect(await fetchAgentKinds("remote-fixture")).toEqual([{ kind: "codex", label: "Codex", installed: false, profiles }, { kind: "omp", label: "OMP", installed: true }]);
   expect(requested).toBe("/api/machines/remote-fixture/agents");
 });
+
+it("offers a supported launcher-only kind without making its unavailable Default installed", async () => {
+  const launchers = [{ id: "pi-review", label: "pi-review" }];
+  globalThis.fetch = (async () => Response.json({ agents: [
+    { kind: "pi", label: "Pi", installed: false, launchers },
+    { kind: "claude", label: "Claude Code", installed: false },
+    { kind: "unsupported", label: "Unsupported", installed: false, launchers },
+  ] })) as typeof fetch;
+  expect(await fetchAgentKinds()).toEqual([{ kind: "pi", label: "Pi", installed: false, launchers }]);
+});

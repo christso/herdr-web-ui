@@ -93,7 +93,7 @@ for (const state of ["active agent", "unreadable foreground", "foreign foregroun
     const ready = { pane_id: "fixture", shell_pid: 123, foreground_process_group_id: 123, foreground_processes: [{ pid: 123, name: "zsh" }] };
     const busy = { ...ready, foreground_process_group_id: 456, foreground_processes: [{ pid: 456, name: "vim" }] };
     const agent = spyOn(herdr, "agentGet").mockRejectedValue(new herdr.HerdrError("agent_not_found", "No agent"));
-    const processes = spyOn(herdr, "paneProcessInfo").mockResolvedValue(state === "unreadable foreground" ? undefined : busy);
+    const processes = spyOn(herdr, "paneProcessInfo").mockResolvedValue(state === "unreadable foreground" ? undefined : state === "active agent" ? ready : busy);
     const input = spyOn(herdr, "paneSendText").mockResolvedValue(undefined);
     if (state === "active agent") agent.mockResolvedValue({ agent: "codex" } as never);
     if (state === "shell becomes busy") processes.mockResolvedValueOnce(ready);
