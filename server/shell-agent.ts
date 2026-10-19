@@ -109,7 +109,7 @@ export function availableLauncherShell(info: NativeProcessInfo | undefined): Pan
   return null;
 }
 
-/** A launcher starts only in the root pane just created by its request. No browser command enters here. */
+/** A launcher starts only in the root pane just created by its request, from a validated host definition. */
 export async function startAgentLauncher(launcher: AgentLauncher, paneId: string, name?: string, timeoutMs = 60_000): Promise<void> {
   if (process.platform !== "linux" && process.platform !== "darwin") throw new Error("Custom launchers are available on Linux and macOS only");
   if (name && !isAgentName(name)) throw new HerdrError("invalid_agent_name", "Invalid agent name");
@@ -132,7 +132,7 @@ export async function startAgentLauncher(launcher: AgentLauncher, paneId: string
   }
   // A second observation immediately before writing protects a shell that changed during startup.
   if (ready === null || await shell() !== ready) throw new HerdrError("agent_pane_busy", "The created pane has no available interactive shell. Open its terminal to continue.");
-  await paneSendText(paneId, shellCommandLine(ready, launcher.command, []) + "\n");
+  await paneSendText(paneId, shellCommandLine(ready, launcher.command, launcher.args ?? []) + "\n");
   while (Date.now() < deadline) {
     const agent = await agentGet(paneId).catch((error: unknown) => {
       if (error instanceof HerdrError && error.code === "agent_not_found") return null;

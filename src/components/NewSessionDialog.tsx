@@ -6,6 +6,7 @@ import "./NewSessionDialog.css";
 import type { AgentKind } from "../../shared/protocol.ts";
 import { MAX_LABEL_CHARS } from "../../shared/labels.ts";
 import { ApiError } from "../lib/api.ts";
+import { withSavedLaunchers } from "../lib/agentLaunchers.ts";
 import { AgentLaunchPicker } from "./AgentLaunchPicker.tsx";
 import { AgentPicker, rememberAgent, rememberedAgent } from "./AgentPicker.tsx";
 import { DirectoryBrowser, homeRelative } from "./DirectoryBrowser.tsx";
@@ -71,6 +72,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
     | { machineId: string; status: "failed" }
     | null
   >(null);
+  const [editingLauncher, setEditingLauncher] = useState(false);
   const [launchChoice, setLaunchChoice] = useState<{ machineId: string; kind: string; profile: string; launcher: string } | null>(null);
   const [agentKind, setAgentKind] = useState(rememberedAgent);
   const [cwd, setCwd] = useState(defaultCwd ?? "");
@@ -105,6 +107,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
   useLayoutEffect(() => {
     setCatalog(null);
     setLaunchChoice(null);
+    setEditingLauncher(false);
     if (!open) return;
     const filled = prefillRef.current;
     setCwd(filled?.cwd ?? defaultCwdRef.current ?? "");
@@ -165,7 +168,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
   const fieldsDisabled = pending || createdPaneId !== null;
 
   const startWorkspace = async (directory: string): Promise<void> => {
-    if (pending || loadingCatalog || missingLauncher || (agentKind !== "" && !catalogReady)) return;
+    if (pending || editingLauncher || loadingCatalog || missingLauncher || (agentKind !== "" && !catalogReady)) return;
     if (createdPaneId !== null) { onCreated(createdPaneId, false); return; }
     setPending(true);
     setError(null);
@@ -215,7 +218,10 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
             <span className="field-label" id="new-session-agent">{t("Agent")}</span>
             <AgentPicker ref={firstFieldRef} agents={agents} value={agentKind} disabled={fieldsDisabled} labelledBy="new-session-agent" onChange={(kind) => { setAgentKind(kind); setLaunchChoice(null); }} />
           </div>
-          <AgentLaunchPicker agent={selectedAgent} profile={profile} launcher={launcher} disabled={fieldsDisabled} onProfileChange={(profile) => setLaunchChoice({ machineId, kind: agentKind, profile, launcher: "" })} onLauncherChange={(launcher) => setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher })} />
+          <AgentLaunchPicker key={`${machineId}:${agentKind}`} onEditingChange={setEditingLauncher} onLaunchersChange={(definitions, selected) => {
+                setCatalog((current) => current?.machineId === machineId && current.status === "ready" ? { ...current, agents: withSavedLaunchers(current.agents, definitions) } : current);
+                setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher: selected });
+              }} agent={selectedAgent} profile={profile} launcher={launcher} disabled={fieldsDisabled} onProfileChange={(profile) => setLaunchChoice({ machineId, kind: agentKind, profile, launcher: "" })} onLauncherChange={(launcher) => setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher })} />
           {tab ? (
             <div className="field">
               <span className="field-label">{t("Directory")}</span>
@@ -265,7 +271,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
         </div>
         <footer className="modal-footer">
           <button type="button" className="btn btn-ghost" disabled={pending} onClick={onClose}>{t("Cancel")}</button>
-          <button type="submit" className="btn btn-primary" disabled={pending || ((loadingCatalog || missingLauncher) && createdPaneId === null)}>{t(pending ? "Starting…" : createdPaneId !== null ? "Open" : "Start")}</button>
+          <button type="submit" className="btn btn-primary" disabled={pending || editingLauncher || ((loadingCatalog || missingLauncher) && createdPaneId === null)}>{t(pending ? "Starting…" : createdPaneId !== null ? "Open" : "Start")}</button>
         </footer>
       </form>
     </div>

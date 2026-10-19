@@ -31,8 +31,11 @@ export function agentFault(agent: AgentPayload | undefined): string | null {
  * Starts a checked `agent` in a pane herdr just made. A failure is answered, not thrown: the
  * workspace, tab or worktree around the pane is there either way.
  */
-export async function agentLaunch(paneId: string, agent: AgentPayload, launch?: AgentLaunch): Promise<{ agent_started: true } | { agent_started: false; error: { code: string; message: string } }> {
+export async function agentLaunch(paneId: string, agent: AgentPayload, resolveLaunch?: () => AgentLaunch | undefined): Promise<{ agent_started: true } | { agent_started: false; error: { code: string; message: string } }> {
   try {
+    // Re-read a saved definition after checkout creation, before any launch input. A removal
+    // or missing executable now returns the existing partial-creation result with its pane.
+    const launch = resolveLaunch?.();
     const kind = agent.kind as string;
     const args = launch && "profile" in launch ? ["--profile", launch.profile] : agent.args as string[] | undefined;
     if (launch && "command" in launch) await startAgentLauncher(launch, paneId, typeof agent.name === "string" ? agent.name : undefined);

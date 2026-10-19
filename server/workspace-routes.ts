@@ -16,6 +16,7 @@ import { HerdrError, tabClose, tabCreate, tabMove, tabRename, workspaceClose, wo
 import { badRequest, conflictResponse, errorResponse, isJsonObject, jsonResponse, readJsonObject } from "./http.ts";
 import { paneContext } from "./pane-routes.ts";
 import { repoDiffResponse } from "./repo-diff.ts";
+import type { SavedLauncherStore } from "./saved-launchers.ts";
 
 function expandedDirectory(value: string): string | null {
   const expanded = value === "~" ? homedir() : value.startsWith("~/") ? resolve(homedir(), value.slice(2)) : resolve(value);
@@ -27,7 +28,14 @@ function expandedDirectory(value: string): string | null {
 }
 
 /** The answer for a workspace route, or null when the path is not one. */
-export async function handleWorkspaceRequest(request: Request, url: URL, pathname: string, bunServer: Pick<Server<unknown>, "timeout">, broadcastAll: (message: ServerMessage) => void): Promise<Response | null> {
+export async function handleWorkspaceRequest(request: Request, url: URL, pathname: string, bunServer: Pick<Server<unknown>, "timeout">, broadcastAll: (message: ServerMessage) => void, savedLaunchers: SavedLauncherStore): Promise<Response | null> {
+  const selectLaunch = (agent: AgentPayload): AgentLaunch | undefined => {
+    if (agent.profile === undefined && agent.launcher === undefined) return undefined;
+    if (typeof agent.launcher === "string" && agent.launcher.startsWith("saved:")) {
+      return savedLaunchers.select(agent.kind as string, agent.launcher);
+    }
+    return selectedAgentLaunch(discoverAgentLaunches(), agent.kind as string, agent.profile as string | undefined, agent.launcher as string | undefined);
+  };
   if (pathname === "/api/workspace/directories" && request.method === "POST") {
     let payload: unknown;
     try { payload = await request.json(); } catch { return badRequest("invalid_json", "request body must be JSON"); }
@@ -109,8 +117,7 @@ export async function handleWorkspaceRequest(request: Request, url: URL, pathnam
     }
     const fault = agentFault(payload.agent);
     if (fault !== null) return badRequest("invalid_agent", fault);
-    let launch: AgentLaunch | undefined;
-    try { if (payload.agent && (payload.agent.profile !== undefined || payload.agent.launcher !== undefined)) launch = selectedAgentLaunch(discoverAgentLaunches(), payload.agent.kind as string, payload.agent.profile as string | undefined, payload.agent.launcher as string | undefined); }
+    try { if (payload.agent && (payload.agent.profile !== undefined || payload.agent.launcher !== undefined)) selectLaunch(payload.agent); }
     catch (error) { return badRequest(error instanceof HerdrError ? error.code : "invalid_agent_profile", error instanceof Error ? error.message : "Profile unavailable"); }
     // agent.start can legitimately take a minute; Bun's default idle timeout is shorter.
     if (payload.agent) bunServer.timeout(request, 75);
@@ -126,7 +133,7 @@ export async function handleWorkspaceRequest(request: Request, url: URL, pathnam
       if (!payload.agent) {
         return jsonResponse({ workspace_id: workspaceId, pane_id: created.root_pane.pane_id, agent_started: false });
       }
-      return jsonResponse({ workspace_id: workspaceId, pane_id: created.root_pane.pane_id, ...(await agentLaunch(created.root_pane.pane_id, payload.agent, launch)) });
+      return jsonResponse({ workspace_id: workspaceId, pane_id: created.root_pane.pane_id, ...(await agentLaunch(created.root_pane.pane_id, payload.agent, () => selectLaunch(payload.agent!))) });
     } catch (error) {
       return errorResponse(error);
     }
@@ -199,8 +206,7 @@ export async function handleWorkspaceRequest(request: Request, url: URL, pathnam
     const agent = creating ? payload.agent ?? undefined : undefined;
     const fault = agentFault(agent);
     if (fault !== null) return badRequest("invalid_agent", fault);
-    let launch: AgentLaunch | undefined;
-    try { if (agent && (agent.profile !== undefined || agent.launcher !== undefined)) launch = selectedAgentLaunch(discoverAgentLaunches(), agent.kind as string, agent.profile as string | undefined, agent.launcher as string | undefined); }
+    try { if (agent && (agent.profile !== undefined || agent.launcher !== undefined)) selectLaunch(agent); }
     catch (error) { return badRequest(error instanceof HerdrError ? error.code : "invalid_agent_profile", error instanceof Error ? error.message : "Profile unavailable"); }
     if (creating && branch === undefined) return badRequest("missing_branch", "branch is required");
     if (!creating && branch === undefined && path === undefined) return badRequest("missing_target", "path or branch is required");
@@ -227,7 +233,7 @@ export async function handleWorkspaceRequest(request: Request, url: URL, pathnam
         already_open: opened.already_open === true,
         path: opened.worktree.path,
         branch: opened.worktree.branch,
-        ...(agent ? await agentLaunch(opened.root_pane.pane_id, agent, launch) : {}),
+        ...(agent ? await agentLaunch(opened.root_pane.pane_id, agent, () => selectLaunch(agent)) : {}),
       });
     } catch (error) {
       // git's own words for a branch that has no commit yet (a folder just `git init`ed): with no

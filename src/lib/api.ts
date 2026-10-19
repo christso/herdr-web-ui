@@ -2,6 +2,8 @@ import type { PreferencesChange, SharedPreferences } from "../../shared/preferen
 import { machinePath, type BridgeHealth, type HerdrIdentity, type Machine, type SetupAction, type SetupJob, type SetupRequest } from "../../shared/machines.ts";
 import type {
   AgentKind,
+  SavedAgentLauncher,
+  SavedAgentLauncherInput,
   AgentRenameRequest,
   ConversationResponse,
   CreateWorktreeRequest,
@@ -441,7 +443,7 @@ export async function uploadPaneImage(paneId: string, image: Blob, machineId = "
   return ((await response.json()) as { path: string }).path;
 }
 
-async function sendJson(url: string, method: "POST" | "PATCH" | "DELETE", body: unknown): Promise<Response> {
+async function sendJson(url: string, method: "POST" | "PUT" | "PATCH" | "DELETE", body: unknown): Promise<Response> {
   const response = await fetch(url, {
     method,
     headers: { "content-type": "application/json", "x-herdr-machine": "1" },
@@ -567,7 +569,22 @@ export async function clearPane(paneId: string, machineId = "local"): Promise<vo
 export async function fetchAgentKinds(machineId = "local"): Promise<AgentKind[]> {
   // filtered here, not on the server: a remote PC's older bridge still answers every manifest,
   // and says nothing of what is installed, so its supported kinds are all offered
-  return (await getJson<{ agents: AgentKind[] }>(machinePath(machineId, "agents"))).agents.filter((agent) => SUPPORTED_AGENT_KINDS.has(agent.kind) && (agent.installed !== false || (agent.profiles?.length ?? 0) > 0 || (agent.launchers?.length ?? 0) > 0));
+  return (await getJson<{ agents: AgentKind[] }>(machinePath(machineId, "agents"))).agents.filter((agent) => SUPPORTED_AGENT_KINDS.has(agent.kind) && (agent.installed !== false || agent.saved_launchers === true || (agent.profiles?.length ?? 0) > 0 || (agent.launchers?.length ?? 0) > 0));
+}
+
+/** Definition details require a controlling device, including GET. Always resolve on the selected PC. */
+export async function fetchSavedLaunchers(machineId = "local"): Promise<SavedAgentLauncher[]> {
+  return (await getJson<{ launchers: SavedAgentLauncher[] }>(machinePath(machineId, "agents/launchers"))).launchers;
+}
+
+export async function saveAgentLauncher(input: SavedAgentLauncherInput, id?: string, machineId = "local"): Promise<SavedAgentLauncher[]> {
+  const response = await sendJson(machinePath(machineId, `agents/launchers${id === undefined ? "" : `?id=${encodeURIComponent(id)}`}`), id === undefined ? "POST" : "PUT", input);
+  return (await response.json() as { launchers: SavedAgentLauncher[] }).launchers;
+}
+
+export async function deleteAgentLauncher(id: string, machineId = "local"): Promise<SavedAgentLauncher[]> {
+  const response = await sendJson(machinePath(machineId, `agents/launchers?id=${encodeURIComponent(id)}`), "DELETE", {});
+  return (await response.json() as { launchers: SavedAgentLauncher[] }).launchers;
 }
 
 /** GET /api/integrations: herdr's agent integrations on that PC and whether each is installed. */

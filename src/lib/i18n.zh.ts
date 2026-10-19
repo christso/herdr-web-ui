@@ -10,6 +10,22 @@
  * Placeholders in braces keep their English names.
  */
 export const ZH: Record<string, string> = {
+  "Launcher name": "启动器名称",
+  "Cancel launcher": "取消启动器",
+  "Add launcher": "添加启动器",
+  "Saved launchers": "已保存的启动器",
+  "Edit launcher": "编辑启动器",
+  "Delete launcher?": "删除启动器？",
+  "Executable": "可执行文件",
+  "Save launcher": "保存启动器",
+  "Add argument": "添加参数",
+  "Argument {number}": "参数 {number}",
+  "Remove argument {number}": "移除参数 {number}",
+  "Updating launchers…": "正在更新启动器…",
+  "This launcher was removed. Choose another launcher or add it again.": "此启动器已被删除。请选择其他启动器或重新添加。",
+  "Saved on this PC for future launches. Existing panes keep running.": "保存在此 PC 上供以后启动使用。现有窗格将继续运行。",
+  "Executable name on PATH or an absolute path on this PC. Saving does not install or run it.": "输入 PATH 中的可执行文件名或此 PC 上的绝对路径。保存不会安装或运行程序。",
+  "Each argument is one value. Spaces stay inside it; shell syntax is not expanded.": "每个参数是一个值。空格保留在参数内，Shell 语法不会展开。",
   "Could not load sign-in options": "无法加载登录方式",
   "On the server PC": "在服务器 PC 上登录",
   "Install {cli} on the server PC first.": "请先在服务器 PC 上安装 {cli}。",

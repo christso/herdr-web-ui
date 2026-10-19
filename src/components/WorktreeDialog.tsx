@@ -15,6 +15,7 @@ import "./WorktreeDialog.css";
 import type { AgentKind, WorkspaceInfo, WorktreeEntry, WorktreeOpened } from "../../shared/protocol.ts";
 import { MAX_LABEL_CHARS } from "../../shared/labels.ts";
 import { ApiError } from "../lib/api.ts";
+import { withSavedLaunchers } from "../lib/agentLaunchers.ts";
 import { AgentLaunchPicker } from "./AgentLaunchPicker.tsx";
 import { AgentPicker, rememberAgent, rememberedAgent } from "./AgentPicker.tsx";
 import { useMachineApi, useMachineId } from "../lib/machineContext.tsx";
@@ -48,6 +49,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
     | { machineId: string; status: "failed" }
     | null
   >(null);
+  const [editingLauncher, setEditingLauncher] = useState(false);
   const [launchChoice, setLaunchChoice] = useState<{ machineId: string; kind: string; profile: string; launcher: string } | null>(null);
   const [agentKind, setAgentKind] = useState(rememberedAgent);
   // the checkout whose agent did not start: it is there, and the button opens it
@@ -95,6 +97,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
   useEffect(() => {
     setCatalog(null);
     setLaunchChoice(null);
+    setEditingLauncher(false);
     if (mode !== "create") return;
     let cancelled = false;
     fetchAgentKinds().then(
@@ -140,7 +143,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
     event.preventDefault();
     if (made) { onOpened(made); return; }
     const name = branch.trim();
-    if (!name || loadingCatalog || missingLauncher || (agentKind !== "" && !catalogReady)) return;
+    if (!name || editingLauncher || loadingCatalog || missingLauncher || (agentKind !== "" && !catalogReady)) return;
     void run(t("Creating the checkout…"), async () => {
       const result = await createWorktree({ workspace_id: workspace.workspace_id, branch: name, base: base.trim() || null, label: label.trim() || null, agent: profile || launcher ? { kind: agentKind, ...(profile ? { profile } : {}), ...(launcher ? { launcher } : {}) } : launchAgent(agentKind, settings) });
       // the default follows what actually started: Shell after a plain checkout, an agent only once it runs
@@ -210,7 +213,10 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
                 <span className="field-label" id={`${id}-agent`}>{t("Agent")}</span>
                 <AgentPicker agents={agents} value={agentKind} disabled={locked} labelledBy={`${id}-agent`} onChange={(kind) => { setAgentKind(kind); setLaunchChoice(null); }} />
               </div>
-              <AgentLaunchPicker agent={selectedAgent} profile={profile} launcher={launcher} disabled={locked} onProfileChange={(profile) => setLaunchChoice({ machineId, kind: agentKind, profile, launcher: "" })} onLauncherChange={(launcher) => setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher })} />
+              <AgentLaunchPicker key={`${machineId}:${agentKind}`} onEditingChange={setEditingLauncher} onLaunchersChange={(definitions, selected) => {
+                setCatalog((current) => current?.machineId === machineId && current.status === "ready" ? { ...current, agents: withSavedLaunchers(current.agents, definitions) } : current);
+                setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher: selected });
+              }} agent={selectedAgent} profile={profile} launcher={launcher} disabled={locked} onProfileChange={(profile) => setLaunchChoice({ machineId, kind: agentKind, profile, launcher: "" })} onLauncherChange={(launcher) => setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher })} />
             </>
           ) : others === null && !error ? (
             <p className="field-hint" role="status">{t("Reading worktrees…")}</p>
@@ -237,7 +243,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
         </div>
         <footer className="modal-footer">
           <button type="button" className="btn btn-ghost" disabled={pending !== null} onClick={onClose}>{t("Cancel")}</button>
-          {mode === "create" && <button type="submit" className="btn btn-primary" disabled={pending !== null || (!made && (!branch.trim() || loadingCatalog || missingLauncher))}>{t(made ? "Open" : "Create worktree")}</button>}
+          {mode === "create" && <button type="submit" className="btn btn-primary" disabled={pending !== null || editingLauncher || (!made && (!branch.trim() || loadingCatalog || missingLauncher))}>{t(made ? "Open" : "Create worktree")}</button>}
         </footer>
       </form>
     </div>,

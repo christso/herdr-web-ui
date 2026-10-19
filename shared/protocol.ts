@@ -805,9 +805,14 @@ export interface AgentKind {
   installed?: boolean;
   /** Native profile IDs discovered on this PC. */
   profiles?: { id: string; label: string }[];
-  /** Installed shell wrappers; paths and environment stay on the host. */
-  launchers?: { id: string; label: string }[];
+  /** Discovered wrappers and saved definitions; executable/arguments are never catalog data. */
+  launchers?: { id: string; label: string; saved?: boolean }[];
+  /** This PC supports saving and running custom launchers; absent on older bridges. */
+  saved_launchers?: boolean;
 }
+
+/** GET/POST/PUT/DELETE /api/agents/launchers (PUT/DELETE identify one with ?id=). Control only. */
+export type { SavedAgentLauncher, SavedAgentLauncherInput } from "./agent-launchers.ts";
 
 /**
  * GET /api/integrations: one of herdr's built-in agent integrations (`integration.list`, herdr
