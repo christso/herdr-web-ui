@@ -32,6 +32,13 @@ to change. Also read [server/AGENTS.md](server/AGENTS.md) and [src/AGENTS.md](sr
   `src/lib/themes.generated.ts` or the generated copies in DESIGN.md, index.html and
   `public/manifest.webmanifest`; run `bun run generate:themes`.
 
+## Change review
+- Before opening a PR, trace changed entrypoints through unchanged callers, helpers and shared
+  state to their effects, including deferred work. Check bounds, permissions and invalidation
+  where the work actually happens, on success, failure and repeated use.
+- A regression test should fail for the original cause. Set up its fixture so unrelated guards
+  do not reject the operation before it reaches the behavior being checked.
+
 ## Tests and QA
 - Tests never touch the user's herdr session or real state: they use the isolated test session,
   a `mkdtempSync` `stateDir` and `port: 0` for every `createServer`. Never run the real
