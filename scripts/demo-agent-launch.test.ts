@@ -46,3 +46,33 @@ it("the demo offers exact native profile IDs separately from wrappers and valida
     }
   }
 });
+
+it("saves distinct demo launchers without randomUUID on an HTTP preview", async () => {
+  const saved = new Map(["window", "location", "PushManager", "crypto"].map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+  try {
+    const storage = new Map<string, string>();
+    Object.defineProperty(globalThis, "crypto", { configurable: true, value: {} });
+    (globalThis as any).location = new URL("http://demo.test/");
+    (globalThis as any).window = { fetch, WebSocket, EventSource: class {}, localStorage: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value) } };
+    const transport = "../site/demo/transport.ts?saved-launcher-http";
+    await import(transport);
+    const demo = (globalThis as any).window;
+    const entries: any[] = [];
+    for (let index = 0; index < 2; index++) {
+      const response = await demo.fetch("/api/agents/launchers", { method: "POST", body: JSON.stringify({ kind: "codex", label: "Research", executable: "/home/demo/bin/research", args: ["", "two words"] }) });
+      expect(response.status).toBe(200);
+      entries.push((await response.json()).launchers.at(-1));
+    }
+    expect(entries[0].id).toStartWith("saved:");
+    expect(entries[1].id).not.toBe(entries[0].id);
+    const catalog = await (await demo.fetch("/api/agents")).text();
+    expect(catalog).not.toContain("/home/demo/bin/research");
+    const edited = await demo.fetch(`/api/agents/launchers?id=${encodeURIComponent(entries[0].id)}`, { method: "PUT", body: JSON.stringify({ kind: "codex", label: "Edited", executable: "research", args: [] }) });
+    expect(edited.status).toBe(200);
+    expect((await edited.json()).launchers[0].id).toBe(entries[0].id);
+    expect((await demo.fetch(`/api/agents/launchers?id=${encodeURIComponent(entries[0].id)}`, { method: "DELETE" })).status).toBe(200);
+    expect((await (await demo.fetch("/api/agents/launchers")).json()).launchers).toEqual([entries[1]]);
+  } finally {
+    for (const [key, descriptor] of saved) { if (descriptor) Object.defineProperty(globalThis, key, descriptor); else Reflect.deleteProperty(globalThis, key); }
+  }
+});

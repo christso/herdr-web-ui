@@ -5,10 +5,10 @@ import { HerdrError } from "./herdr/client.ts";
 import { ompConfigRoot } from "./omp.ts";
 
 interface NativeProfile { kind: string; id: string }
-export interface AgentLauncher { kind: string; id: string; command: string }
+export interface AgentLauncher { kind: string; id: string; command: string; args?: string[] }
 export interface AgentLaunches { profiles: NativeProfile[]; launchers: AgentLauncher[] }
 export type AgentLaunch = { kind: string; profile: string } | AgentLauncher;
-function executableSearchPaths(home: string, env: NodeJS.ProcessEnv): string[] {
+export function executableSearchPaths(home: string, env: NodeJS.ProcessEnv): string[] {
   const paths = [...(env["PATH"] ?? "").split(":"), join(home, ".local/bin"), join(home, ".bun/bin"), join(home, "bin")];
   return [...new Set(paths.filter(isAbsolute))];
 }

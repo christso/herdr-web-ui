@@ -13,6 +13,8 @@
  * What does not: files, images, push and remote PCs, which need a real machine.
  */
 import type { AgentKind, AgentIntegration, AgentStatus, ConversationTurn, IntegrationsResponse, Machine, MachineEvent, PaneDirection, PaneFindMatch, PaneFindRequest, PanePlan, PaneResized, PaneSplit, PaneSwapped, PaneZoomed, PendingMessage, PlanStep, PluginActionResult, PluginActions, PluginActionsResponse, PortalStatus, ServerMessage, SessionSnapshot, TabMoved, UsageReport, WorkspaceCreated, WorkspaceInfo, WorktreeEntry, WorktreeListing, WorktreeOpened, WorktreeRemoved } from "../../shared/protocol.ts";
+import { SAVED_LAUNCHER_KINDS, savedLauncherInput, type SavedAgentLauncher } from "../../shared/agent-launchers.ts";
+import { withSavedLaunchers } from "../../src/lib/agentLaunchers.ts";
 import type { RepoDiffFile, RepoDiffFileList, RepoDiffFilePatch, RepoDiffRepository, RepoDiffScope } from "../../shared/protocol.ts";
 import { VOICE_DEFAULTS, type VoiceStatus } from "../../shared/voice.ts";
 import { isAgentName } from "../../shared/agent-name.ts";
@@ -31,14 +33,19 @@ import terminalFixture from "./fixtures/terminal.json";
 const DEMO_VERSION = "demo";
 const demoAgents: AgentKind[] = agentsFixture.agents.map((agent) => ({ ...agent,
   ...(["codex", "omp"].includes(agent.kind) ? { profiles: [{ id: "compound-engineering", label: "compound-engineering" }, { id: "review", label: "review" }] } : {}),
+  ...(SAVED_LAUNCHER_KINDS.includes(agent.kind) ? { saved_launchers: true } : {}),
   ...(["codex", "omp", "pi", "claude"].includes(agent.kind) ? { launchers: [{ id: `${agent.kind}-compound`, label: `${agent.kind}-compound` }] } : {}),
 }));
+let demoSavedLaunchers: SavedAgentLauncher[] = [];
+let demoLauncherSequence = 0;
+const demoLauncherId = () => `saved:${globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${(++demoLauncherSequence).toString(36)}-${Math.random().toString(36).slice(2)}`}`;
+const demoAgentCatalog = () => withSavedLaunchers(demoAgents, demoSavedLaunchers);
 function demoLaunchFault(value: unknown): Response | null {
   if (value === null || typeof value !== "object") return null;
   const agent = value as { kind?: unknown; profile?: unknown; launcher?: unknown; args?: unknown };
   if (agent.profile === undefined && agent.launcher === undefined) return null;
   if (agent.args !== undefined || (agent.profile !== undefined && agent.launcher !== undefined) || Object.keys(agent).some((key) => !["kind", "name", "profile", "launcher"].includes(key))
-    || (agent.launcher !== undefined ? !demoAgents.find((entry) => entry.kind === agent.kind)?.launchers?.some((launcher) => launcher.id === agent.launcher) : !demoAgents.find((entry) => entry.kind === agent.kind)?.profiles?.some((profile) => profile.id === agent.profile))) {
+    || (agent.launcher !== undefined ? !demoAgentCatalog().find((entry) => entry.kind === agent.kind)?.launchers?.some((launcher) => launcher.id === agent.launcher) : !demoAgentCatalog().find((entry) => entry.kind === agent.kind)?.profiles?.some((profile) => profile.id === agent.profile))) {
     return error("invalid_agent_profile", "The selected agent profile is unavailable on this PC", 400);
   }
   return null;
@@ -536,7 +543,23 @@ async function route(url: URL, method: string, init: RequestInit | undefined, in
   }
   if (path === "/api/machines") return json({ machines });
   if (path === "/api/session") return json({ snapshot: snapshot() });
-  if (path === "/api/agents") return json({ agents: demoAgents });
+  if (path === "/api/agents") return json({ agents: demoAgentCatalog() });
+  if (path === "/api/agents/launchers") {
+    if (method === "GET") return json({ launchers: demoSavedLaunchers });
+    const id = query.get("id");
+    const index = demoSavedLaunchers.findIndex((entry) => entry.id === id);
+    if (method === "DELETE" || method === "PUT") {
+      if (index < 0) return error("invalid_agent_launcher", "This saved launcher was removed. Add it again or choose Default.", 400);
+    }
+    if (method === "DELETE") demoSavedLaunchers = demoSavedLaunchers.filter((entry) => entry.id !== id);
+    else if (method === "POST" || method === "PUT") {
+      const definition = savedLauncherInput(await bodyOf(init, input));
+      if (!definition || !SAVED_LAUNCHER_KINDS.includes(definition.kind)) return error("invalid_agent_launcher", "Enter an agent, name, executable and individual arguments without control characters.", 400);
+      const entry = { ...definition, id: method === "PUT" ? id! : demoLauncherId(), args: definition.args ?? [] };
+      if (method === "PUT") demoSavedLaunchers[index] = entry; else demoSavedLaunchers.push(entry);
+    } else return error("method_not_allowed", "Use GET, POST, PUT or DELETE", 400);
+    return json({ launchers: demoSavedLaunchers });
+  }
   if (path === "/api/integrations") return json({ integrations: integrationsFixture } satisfies IntegrationsResponse);
   if (path === "/api/updates") return json({ managed: false, auto_update: false, phase: "idle", current_revision: null, latest_revision: null, current_version: __APP_VERSION__, latest_version: null, available: false, checked_at: null, blocked_reason: null, error: null }, 200, { "cache-control": "no-store" });
   if (path === "/api/updates/notes") return json({ revision: null, releases: [], omitted: 0 }, 200, { "cache-control": "no-store" });

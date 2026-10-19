@@ -1038,6 +1038,26 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   note is dim, red for an expired sign-in or a failed request.
 
 ### New workspace dialog
+- Launcher management follows [Warp's saved launch configurations](https://docs.warp.dev/terminal/sessions/launch-configurations)
+  as a precedent for naming and reusing a launch command near session creation. Here definitions
+  are scoped to the selected PC and one recognized agent, with individual argument fields, rather
+  than a terminal layout. No source or visual assets are copied. This fork feature adds no global
+  agent configuration or environment editor.
+- On Linux/macOS bridges with saved-launcher support, **Launcher** stays visible even with no
+  choices, alongside **Add launcher**. Default remains disabled when the ordinary command is
+  unavailable. Saved choices form their own group and use their display label; a short ID
+  disambiguates duplicate saved labels. Edit/Delete acts on the selected definition.
+  A second Delete press confirms removal.
+  Selecting any custom launcher clears and hides Profile; returning to Default resets Profile.
+  Changing Agent or PC resets both choices. Windows and older bridges do not show saved-launcher
+  management. Catalogs contain summaries only; executable and argument details require control.
+- Add/Edit unfolds an inline fieldset inside the existing dialog and its focus trap: Launcher name,
+  Executable, then individually labelled arguments with Add/Remove controls. Saving selects the
+  saved definition without starting an agent; Start/Create worktree stays disabled while editing
+  or updating definitions. The inner **Cancel launcher** is distinct from the creation dialog’s Cancel.
+  Inputs and buttons use existing tokens, and action rows wrap on phones.
+  The same picker serves New workspace, New tab and New worktree. Editing/deleting affects future
+  launches, and other browsers load the saved choices when reopening their creation dialog.
 - Agent select comes from `GET /api/agents`; shell-only is always available. Directory defaults to
   the selected pane cwd and name is an optional workspace label. **Browse** updates Directory as
   each folder opens (`onFolder`), so **Start** uses the path shown in the browser even when

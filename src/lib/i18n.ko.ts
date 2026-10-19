@@ -6,6 +6,22 @@
  * braces keep their English names.
  */
 export const KO: Record<string, string> = {
+  "Launcher name": "런처 이름",
+  "Cancel launcher": "런처 취소",
+  "Add launcher": "런처 추가",
+  "Saved launchers": "저장된 런처",
+  "Edit launcher": "런처 수정",
+  "Delete launcher?": "런처를 삭제할까요?",
+  "Executable": "실행 파일",
+  "Save launcher": "런처 저장",
+  "Add argument": "인자 추가",
+  "Argument {number}": "인자 {number}",
+  "Remove argument {number}": "인자 {number} 제거",
+  "Updating launchers…": "런처 업데이트 중…",
+  "This launcher was removed. Choose another launcher or add it again.": "이 런처는 삭제되었습니다. 다른 런처를 선택하거나 다시 추가하세요.",
+  "Saved on this PC for future launches. Existing panes keep running.": "이후 실행을 위해 이 PC에 저장됩니다. 기존 패널은 계속 실행됩니다.",
+  "Executable name on PATH or an absolute path on this PC. Saving does not install or run it.": "PATH의 실행 파일 이름 또는 이 PC의 절대 경로입니다. 저장해도 설치하거나 실행하지 않습니다.",
+  "Each argument is one value. Spaces stay inside it; shell syntax is not expanded.": "각 인자는 하나의 값입니다. 공백은 값 안에 유지되며 셸 구문은 확장되지 않습니다.",
   "Could not load sign-in options": "로그인 방법을 불러오지 못했습니다",
   "On the server PC": "서버 PC에서 로그인",
   "Install {cli} on the server PC first.": "먼저 서버 PC에 {cli}를 설치하세요.",

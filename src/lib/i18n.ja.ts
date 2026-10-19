@@ -8,6 +8,22 @@
  * in English. Placeholders in braces keep their English names.
  */
 export const JA: Record<string, string> = {
+  "Launcher name": "ランチャー名",
+  "Cancel launcher": "ランチャーをキャンセル",
+  "Add launcher": "ランチャーを追加",
+  "Saved launchers": "保存したランチャー",
+  "Edit launcher": "ランチャーを編集",
+  "Delete launcher?": "ランチャーを削除しますか？",
+  "Executable": "実行ファイル",
+  "Save launcher": "ランチャーを保存",
+  "Add argument": "引数を追加",
+  "Argument {number}": "引数 {number}",
+  "Remove argument {number}": "引数 {number} を削除",
+  "Updating launchers…": "ランチャーを更新中…",
+  "This launcher was removed. Choose another launcher or add it again.": "このランチャーは削除されました。別のランチャーを選ぶか、もう一度追加してください。",
+  "Saved on this PC for future launches. Existing panes keep running.": "今後の起動用にこの PC に保存します。既存のペインは実行を続けます。",
+  "Executable name on PATH or an absolute path on this PC. Saving does not install or run it.": "PATH 上の実行ファイル名か、この PC 上の絶対パスを指定します。保存してもインストールや実行はしません。",
+  "Each argument is one value. Spaces stay inside it; shell syntax is not expanded.": "各引数は一つの値です。空白はそのまま含まれ、シェル構文は展開されません。",
   "Could not load sign-in options": "ログイン方法を読み込めませんでした",
   "On the server PC": "サーバーPCでログイン",
   "Install {cli} on the server PC first.": "先にサーバーPCに{cli}をインストールしてください。",
