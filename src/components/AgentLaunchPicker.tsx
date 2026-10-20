@@ -18,9 +18,10 @@ interface Props {
   onLauncherChange: (id: string) => void;
   onLaunchersChange: (launchers: SavedAgentLauncher[], selected: string) => void;
   onEditingChange: (editing: boolean) => void;
+  onMutationChange?: (pending: boolean) => void;
 }
 
-export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfileChange, onLauncherChange, onLaunchersChange, onEditingChange }: Props) {
+export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfileChange, onLauncherChange, onLaunchersChange, onEditingChange, onMutationChange }: Props) {
   const t = useT();
   const id = useId();
   const { fetchSavedLaunchers, saveAgentLauncher, deleteAgentLauncher, searchLauncherExecutables } = useMachineApi();
@@ -44,10 +45,10 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
   const query = editor?.executable ?? "";
   const searchMessage = open === "executable" && query.trim() ? t(searchState === "loading" ? "Searching executables…" : searchState === "error" ? "Could not search this PC. Enter an executable or try again." : searchState === "ready" && !suggestions.length ? "No matching executables. You can enter a command or full path." : "Choose an executable or keep typing, then save the launcher.") : null;
   const announcedSearch = useAnnouncedText(searchMessage);
-  useEffect(() => {
+  useLayoutEffect(() => {
     active.current = true;
-    return () => { active.current = false; };
-  }, []);
+    return () => { active.current = false; onMutationChange?.(false); };
+  }, [onMutationChange]);
   useEffect(() => { onEditingChange(editor !== null || busy); }, [editor, busy, onEditingChange]);
   useLayoutEffect(() => { if (editor) nameField.current?.focus({ preventScroll: true }); }, [editor?.id, editor !== null]);
   useLayoutEffect(() => {
@@ -171,6 +172,7 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
   };
   const save = async (): Promise<void> => {
     if (!agent || !editor || busy || disabled || !editor.label.trim() || !editor.executable.trim()) return;
+    onMutationChange?.(true);
     setBusy(true);
     setError(null);
     try {
@@ -179,19 +181,20 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
       onLaunchersChange(definitions, editor.id ?? definitions.at(-1)!.id);
       closeEditor();
     } catch (reason) { if (active.current) setError(userErrorMessage(reason).detail ?? userErrorMessage(reason).message); }
-    finally { if (active.current) setBusy(false); }
+    finally { if (active.current) { setBusy(false); onMutationChange?.(false); } }
   };
   const remove = async (): Promise<void> => {
+    if (!editor?.id || busy || disabled) return;
+    onMutationChange?.(true);
     setBusy(true);
     setError(null);
     try {
-      if (!editor?.id) return;
       const definitions = await deleteAgentLauncher(editor.id);
       if (!active.current) return;
       onLaunchersChange(definitions, "");
       closeEditor();
     } catch (reason) { if (active.current) setError(userErrorMessage(reason).detail ?? userErrorMessage(reason).message); }
-    finally { if (active.current) setBusy(false); }
+    finally { if (active.current) { setBusy(false); onMutationChange?.(false); } }
   };
   return <>
     <span className="visually-hidden launcher-search-announcement" role="status">{announcedSearch}</span>
@@ -199,6 +202,7 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
       if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) { event.stopPropagation(); return; }
       if (event.key !== "Escape" || (!open && !editor)) return;
       event.preventDefault(); event.stopPropagation();
+      if (busy) return;
       if (open) {
         const anchor = open === "launcher" ? launcherField.current : searchField.current;
         closePopup(); anchor?.focus({ preventScroll: true });

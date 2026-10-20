@@ -3,6 +3,7 @@
  * Herdr deliberately omits recognized agents' argv on WSL to avoid blocking procfs reads.
  * Recover process identity outside the bridge, then use the open transcript or breadcrumb.
  */
+import { execFile } from "node:child_process";
 import nodePath, { join, type PlatformPath } from "node:path";
 
 import { paneProcessInfo } from "./herdr/client.ts";
@@ -40,6 +41,29 @@ export function ompAgentDir(argv: readonly string[], environ: readonly string[] 
   return /^[\w.-]+$/.test(profile) && profile !== "." && profile !== ".." ? join(root, "profiles", profile, "agent") : null;
 }
 
+/** Read only native OMP settings after the caller has verified the foreground argv. */
+async function ompProcessEnviron(pid: number): Promise<readonly string[] | null> {
+  if (process.platform !== "darwin") return processEnviron(pid);
+  const uid = process.getuid?.();
+  if (uid === undefined || !Number.isSafeInteger(pid) || pid <= 0) return null;
+  return new Promise((resolve) => {
+    execFile("/bin/ps", ["-E", "-ww", "-p", String(pid), "-o", "uid=", "-o", "command="], {
+      encoding: "utf8", timeout: 3000, maxBuffer: 64 * 1024,
+    }, (error, output) => {
+      if (error) { resolve(null); return; }
+      const row = /^\s*(\d+)\s+([\s\S]*)$/.exec(output);
+      if (!row || Number(row[1]) !== uid) { resolve(null); return; }
+      // As in Codex's macOS reader, the environment follows argv. Take the last
+      // assignment, up to the next NAME=; paths may contain spaces. ps cannot
+      // distinguish a value containing " NAME=" or an argv assignment with no env.
+      resolve(["PI_CONFIG_DIR", "OMP_PROFILE"].flatMap((name) => {
+        const value = [...row[2]!.matchAll(new RegExp(`(?:^|\\s)${name}=(.*?)(?=\\s+[A-Za-z_][A-Za-z0-9_]*=|\\s*$)`, "g"))].at(-1)?.[1];
+        return value === undefined ? [] : [`${name}=${value}`];
+      }));
+    });
+  });
+}
+
 /** The transcript the pane's omp process holds open or last pointed its terminal breadcrumb at, or null. */
 export async function ompHeldTranscript(paneId: string, cwd: string, home = process.env["HOME"] ?? ""): Promise<string | null> {
   const info = await paneProcessInfo(paneId).catch(() => null);
@@ -61,7 +85,7 @@ export async function ompHeldTranscript(paneId: string, cwd: string, home = proc
       environ = memory.environ;
     }
     if (!isOmpProcess(argv)) continue;
-    const dir = ompAgentDir(argv, environ ?? processEnviron(foreground.pid), home);
+    const dir = ompAgentDir(argv, environ ?? await ompProcessEnviron(foreground.pid), home);
     // a moved store, or two omp processes keeping different ones: nothing says which the pane shows
     if (dir === null || agentDir !== null && dir !== agentDir) return null;
     agentDir = dir;

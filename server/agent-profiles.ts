@@ -69,22 +69,36 @@ function executableShell(path: string): string | null {
 export function discoverAgentLaunches({ home = homedir(), env = process.env, platform = process.platform, legacyLaunchers = false }: { home?: string; env?: NodeJS.ProcessEnv; platform?: string; legacyLaunchers?: boolean } = {}): AgentLaunches {
   if (platform !== "linux" && platform !== "darwin") return { profiles: [], launchers: [] };
   const profiles: NativeProfile[] = [];
-  const codexHome = env["CODEX_HOME"] ? resolve(env["CODEX_HOME"]) : join(home, ".codex");
-  const codexIds = new Set<string>();
-  const config = toml(join(codexHome, "config.toml"));
-  const legacy = config?.["profiles"];
-  const legacyIds = legacy && typeof legacy === "object" && !Array.isArray(legacy) ? Object.keys(legacy).filter(nativeId) : [];
-  const files = names(codexHome).filter((name) => name.endsWith(".config.toml") && nativeId(name.slice(0, -".config.toml".length)));
-  const format = legacyIds.length || files.length ? codexProfileFormat(home, env) : null;
-  if (format === "legacy") for (const id of legacyIds) codexIds.add(id);
-  if (format === "v2") for (const file of files) {
-    const id = file.slice(0, -".config.toml".length);
-    if (!legacyIds.includes(id) && config?.["profile"] !== id && toml(join(codexHome, file))) codexIds.add(id);
+  // Native profiles are optional; a broken provider must not remove independent choices.
+  try {
+    const codexHome = env["CODEX_HOME"] ? resolve(env["CODEX_HOME"]) : join(home, ".codex");
+    const codexIds = new Set<string>();
+    const config = toml(join(codexHome, "config.toml"));
+    const legacy = config?.["profiles"];
+    const legacyIds = legacy && typeof legacy === "object" && !Array.isArray(legacy) ? Object.keys(legacy).filter(nativeId) : [];
+    const files = names(codexHome).filter((name) => name.endsWith(".config.toml") && nativeId(name.slice(0, -".config.toml".length)));
+    const format = legacyIds.length || files.length ? codexProfileFormat(home, env) : null;
+    if (format === "legacy") for (const id of legacyIds) codexIds.add(id);
+    if (format === "v2") for (const file of files) {
+      const id = file.slice(0, -".config.toml".length);
+      try {
+        if (!legacyIds.includes(id) && config?.["profile"] !== id && toml(join(codexHome, file))) codexIds.add(id);
+      } catch (error) {
+        if (!(error instanceof HerdrError) || error.code !== "agent_discovery_failed") throw error;
+        // One bad profile file does not hide the other compatible native profiles.
+      }
+    }
+    for (const id of [...codexIds].sort()) profiles.push({ kind: "codex", id });
+  } catch (error) {
+    if (!(error instanceof HerdrError) || error.code !== "agent_discovery_failed") throw error;
   }
-  for (const id of [...codexIds].sort()) profiles.push({ kind: "codex", id });
-  // OMP joins the native config dirname under home; PI_CODING_AGENT_DIR affects Default only.
-  const ompProfiles = join(ompConfigRoot(home, env["PI_CONFIG_DIR"] || ".omp"), "profiles");
-  for (const id of names(ompProfiles)) if (ompId(id) && directory(join(ompProfiles, id, "agent"))) profiles.push({ kind: "omp", id });
+  try {
+    // OMP joins the native config dirname under home; PI_CODING_AGENT_DIR affects Default only.
+    const ompProfiles = join(ompConfigRoot(home, env["PI_CONFIG_DIR"] || ".omp"), "profiles");
+    for (const id of names(ompProfiles)) if (ompId(id) && directory(join(ompProfiles, id, "agent"))) profiles.push({ kind: "omp", id });
+  } catch (error) {
+    if (!(error instanceof HerdrError) || error.code !== "agent_discovery_failed") throw error;
+  }
   const launchers: AgentLauncher[] = [];
   const seen = new Set<string>();
   for (const path of legacyLaunchers ? executableSearchPaths(home, env) : []) {

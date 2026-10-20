@@ -50,6 +50,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
     | null
   >(null);
   const [editingLauncher, setEditingLauncher] = useState(false);
+  const [mutatingLauncher, setMutatingLauncher] = useState(false);
   const [launchChoice, setLaunchChoice] = useState<{ machineId: string; kind: string; profile: string; launcher: string } | null>(null);
   const [agentKind, setAgentKind] = useState(rememberedAgent);
   // the checkout whose agent did not start: it is there, and the button opens it
@@ -61,11 +62,12 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
   const label = typedLabel ?? worktreeLabel(branch);
   const [entries, setEntries] = useState<WorktreeEntry[] | null>(null);
   const [pending, setPending] = useState<string | null>(null);
+  const dismissalPending = pending !== null || mutatingLauncher;
   const [error, setError] = useState<string | null>(null);
   const first = useRef<HTMLInputElement>(null);
   const surface = useRef<HTMLFormElement>(null);
-  useSheetSwipe(surface, pending ? null : onClose);
-  usePhoneSheetBack(() => { if (pending) return false; onClose(); });
+  useSheetSwipe(surface, dismissalPending ? null : onClose);
+  usePhoneSheetBack(() => { if (dismissalPending) return false; onClose(); });
   const opener = useRef<HTMLElement | null>(null);
 
   useLayoutEffect(() => {
@@ -89,15 +91,16 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
       if (active?.getAttribute("aria-expanded") === "true" || active?.closest(".launcher-popup, .launcher-editor")) return;
       event.stopPropagation();
       event.preventDefault();
-      if (!pending) onClose();
+      if (!dismissalPending) onClose();
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [onClose, pending]);
+  }, [onClose, dismissalPending]);
   useEffect(() => {
     setCatalog(null);
     setLaunchChoice(null);
     setEditingLauncher(false);
+    setMutatingLauncher(false);
     if (mode !== "create") return;
     let cancelled = false;
     fetchAgentKinds().then(
@@ -155,7 +158,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
     void run(t("Opening…"), () => openWorktree({ workspace_id: workspace.workspace_id, path: entry.path }));
   };
   const closeFromScrim = (event: MouseEvent<HTMLDivElement>): void => {
-    if (!pending && event.target === event.currentTarget) onClose();
+    if (!dismissalPending && event.target === event.currentTarget) onClose();
   };
   // modal: Tab and Shift+Tab stay among the dialog's own fields and buttons
   const onKeyDown = (event: ReactKeyboardEvent<HTMLFormElement>): void => {
@@ -176,7 +179,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
   const profile = !launcher && selectedAgent?.profiles?.some((entry) => entry.id === scopedChoice?.profile) ? scopedChoice!.profile : "";
   const loadingCatalog = catalog?.machineId !== machineId;
   const missingLauncher = selectedAgent?.installed === false && !launcher;
-  const locked = pending !== null || made !== null;
+  const locked = pending !== null || mutatingLauncher || made !== null;
   const title = mode === "create" ? t("New worktree · {name}", { name: workspace.label }) : t("Open worktree · {name}", { name: workspace.label });
   // the repository's own checkout is this workspace: the list is the other ones
   const others = entries?.filter((entry) => entry.open_workspace_id !== workspace.workspace_id) ?? null;
@@ -186,7 +189,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
       <form ref={surface} className="modal worktree-modal" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} onSubmit={submit} onKeyDown={onKeyDown}>
         <header className="modal-header">
           <h2 className="modal-title" id={`${id}-title`}>{title}</h2>
-          <button type="button" className="icon-button" aria-label={t("Close worktree dialog")} disabled={pending !== null} onClick={onClose}>
+          <button type="button" className="icon-button" aria-label={t("Close worktree dialog")} disabled={dismissalPending} onClick={onClose}>
             <X aria-hidden="true" />
           </button>
         </header>
@@ -213,7 +216,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
                 <span className="field-label" id={`${id}-agent`}>{t("Agent")}</span>
                 <AgentPicker agents={agents} value={agentKind} disabled={locked} labelledBy={`${id}-agent`} onChange={(kind) => { setAgentKind(kind); setLaunchChoice(null); }} />
               </div>
-              <AgentLaunchPicker key={`${machineId}:${agentKind}`} onEditingChange={setEditingLauncher} onLaunchersChange={(definitions, selected) => {
+              <AgentLaunchPicker key={`${machineId}:${agentKind}`} onEditingChange={setEditingLauncher} onMutationChange={setMutatingLauncher} onLaunchersChange={(definitions, selected) => {
                 setCatalog((current) => current?.machineId === machineId && current.status === "ready" ? { ...current, agents: withSavedLaunchers(current.agents, definitions) } : current);
                 setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher: selected });
               }} agent={selectedAgent} profile={profile} launcher={launcher} disabled={locked} onProfileChange={(profile) => setLaunchChoice({ machineId, kind: agentKind, profile, launcher: "" })} onLauncherChange={(launcher) => setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher })} />
@@ -242,7 +245,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
           {error && <p className="field-hint worktree-error" role="alert">{error}</p>}
         </div>
         <footer className="modal-footer">
-          <button type="button" className="btn btn-ghost" disabled={pending !== null} onClick={onClose}>{t("Cancel")}</button>
+          <button type="button" className="btn btn-ghost" disabled={dismissalPending} onClick={onClose}>{t("Cancel")}</button>
           {mode === "create" && <button type="submit" className="btn btn-primary" disabled={pending !== null || editingLauncher || (!made && (!branch.trim() || loadingCatalog || missingLauncher))}>{t(made ? "Open" : "Create worktree")}</button>}
         </footer>
       </form>

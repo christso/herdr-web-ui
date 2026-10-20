@@ -73,11 +73,13 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
     | null
   >(null);
   const [editingLauncher, setEditingLauncher] = useState(false);
+  const [mutatingLauncher, setMutatingLauncher] = useState(false);
   const [launchChoice, setLaunchChoice] = useState<{ machineId: string; kind: string; profile: string; launcher: string } | null>(null);
   const [agentKind, setAgentKind] = useState(rememberedAgent);
   const [cwd, setCwd] = useState(defaultCwd ?? "");
   const [name, setName] = useState("");
   const [pending, setPending] = useState(false);
+  const dismissalPending = pending || mutatingLauncher;
   const [error, setError] = useState<UserError | null>(null);
   const [createdPaneId, setCreatedPaneId] = useState<string | null>(null);
   const [browsing, setBrowsing] = useState(false);
@@ -97,7 +99,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
     if (open && document.activeElement !== cwdField.current) showPathEnd();
   }, [open, cwd]);
   const surface = useFocusTrap<HTMLFormElement>(open, { initialFocus: firstFieldRef });
-  useSheetSwipe(surface, pending ? null : onClose);
+  useSheetSwipe(surface, dismissalPending ? null : onClose);
   const defaultCwdRef = useRef(defaultCwd);
   defaultCwdRef.current = defaultCwd;
   const prefillRef = useRef(prefill);
@@ -108,6 +110,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
     setCatalog(null);
     setLaunchChoice(null);
     setEditingLauncher(false);
+    setMutatingLauncher(false);
     if (!open) return;
     const filled = prefillRef.current;
     setCwd(filled?.cwd ?? defaultCwdRef.current ?? "");
@@ -148,11 +151,11 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
       // a native modal over it (Add PC, from the palette) takes its own Escape
       if (event.key !== "Escape" || nativeModalOver(surface.current)) return;
       event.preventDefault();
-      if (!pending) onClose();
+      if (!dismissalPending) onClose();
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose, pending]);
+  }, [open, onClose, dismissalPending]);
 
   if (!open) return null;
 
@@ -165,7 +168,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
   const pendingLabel = selectedAgent ? t("Starting {agent}… up to 60s", { agent: selectedAgent.label }) : t("Starting shell…");
   const loadingCatalog = catalog?.machineId !== machineId;
   const missingLauncher = selectedAgent?.installed === false && !launcher;
-  const fieldsDisabled = pending || createdPaneId !== null;
+  const fieldsDisabled = pending || mutatingLauncher || createdPaneId !== null;
 
   const startWorkspace = async (directory: string): Promise<void> => {
     if (pending || editingLauncher || loadingCatalog || missingLauncher || (agentKind !== "" && !catalogReady)) return;
@@ -201,7 +204,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
   };
 
   const closeFromScrim = (event: MouseEvent<HTMLDivElement>): void => {
-    if (!pending && event.target === event.currentTarget) onClose();
+    if (!dismissalPending && event.target === event.currentTarget) onClose();
   };
 
   return (
@@ -209,7 +212,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
       <form ref={surface} className="modal new-session-modal" role="dialog" aria-modal="true" aria-labelledby="new-session-title" tabIndex={-1} onSubmit={(event) => { event.preventDefault(); void startWorkspace(cwd); }}>
         <header className="modal-header">
           <h2 className="modal-title" id="new-session-title">{tab ? `${t("New tab")} · ${tab.workspaceLabel}` : `${t("New workspace")} · ${machineName ?? machineId}`}</h2>
-          <button type="button" className="icon-button" aria-label={t("Close dialog")} disabled={pending} onClick={onClose}>
+          <button type="button" className="icon-button" aria-label={t("Close dialog")} disabled={dismissalPending} onClick={onClose}>
             <X aria-hidden="true" />
           </button>
         </header>
@@ -218,7 +221,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
             <span className="field-label" id="new-session-agent">{t("Agent")}</span>
             <AgentPicker ref={firstFieldRef} agents={agents} value={agentKind} disabled={fieldsDisabled} labelledBy="new-session-agent" onChange={(kind) => { setAgentKind(kind); setLaunchChoice(null); }} />
           </div>
-          <AgentLaunchPicker key={`${machineId}:${agentKind}`} onEditingChange={setEditingLauncher} onLaunchersChange={(definitions, selected) => {
+          <AgentLaunchPicker key={`${machineId}:${agentKind}`} onEditingChange={setEditingLauncher} onMutationChange={setMutatingLauncher} onLaunchersChange={(definitions, selected) => {
                 setCatalog((current) => current?.machineId === machineId && current.status === "ready" ? { ...current, agents: withSavedLaunchers(current.agents, definitions) } : current);
                 setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher: selected });
               }} agent={selectedAgent} profile={profile} launcher={launcher} disabled={fieldsDisabled} onProfileChange={(profile) => setLaunchChoice({ machineId, kind: agentKind, profile, launcher: "" })} onLauncherChange={(launcher) => setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher })} />
@@ -270,7 +273,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
           {error && <p className="field-hint new-session-error" role="alert">{error.message}{error.detail !== null && <><br /><code>{error.detail}</code></>}</p>}
         </div>
         <footer className="modal-footer">
-          <button type="button" className="btn btn-ghost" disabled={pending} onClick={onClose}>{t("Cancel")}</button>
+          <button type="button" className="btn btn-ghost" disabled={dismissalPending} onClick={onClose}>{t("Cancel")}</button>
           <button type="submit" className="btn btn-primary" disabled={pending || editingLauncher || ((loadingCatalog || missingLauncher) && createdPaneId === null)}>{t(pending ? "Starting…" : createdPaneId !== null ? "Open" : "Start")}</button>
         </footer>
       </form>
