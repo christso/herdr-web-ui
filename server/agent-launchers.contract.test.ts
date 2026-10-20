@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "./index.ts";
 import { launchedAgents } from "./launched-agents.ts";
+import { SavedLauncherStore } from "./saved-launchers.ts";
 import type { WorkspaceCreated } from "../shared/protocol.ts";
 import { agentGet, herdrRpc, sessionSnapshot, workspaceClose, workspaceCreate } from "./herdr/client.ts";
 
@@ -20,6 +21,9 @@ writeFileSync(join(process.env["CODEX_HOME"]!, "private.config.toml"), 'model = 
 const launcher = join(stateDir, "codex-private");
 writeFileSync(launcher, "#!/bin/sh\nexit 0\n", { mode: 0o755 });
 
+const savedLauncher = new SavedLauncherStore(stateDir).save({ kind: "codex", label: "Private launcher", executable: launcher, args: ["secret-fixed-argument"] })[0]!;
+const savedSummary = { id: savedLauncher.id, label: savedLauncher.label };
+
 const server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir });
 const base = `http://127.0.0.1:${server.port}`;
 async function saveLauncher(kind: string, executable: string): Promise<string> {
@@ -33,7 +37,7 @@ afterAll(() => {
   if (previousPath === undefined) delete process.env["PATH"]; else process.env["PATH"] = previousPath;
   if (previousCodexHome === undefined) delete process.env["CODEX_HOME"]; else process.env["CODEX_HOME"] = previousCodexHome;
   server.stop(); rmSync(stateDir, { recursive: true, force: true }); });
-it.skipIf(process.platform === "win32")("HTTP catalog omits native profiles and automatic wrapper choices", async () => {
+it.skipIf(process.platform === "win32")("HTTP catalog exposes saved launcher summaries without command or configuration details", async () => {
   const response = await fetch(`${base}/api/agents`);
   const text = await response.text();
   expect(response.status).toBe(200);
@@ -41,17 +45,17 @@ it.skipIf(process.platform === "win32")("HTTP catalog omits native profiles and 
   expect(text).not.toContain("secret-fixed-argument");
   const codex = JSON.parse(text).agents.find((agent: { kind: string }) => agent.kind === "codex");
   expect(codex).not.toHaveProperty("profiles");
-  expect(codex.launchers).toBeUndefined();
+  expect(codex.launchers).toEqual([savedSummary]);
   expect(codex.launcher_search).toBeTrue();
 });
-it.skipIf(process.platform === "win32")("keeps canonical installed availability separate from valid wrapper availability", async () => {
+it.skipIf(process.platform === "win32")("keeps saved launcher summaries available when the ordinary command is unavailable", async () => {
   const path = process.env["PATH"];
   try {
     process.env["PATH"] = stateDir;
     chmodSync(join(stateDir, "codex"), 0o644);
     const response = await fetch(`${base}/api/agents`);
     const catalog = await response.json();
-    expect(catalog.agents.find((agent: { kind: string }) => agent.kind === "codex")).toMatchObject({ installed: false, saved_launchers: true, launcher_search: true });
+    expect(catalog.agents.find((agent: { kind: string }) => agent.kind === "codex")).toMatchObject({ installed: false, saved_launchers: true, launcher_search: true, launchers: [savedSummary] });
   } finally { chmodSync(join(stateDir, "codex"), 0o755); process.env["PATH"] = path; }
 });
 it.skipIf(process.platform === "win32")("refuses invalid saved launcher selections before any creation", async () => {
