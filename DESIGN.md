@@ -1043,29 +1043,36 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   are scoped to the selected PC and one recognized agent, with individual argument fields, rather
   than a terminal layout. No source or visual assets are copied. This fork feature adds no global
   agent configuration or environment editor.
-- Search follows [Warp's searchable launch-configuration palette](https://docs.warp.dev/terminal/sessions/launch-configurations)
-  and [Command Palette](https://docs.warp.dev/terminal/command-palette): typing narrows saved
-  names. Here it also requests executable name prefixes from the selected PC, without automatic
-  wrapper discovery. A suggestion or explicit typed executable opens the existing editor;
-  only Save persists it. The combobox keeps focus in its input with an anchored scrollable
-  listbox, active-descendant arrows/Enter, Escape cancellation and IME protection. Saved names and
-  executable suggestions have separate labeled groups; suggestions say they open the editor.
-  Escape dismisses active search first, then reaches the existing dialog dismissal. Touch rows are
-  44px tall. The existing dialog owns focus trapping/restoration. Search text blocks creation
-  until selected or canceled. A separate bridge capability preserves older select/manual flows.
+- Choosing and managing launchers follow the separation in
+  [Warp’s legacy launch configurations](https://docs.warp.dev/terminal/sessions/launch-configurations):
+  saved configurations are selected through a launch palette/menu; creating one is an explicit
+  Save action. This is a conceptual precedent, not the same interaction: here a select-only
+  Launcher popup offers Default and saved definitions with **Add launcher…** and, for a selected
+  saved definition only, **Edit launcher…** in a separate footer outside its listbox.
+  No executable discovery or typed executable action appears in the selector, and no persistent
+  management row competes with the launch fields. Legacy bridge choices remain available.
 - On Linux/macOS bridges with saved-launcher support, **Launcher** stays visible even with no
-  choices, alongside **Add launcher**. Default remains disabled when the ordinary command is
-  unavailable. Saved choices form their own group and use their display label; a short ID
-  disambiguates duplicate saved labels. Edit/Delete acts on the selected definition.
-  A second Delete press confirms removal.
-  Selecting any custom launcher clears and hides Profile; returning to Default resets Profile.
-  Changing Agent or PC resets both choices. Windows and older bridges do not show saved-launcher
-  management. Catalogs contain summaries only; executable and argument details require control.
+  choices. Default remains disabled when the ordinary command is unavailable. Saved choices form
+  their own group and use their display label; a short ID disambiguates duplicate saved labels.
+  Selecting any custom launcher clears and hides Profile; returning to Default resets Profile,
+  while reselecting Default preserves an existing native Profile. Changing Agent or PC resets
+  both choices. Windows and older bridges without saved-launcher support do not show management.
+  Catalogs contain summaries only; executable and argument details require control.
 - Add/Edit unfolds an inline fieldset inside the existing dialog and its focus trap: Launcher name,
-  Executable, then individually labelled arguments with Add/Remove controls. Saving selects the
-  saved definition without starting an agent; Start/Create worktree stays disabled while editing
-  or updating definitions. The inner **Cancel launcher** is distinct from the creation dialog’s Cancel.
-  Inputs and buttons use existing tokens, and action rows wrap on phones.
+  Executable, then individually labelled arguments with Add/Remove controls. Executable uses the
+  existing selected-PC prefix search, cache and 180ms debounce, cancelling stale requests. A
+  suggestion fills only Executable and leaves the editor open; a manual command/full path remains
+  valid. **Save launcher**, or Enter in a name/argument field after IME composition, persists the
+  definition. Executable Enter only chooses a suggestion; editor actions never launch it.
+  **Delete** lives only in Edit, with a second press to confirm and an explicit Cancel.
+  Saving selects the definition without starting an agent; Start/Create stays disabled while
+  editing or updating definitions. **Cancel launcher** returns focus to Launcher.
+  The selector and autocomplete use anchored scrollable listboxes with active-descendant arrows
+  and Enter, IME protection, visual-viewport placement, and 44px touch rows. Selector Tab reaches
+  its separate footer buttons; no action is nested inside an option. Escape dismisses a popup
+  first, then cancels deletion confirmation or the editor, then reaches dialog dismissal. The
+  existing dialog owns Tab trapping/restoration. Search announcements use one persistent status
+  region. Inputs and buttons use existing tokens, and action rows wrap on phones.
   The same picker serves New workspace, New tab and New worktree. Editing/deleting affects future
   launches, and other browsers load the saved choices when reopening their creation dialog.
 - Agent select comes from `GET /api/agents`; shell-only is always available. Directory defaults to

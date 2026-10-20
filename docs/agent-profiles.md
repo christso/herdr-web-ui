@@ -1,21 +1,21 @@
 # Native profiles and launchers
 
 New workspace, New tab and New worktree discover the selected PC's existing
-Codex and Oh My Pi profiles. Launcher searches executable names on that PC as you type.
+Codex and Oh My Pi profiles. The launcher editor searches executable names on that PC as you type.
 No Herdr agent catalog is needed. SSH bridges discover on the remote PC.
 
 Choose the underlying **Agent** first. **Launcher → Default** uses the ordinary
 agent launch. With Default selected, **Profile** offers exact native profile IDs,
 without display aliases. Choosing a custom Launcher
 hides Profile: the launcher owns its own profile, environment and arguments.
-Profile is hidden when no profiles exist. On a supported PC, Launcher and **Add launcher**
+Profile is hidden when no profiles exist. On a supported PC, Launcher and its **Add launcher…** footer
 remain available even when nothing was discovered or the ordinary agent is not installed.
 If the ordinary agent is unavailable, save and select a custom launcher explicitly
 before starting; Default stays unavailable.
 
 ## Saved definitions
 
-On Linux and macOS, **Add launcher** saves a display name, the selected underlying agent
+On Linux and macOS, the Launcher dropdown’s **Add launcher…** footer opens a form to save a display name, the selected underlying agent
 kind (Codex, Oh My Pi, Pi or Claude Code), an executable and optional individual arguments.
 Use a command name on the bridge's PATH, an absolute path, or a path starting with `~/`.
 Each argument field represents one argument, including any spaces; do not add shell quoting.
@@ -24,7 +24,9 @@ launcher can be saved without a naming convention or shell-script restriction.
 Saving checks the executable without running it; it installs nothing and creates no wrapper.
 
 Saved choices appear in their own Launcher group, with a short ID beside the display name
-only when saved names collide. Select one to **Edit** or **Delete** it in the same dialog.
+only when saved names collide. Select one, then use **Edit launcher…** in the dropdown footer.
+**Delete** is available only inside that Edit form and requires confirmation; **Cancel** keeps it.
+The Add form has no Delete action.
 The underlying kind is the Agent selected before adding it. A saved launcher owns its setup,
 so Profile is cleared and hidden and the ordinary agent's launch-mode arguments are not added.
 Edits and deletion affect future launches only; existing panes keep running.
@@ -76,19 +78,25 @@ arguments. Discovery reads native Codex TOML and OMP directory markers; it does
 not return configuration contents, authentication, paths or environment to the
 browser. These settings must be available to the bridge process on that PC.
 
-On current Linux/macOS bridges, Launcher offers Default and saved labels without automatically
-cataloging wrappers. Type to filter those labels and request executable name suggestions from the
-selected PC. Suggestions use a case-sensitive prefix of actual executable names in absolute PATH
-directories, then `~/.local/bin`, `~/.bun/bin` and `~/bin`. Names are deduplicated and limited to 20.
+On current Linux/macOS bridges, Launcher offers Default and saved labels. Its popup footer has
+**Add launcher…** and, only for a selected saved definition, **Edit launcher…**. These actions are
+separate from the selectable choices. Older bridges retain their existing legacy choices.
+
+In Add/Edit, type in **Executable** to request name suggestions from the selected PC. Suggestions
+use a case-sensitive prefix of actual executable names in absolute PATH directories, then
+`~/.local/bin`, `~/.bun/bin` and `~/bin`. Names are deduplicated and limited to 20.
 Shell aliases/functions and non-executable files are excluded; script format and name prefixes do
 not matter. No candidate is executed, sourced or probed for help. Full-path completion is not added.
 
-Selecting a suggestion or **Use executable: …** opens the existing editor with name and executable
-prefilled. You can enter an absolute or `~/` path even when no suggestion matches. Adjust the name
-and individual arguments and explicitly **Save launcher**; then the outer Start/Create launches it.
-Typing and selecting suggestions never saves or runs them. Uncommitted search text blocks creation;
-select a launcher or cancel search to continue. Arrow keys and Enter choose a row; Escape cancels
-search without closing the dialog. IME confirmation remains input, not a selection or submission.
+Choosing a suggestion fills only Executable and keeps the editor open, preserving the independent
+name and individual arguments. You can also type a command or absolute/`~/` path without choosing
+a suggestion. **Save launcher** persists the definition; Enter in the name or an argument field
+also saves, after IME composition finishes. Enter in Executable only chooses a suggestion. Nothing
+in the editor starts an agent. The outer Start/Create stays disabled until you save or cancel the editor.
+Arrow keys and Enter choose a popup row. Tab reaches the selector’s action footer and stays within
+the creation dialog. Escape dismisses an open popup first, then cancels deletion confirmation or
+the editor, then closes the creation dialog. IME confirmation remains input, not a selection or
+submission.
 
 `GET /api/agents/launchers/search?q=prefix` returns `{ names: string[] }` to controlling devices only,
 including local aliases and remote forwarding. Each bridge owns a shared metadata cache keyed by

@@ -66,3 +66,9 @@
 .launcher-choice.active { background: var(--bg-hover); }
 .launcher-choice[aria-selected="true"] { font-weight: 600; }
 .launcher-choice[aria-disabled="true"] { color: var(--text-dim); cursor: default; }
+
+.launcher-selector { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); text-align: start; cursor: pointer; }
+.launcher-selector span { min-width: 0; overflow-wrap: anywhere; }
+.launcher-selector svg { flex: none; width: var(--icon-size); height: var(--icon-size); }
+.launcher-footer { flex: none; border-top: var(--hairline) solid var(--border); }
+.launcher-footer .launcher-choice:hover { background: var(--bg-hover); }

@@ -46,7 +46,8 @@ async function editor(launchers: { id: string; label: string; saved?: boolean }[
       onProfileChange() {}, onLauncherChange() {}, onLaunchersChange() {}, onEditingChange() {},
     })), { createNodeMock: () => new Input() });
   });
-  await act(async () => renderer.root.findAllByType("button").find((node) => node.children.join("") === "Add launcher")!.props.onClick());
+  await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onClick());
+  await act(async () => renderer.root.findAllByType("button").find((node) => node.children.join("") === "Add launcher…")!.props.onClick());
   const change = async (suffix: string, value: string) => act(async () => renderer.root.findAllByType("input").find((node) => node.props.id.endsWith(suffix))!.props.onChange({ target: { value } }));
   await change("-name", "Research"); await change("-executable", process.execPath);
   return change;
@@ -77,14 +78,13 @@ it("names the launcher editor's own fields and only disambiguates colliding save
   ]);
   expect(renderer.root.findAllByType("label").some((node) => node.children.join("") === "Launcher name")).toBeTrue();
   expect(renderer.root.findAllByType("button").some((node) => node.children.join("") === "Cancel launcher")).toBeTrue();
-  const options = renderer.root.findAllByType("option").map((node) => ({ value: node.props.value, label: node.children.join("") }));
-  expect(options.find((option) => option.value === "codex-research")!.label).toBe("Research");
-  expect(options.find((option) => option.value.endsWith("00000001"))!.label).toBe("Research · 00000001");
-  expect(options.find((option) => option.value.endsWith("00000002"))!.label).toBe("Research · 00000002");
-  expect(options.find((option) => option.value.endsWith("00000003"))!.label).toBe("Unique");
+  await act(async () => renderer.root.findAllByType("button").find((node) => node.children.join("") === "Cancel launcher")!.props.onClick());
+  await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onClick());
+  const options = renderer.root.findAllByProps({ role: "option" }).map((node) => ({ value: node.props.id, label: node.children.join("") }));
+  expect(options.map((option) => option.label)).toEqual(["Default", "Research", "Research · 00000001", "Research · 00000002", "Unique"]);
 });
 
-it("offers a searchable picker and opens an unsaved executable in the explicit editor", async () => {
+it("offers selection and a footer, then keeps a manually typed executable unsaved in the editor", async () => {
   let editing = false;
   await act(async () => {
     renderer = create(createElement(SettingsProvider, null, createElement(AgentLaunchPicker, {
@@ -93,10 +93,12 @@ it("offers a searchable picker and opens an unsaved executable in the explicit e
     })), { createNodeMock: () => new Input() });
   });
   const combo = renderer.root.findByProps({ role: "combobox" });
-  await act(async () => combo.props.onChange({ target: { value: process.execPath } }));
+  await act(async () => combo.props.onClick());
+  expect(renderer.root.findAllByProps({ role: "option" }).map((node) => node.children.join(""))).toEqual(["Default"]);
+  expect(editing).toBeFalse();
+  await act(async () => renderer.root.findAllByType("button").find((node) => node.children.join("") === "Add launcher…")!.props.onClick());
+  await act(async () => renderer.root.findAllByType("input").find((node) => node.props.id.endsWith("-executable"))!.props.onChange({ target: { value: process.execPath } }));
   expect(editing).toBeTrue();
-  const use = renderer.root.findAllByProps({ role: "option" }).find((node) => node.children.join("").includes(process.execPath))!;
-  await act(async () => use.props.onClick());
   expect(store.get()).toEqual([]);
   expect(renderer.root.findAllByType("input").find((node) => node.props.id.endsWith("-executable"))!.props.value).toBe(process.execPath);
 });
@@ -107,9 +109,13 @@ async function searchable(machine = "local", onEditingChange = (_value: boolean)
     onProfileChange() {}, onLauncherChange() {}, onLaunchersChange() {}, onEditingChange,
   })));
   await act(async () => { if (renderer) renderer.update(view); else renderer = create(view, { createNodeMock: () => new Input() }); });
-  return renderer.root.findByProps({ role: "combobox" });
+  if (!renderer.root.findAllByType("fieldset").length) {
+    await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onClick());
+    await act(async () => renderer.root.findAllByType("button").find((node) => node.children.join("") === "Add launcher…")!.props.onClick());
+  }
+  return renderer.root.findAllByType("input").find((node) => node.props.id.endsWith("-executable"))!;
 }
-it("ignores older queries and PC results, cancels on close, and retains the older bridge select", async () => {
+it("ignores older queries and PC results, cancels on close, and retains older bridge manual editing", async () => {
   restoreFetch();
   const pending: { query: string; url: string; signal: AbortSignal; resolve: (value: Response) => void }[] = [];
   let entered: (() => void) | undefined;
@@ -119,12 +125,12 @@ it("ignores older queries and PC results, cancels on close, and retains the olde
   restoreFetch = () => fetcher.mockRestore();
   const type = async (text: string) => {
     const started = new Promise<void>((resolve) => { entered = resolve; });
-    await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onChange({ target: { value: text } }));
+    await act(async () => renderer.root.findByProps({ role: "combobox", "aria-autocomplete": "list" }).props.onChange({ target: { value: text } }));
     await started;
   };
   await searchable("local", undefined, [{ id: "saved:00000000-0000-4000-8000-000000000001", label: "new-command", saved: true }]);
   await act(async () => {
-    const input = renderer.root.findByProps({ role: "combobox" });
+    const input = renderer.root.findByProps({ role: "combobox", "aria-autocomplete": "list" });
     input.props.onChange({ target: { value: "o" } }); input.props.onChange({ target: { value: "ol" } });
   });
   await type("old"); await type("new");
@@ -134,20 +140,21 @@ it("ignores older queries and PC results, cancels on close, and retains the olde
   await act(async () => { pending[0]!.resolve(Response.json({ names: ["old-command"] })); });
   expect(renderer.root.findAllByProps({ role: "option" }).some((node) => node.children.includes("new-command"))).toBeTrue();
   expect(renderer.root.findAllByProps({ role: "option" }).some((node) => node.children.includes("old-command"))).toBeFalse();
-  expect(renderer.root.findByProps({ role: "group", "aria-label": "Saved launchers" }).findAllByProps({ role: "option" }).map((node) => node.children.join(""))).toEqual(["new-command"]);
-  expect(renderer.root.findByProps({ role: "group", "aria-label": "Executables · opens editor" }).findAllByProps({ role: "option" }).map((node) => node.children.join(""))).toEqual(["new-command"]);
+  expect(renderer.root.findByProps({ role: "listbox", "aria-label": "Executable" }).findAllByProps({ role: "option" }).map((node) => node.children.join(""))).toEqual(["new-command"]);
   const switched = new Promise<void>((resolve) => { entered = resolve; });
   await searchable("remote-pc"); await switched;
   expect(pending[2]!.url).toContain("/api/machines/remote-pc/");
   let prevented = false, stopped = false;
-  await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onKeyDown({ key: "Escape", nativeEvent: {}, preventDefault() { prevented = true; }, stopPropagation() { stopped = true; } }));
+  await act(async () => renderer.root.findAllByType("div").find((node) => node.props.className === "field" && node.props.onKeyDown)!.props.onKeyDown({ key: "Escape", nativeEvent: {}, preventDefault() { prevented = true; }, stopPropagation() { stopped = true; } }));
   expect(prevented && stopped).toBeTrue(); expect(pending[2]!.signal.aborted).toBeTrue();
   await act(async () => pending[2]!.resolve(Response.json({ names: ["foreign-command"] })));
   expect(renderer.root.findAllByProps({ role: "option" })).toHaveLength(0);
-  expect(renderer.root.findByProps({ role: "combobox" }).props.value).toBe("Default");
+  expect(renderer.root.findByProps({ role: "combobox", "aria-autocomplete": "list" }).props.value).toBe("new");
   let secondPrevented = false, secondStopped = false;
-  await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onKeyDown({ key: "Escape", nativeEvent: {}, preventDefault() { secondPrevented = true; }, stopPropagation() { secondStopped = true; } }));
-  expect(secondPrevented || secondStopped).toBeFalse();
+  await act(async () => renderer.root.findAllByType("div").find((node) => node.props.className === "field" && node.props.onKeyDown)!.props.onKeyDown({ key: "Escape", nativeEvent: {}, preventDefault() { secondPrevented = true; }, stopPropagation() { secondStopped = true; } }));
+  expect(secondPrevented && secondStopped).toBeTrue();
+  expect(renderer.root.findAllByType("fieldset")).toHaveLength(0);
+  await searchable("remote-pc");
   await type("none");
   expect(renderer.root.findByProps({ role: "status" }).children.join("")).toBe("Searching executables…");
   await act(async () => pending[3]!.resolve(Response.json({ names: [] })));
@@ -155,20 +162,22 @@ it("ignores older queries and PC results, cancels on close, and retains the olde
   await type("error");
   await act(async () => pending[4]!.resolve(Response.json({ error: { code: "fixture", message: "fixture" } }, { status: 500 })));
   expect(renderer.root.findByProps({ role: "status" }).children.join("")).toContain("Could not search this PC");
-  expect(renderer.root.findByProps({ role: "combobox" }).props.value).toBe("error");
+  expect(renderer.root.findByProps({ role: "combobox", "aria-autocomplete": "list" }).props.value).toBe("error");
   await type("closing");
   await act(async () => renderer.unmount());
   expect(pending[5]!.signal.aborted).toBeTrue();
   await act(async () => pending[5]!.resolve(Response.json({ names: ["after-unmount"] })));
   const before = pending.length;
   await editor([{ id: "codex-legacy", label: "Legacy" }]);
-  expect(renderer.root.findAllByProps({ role: "combobox" })).toHaveLength(0);
-  expect(renderer.root.findAllByType("option").some((node) => node.props.value === "codex-legacy")).toBeTrue();
+  expect(renderer.root.findAllByProps({ role: "combobox", "aria-autocomplete": "list" })).toHaveLength(0);
+  await act(async () => renderer.root.findAllByType("button").find((node) => node.children.join("") === "Cancel launcher")!.props.onClick());
+  await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onClick());
+  expect(renderer.root.findAllByProps({ role: "option" }).some((node) => node.children.includes("Legacy"))).toBeTrue();
   expect(pending).toHaveLength(before);
 });
 it("consumes arrows and Enter without form submission and preserves both IME confirmation forms", async () => {
   await searchable();
-  const combo = () => renderer.root.findByProps({ role: "combobox" });
+  const combo = () => renderer.root.findByProps({ role: "combobox", "aria-autocomplete": "list" });
   await act(async () => combo().props.onChange({ target: { value: "/custom/research" } }));
   const key = async (name: string, nativeEvent: object = {}) => {
     let prevented = false, stopped = false;
@@ -177,7 +186,7 @@ it("consumes arrows and Enter without form submission and preserves both IME con
   };
   for (const native of [{ isComposing: true }, { keyCode: 229 }]) {
     expect(await key("Enter", native)).toEqual({ prevented: false, stopped: true });
-    expect(renderer.root.findAllByType("fieldset")).toHaveLength(0);
+    expect(renderer.root.findAllByType("fieldset")).toHaveLength(1);
   }
   expect((await key("ArrowDown")).prevented).toBeTrue();
   expect((await key("ArrowUp")).prevented).toBeTrue();
@@ -196,12 +205,12 @@ it("preserves a native profile when reselecting Default and activates the existi
     await act(async () => { if (renderer) renderer.update(view); else renderer = create(view, { createNodeMock: () => new Input() }); });
   };
   await render("", "research");
-  await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onFocus({ target: { select() {} } }));
+  await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onClick());
   await act(async () => renderer.root.findAllByProps({ role: "option" }).find((node) => node.children.includes("Default"))!.props.onClick());
   expect(changes).toEqual([]);
   expect(renderer.root.findAllByType("select").find((node) => node.props.id.endsWith("-profile"))!.props.value).toBe("research");
   await render("saved:current", "");
-  await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onFocus({ target: { select() {} } }));
+  await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onClick());
   const combo = renderer.root.findByProps({ role: "combobox" });
   const selected = renderer.root.findAllByProps({ role: "option" }).find((node) => node.props["aria-selected"])!;
   expect(combo.props["aria-activedescendant"]).toBe(selected.props.id);
@@ -209,23 +218,23 @@ it("preserves a native profile when reselecting Default and activates the existi
   expect(changes).toEqual([""]);
 });
 
-it("keeps the highlighted typed executable when delayed suggestions insert before it", async () => {
+it("keeps the typed executable until a delayed suggestion is explicitly chosen", async () => {
   restoreFetch();
   let answer!: (response: Response) => void, entered!: () => void;
   const started = new Promise<void>((resolve) => { entered = resolve; });
   const network = spyOn(globalThis, "fetch").mockImplementation(Object.assign(() => new Promise<Response>((resolve) => { answer = resolve; entered(); }), { preconnect: globalThis.fetch.preconnect }));
   restoreFetch = () => network.mockRestore();
   await searchable();
-  const combo = () => renderer.root.findByProps({ role: "combobox" });
+  const combo = () => renderer.root.findByProps({ role: "combobox", "aria-autocomplete": "list" });
   await act(async () => combo().props.onChange({ target: { value: "cod" } }));
   await started;
   const key = async (key: string) => act(async () => combo().props.onKeyDown({ key, nativeEvent: {}, preventDefault() {}, stopPropagation() {} }));
   await key("ArrowDown");
-  expect(renderer.root.findByProps({ id: combo().props["aria-activedescendant"] }).children.join("")).toBe("Use executable: cod");
+  expect(combo().props.value).toBe("cod");
   await act(async () => answer(Response.json({ names: ["codex", "codex-helper"] })));
-  expect(renderer.root.findByProps({ id: combo().props["aria-activedescendant"] }).children.join("")).toBe("Use executable: cod");
+  expect(combo().props.value).toBe("cod");
   await key("Enter");
-  expect(renderer.root.findAllByType("input").find((node) => node.props.id.endsWith("-executable"))!.props.value).toBe("cod");
+  expect(renderer.root.findAllByType("input").find((node) => node.props.id.endsWith("-executable"))!.props.value).toBe("codex");
   expect(store.get()).toEqual([]);
 });
 
@@ -236,8 +245,10 @@ it("places and updates the popup within emulated visual viewport geometry and cl
   const add = spyOn(viewport, "addEventListener"), remove = spyOn(viewport, "removeEventListener");
   try {
     await searchable();
+    await act(async () => renderer.root.findAllByType("button").find((node) => node.children.join("") === "Cancel launcher")!.props.onClick());
     const combo = () => renderer.root.findByProps({ role: "combobox" });
-    await act(async () => combo().props.onFocus({ target: { select() {} } }));
+    add.mockClear(); remove.mockClear();
+    await act(async () => combo().props.onClick());
     const popup = () => renderer.root.findByProps({ className: "launcher-popup" });
     expect(popup().props.style.bottom).toBe(454);
     expect(popup().props.style.top).toBeUndefined();
@@ -251,10 +262,10 @@ it("places and updates the popup within emulated visual viewport geometry and cl
     expect(combo().props["aria-expanded"]).toBeTrue();
     const listeners = add.mock.calls.filter(([name]) => name === "resize" || name === "scroll");
     expect(listeners).toHaveLength(2);
-    await act(async () => combo().props.onKeyDown({ key: "Escape", nativeEvent: {}, preventDefault() {}, stopPropagation() {} }));
+    await act(async () => renderer.root.findAllByType("div").find((node) => node.props.className === "field" && node.props.onKeyDown)!.props.onKeyDown({ key: "Escape", nativeEvent: {}, preventDefault() {}, stopPropagation() {} }));
     for (const [name, listener] of listeners) expect(remove.mock.calls.some((call) => call[0] === name && call[1] === listener)).toBeTrue();
     const calls = add.mock.calls.length;
-    await act(async () => combo().props.onFocus({ target: { select() {} } }));
+    await act(async () => combo().props.onClick());
     expect(add.mock.calls.length).toBe(calls + 2);
     await act(async () => renderer.unmount());
     expect(remove.mock.calls.length).toBe(add.mock.calls.length);
@@ -268,13 +279,13 @@ it("keeps one initially empty search live region through opening, frame announce
   const region = renderer.root.findByProps({ role: "status" });
   expect(region.children).toEqual([]);
   expect(region.props.className).toContain("visually-hidden");
-  const combo = () => renderer.root.findByProps({ role: "combobox" });
+  const combo = () => renderer.root.findByProps({ role: "combobox", "aria-autocomplete": "list" });
   await act(async () => combo().props.onChange({ target: { value: "research" } }));
   expect(renderer.root.findByProps({ role: "status" })).toBe(region);
   expect(region.children).toEqual([]);
   await act(async () => { for (const frame of frames.splice(0)) frame(0); });
   expect(region.children.join("")).toBe("Searching executables…");
-  await act(async () => combo().props.onKeyDown({ key: "Escape", nativeEvent: {}, preventDefault() {}, stopPropagation() {} }));
+  await act(async () => renderer.root.findAllByType("div").find((node) => node.props.className === "field" && node.props.onKeyDown)!.props.onKeyDown({ key: "Escape", nativeEvent: {}, preventDefault() {}, stopPropagation() {} }));
   expect(renderer.root.findByProps({ role: "status" })).toBe(region);
   expect(region.children).toEqual([]);
   expect(region.props.style?.display).not.toBe("none");
