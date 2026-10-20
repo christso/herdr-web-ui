@@ -39,7 +39,7 @@ afterEach(async () => {
   renderer = undefined as unknown as ReactTestRenderer;
   saved.clear(); rmSync(dir, { recursive: true, force: true });
 });
-async function editor(launchers: { id: string; label: string; saved?: boolean }[] = []) {
+async function editor(launchers: { id: string; label: string }[] = []) {
   await act(async () => {
     renderer = create(createElement(SettingsProvider, null, createElement(AgentLaunchPicker, {
       agent: { kind: "codex", label: "Codex", saved_launchers: true, launchers }, launcher: "", disabled: false,
@@ -71,17 +71,16 @@ for (const native of [{ isComposing: true, keyCode: 13 }, { isComposing: false, 
 
 it("names the launcher editor's own fields and only disambiguates colliding saved labels", async () => {
   await editor([
-    { id: "codex-research", label: "Research" },
-    { id: "saved:00000000-0000-4000-8000-000000000001", label: "Research", saved: true },
-    { id: "saved:00000000-0000-4000-8000-000000000002", label: "Research", saved: true },
-    { id: "saved:00000000-0000-4000-8000-000000000003", label: "Unique", saved: true },
+    { id: "saved:00000000-0000-4000-8000-000000000001", label: "Research" },
+    { id: "saved:00000000-0000-4000-8000-000000000002", label: "Research" },
+    { id: "saved:00000000-0000-4000-8000-000000000003", label: "Unique" },
   ]);
   expect(renderer.root.findAllByType("label").some((node) => node.children.join("") === "Launcher name")).toBeTrue();
   expect(renderer.root.findAllByType("button").some((node) => node.children.join("") === "Cancel launcher")).toBeTrue();
   await act(async () => renderer.root.findAllByType("button").find((node) => node.children.join("") === "Cancel launcher")!.props.onClick());
   await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onClick());
   const options = renderer.root.findAllByProps({ role: "option" }).map((node) => ({ value: node.props.id, label: node.children.join("") }));
-  expect(options.map((option) => option.label)).toEqual(["Default", "Research", "Research · 00000001", "Research · 00000002", "Unique"]);
+  expect(options.map((option) => option.label)).toEqual(["Default", "Research · 00000001", "Research · 00000002", "Unique"]);
 });
 
 it("offers selection and a footer, then keeps a manually typed executable unsaved in the editor", async () => {
@@ -103,7 +102,7 @@ it("offers selection and a footer, then keeps a manually typed executable unsave
   expect(renderer.root.findAllByType("input").find((node) => node.props.id.endsWith("-executable"))!.props.value).toBe(process.execPath);
 });
 
-async function searchable(machine = "local", onEditingChange = (_value: boolean) => {}, launchers: { id: string; label: string; saved?: boolean }[] = []) {
+async function searchable(machine = "local", onEditingChange = (_value: boolean) => {}, launchers: { id: string; label: string }[] = []) {
   const view = createElement(SettingsProvider, null, createElement(MachineContext.Provider, { value: machine }, createElement(AgentLaunchPicker, {
     agent: { kind: "codex", label: "Codex", installed: true, saved_launchers: true, launcher_search: true, launchers }, launcher: "", disabled: false,
     onLauncherChange() {}, onLaunchersChange() {}, onEditingChange,
@@ -115,7 +114,7 @@ async function searchable(machine = "local", onEditingChange = (_value: boolean)
   }
   return renderer.root.findAllByType("input").find((node) => node.props.id.endsWith("-executable"))!;
 }
-it("ignores older queries and PC results, cancels on close, and retains older bridge manual editing", async () => {
+it("ignores older queries and PC results, cancels on close, and retains manual editing without search", async () => {
   restoreFetch();
   const pending: { query: string; url: string; signal: AbortSignal; resolve: (value: Response) => void }[] = [];
   let entered: (() => void) | undefined;
@@ -128,7 +127,7 @@ it("ignores older queries and PC results, cancels on close, and retains older br
     await act(async () => renderer.root.findByProps({ role: "combobox", "aria-autocomplete": "list" }).props.onChange({ target: { value: text } }));
     await started;
   };
-  await searchable("local", undefined, [{ id: "saved:00000000-0000-4000-8000-000000000001", label: "new-command", saved: true }]);
+  await searchable("local", undefined, [{ id: "saved:00000000-0000-4000-8000-000000000001", label: "new-command" }]);
   await act(async () => {
     const input = renderer.root.findByProps({ role: "combobox", "aria-autocomplete": "list" });
     input.props.onChange({ target: { value: "o" } }); input.props.onChange({ target: { value: "ol" } });
@@ -168,11 +167,11 @@ it("ignores older queries and PC results, cancels on close, and retains older br
   expect(pending[5]!.signal.aborted).toBeTrue();
   await act(async () => pending[5]!.resolve(Response.json({ names: ["after-unmount"] })));
   const before = pending.length;
-  await editor([{ id: "codex-legacy", label: "Legacy" }]);
+  await editor([{ id: "saved:00000000-0000-4000-8000-000000000001", label: "Manual" }]);
   expect(renderer.root.findAllByProps({ role: "combobox", "aria-autocomplete": "list" })).toHaveLength(0);
   await act(async () => renderer.root.findAllByType("button").find((node) => node.children.join("") === "Cancel launcher")!.props.onClick());
   await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onClick());
-  expect(renderer.root.findAllByProps({ role: "option" }).some((node) => node.children.includes("Legacy"))).toBeTrue();
+  expect(renderer.root.findAllByProps({ role: "option" }).some((node) => node.children.includes("Manual"))).toBeTrue();
   expect(pending).toHaveLength(before);
 });
 it("consumes arrows and Enter without form submission and preserves both IME confirmation forms", async () => {
@@ -199,7 +198,7 @@ it("keeps Default when reselected and activates the existing launcher on open", 
   const changes: string[] = [];
   const render = async (launcher: string) => {
     const view = createElement(SettingsProvider, null, createElement(AgentLaunchPicker, {
-      agent: { kind: "codex", label: "Codex", saved_launchers: true, launcher_search: true, launchers: [{ id: "saved:current", label: "Current", saved: true }] }, launcher, disabled: false,
+      agent: { kind: "codex", label: "Codex", saved_launchers: true, launcher_search: true, launchers: [{ id: "saved:current", label: "Current" }] }, launcher, disabled: false,
       onLauncherChange(value: string) { changes.push(value); }, onLaunchersChange() {}, onEditingChange() {},
     }));
     await act(async () => { if (renderer) renderer.update(view); else renderer = create(view, { createNodeMock: () => new Input() }); });

@@ -40,8 +40,7 @@ const demoLauncherId = () => `saved:${globalThis.crypto?.randomUUID?.() ?? `${Da
 const demoAgentCatalog = () => withSavedLaunchers(demoAgents, demoSavedLaunchers);
 function demoLaunchFault(value: unknown): Response | null {
   if (value === null || typeof value !== "object") return null;
-  const agent = value as { kind?: unknown; profile?: unknown; launcher?: unknown; args?: unknown };
-  if (agent.profile !== undefined) return error("invalid_agent", "agent.profile is no longer supported. Save a launcher with --profile and its ID as separate arguments, or send them in agent.args.", 400);
+  const agent = value as { kind?: unknown; launcher?: unknown; args?: unknown };
   if (agent.launcher === undefined) return null;
   if (agent.args !== undefined || Object.keys(agent).some((key) => !["kind", "name", "launcher"].includes(key))
     || !demoAgentCatalog().find((entry) => entry.kind === agent.kind)?.launchers?.some((launcher) => launcher.id === agent.launcher)) {

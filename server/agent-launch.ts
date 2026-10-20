@@ -10,7 +10,7 @@ import { launchedAgents } from "./launched-agents.ts";
 import { isShellAgentKind, startShellAgent, startAgentLauncher } from "./shell-agent.ts";
 import { agentStart, HerdrError, paneRead, sessionSnapshot } from "./herdr/client.ts";
 
-export type AgentPayload = { kind?: unknown; name?: unknown; args?: unknown; profile?: unknown; launcher?: unknown };
+export type AgentPayload = { kind?: unknown; name?: unknown; args?: unknown; launcher?: unknown };
 
 /** What is wrong with a request's `agent`, in the API's words; null when it can be started. */
 export function agentFault(agent: AgentPayload | undefined): string | null {
@@ -20,7 +20,6 @@ export function agentFault(agent: AgentPayload | undefined): string | null {
     || (agent.args !== undefined && (!Array.isArray(agent.args) || !agent.args.every((arg) => typeof arg === "string")))) {
     return "agent.name must be a string and agent.args must be an array of strings";
   }
-  if (agent.profile !== undefined) return "agent.profile is no longer supported. Save a launcher with --profile and its ID as separate arguments, or send them in agent.args.";
   if (agent.launcher !== undefined && (typeof agent.launcher !== "string" || agent.launcher.length === 0)) return "agent.launcher must be a nonempty string";
   if (agent.launcher !== undefined && (agent.args !== undefined || Object.keys(agent).some((key) => !["kind", "name", "launcher"].includes(key)))) return "Launchers accept only kind, name and launcher";
   return null;

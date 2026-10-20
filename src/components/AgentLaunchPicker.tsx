@@ -102,11 +102,10 @@ export function AgentLaunchPicker({ agent, launcher, disabled, onLauncherChange,
     return () => { document.removeEventListener("pointerdown", outside); };
   }, [open]);
 
-  const label = (choice: NonNullable<AgentKind["launchers"]>[number]): string => choice.label + (choice.saved && agent?.launchers?.some((other) => other.saved && other.id !== choice.id && other.label === choice.label) ? ` · ${choice.id.slice(-8)}` : "");
+  const label = (choice: NonNullable<AgentKind["launchers"]>[number]): string => choice.label + (agent?.launchers?.some((other) => other.id !== choice.id && other.label === choice.label) ? ` · ${choice.id.slice(-8)}` : "");
   const optionGroups = [
     { key: "default", label: null, options: [{ key: "default", text: t("Default"), selected: !launcher, disabled: agent?.installed === false, choose: () => { if (launcher) onLauncherChange(""); } }] },
-    { key: "legacy", label: null, options: (agent?.launchers ?? []).filter((choice) => !choice.saved).map((choice) => ({ key: choice.id, text: label(choice), selected: launcher === choice.id, disabled: false, choose: () => { if (launcher !== choice.id) onLauncherChange(choice.id); } })) },
-    { key: "saved", label: t("Saved launchers"), options: (agent?.launchers ?? []).filter((choice) => choice.saved).map((choice) => ({ key: choice.id, text: label(choice), selected: launcher === choice.id, disabled: false, choose: () => { if (launcher !== choice.id) onLauncherChange(choice.id); } })) },
+    { key: "saved", label: t("Saved launchers"), options: (agent?.launchers ?? []).map((choice) => ({ key: choice.id, text: label(choice), selected: launcher === choice.id, disabled: false, choose: () => { if (launcher !== choice.id) onLauncherChange(choice.id); } })) },
   ];
   const options = optionGroups.flatMap((group) => group.options);
   const choices = open === "executable" ? suggestions.map((name) => ({ key: name })) : options;
@@ -196,7 +195,7 @@ export function AgentLaunchPicker({ agent, launcher, disabled, onLauncherChange,
   };
   return <>
     <span className="visually-hidden launcher-search-announcement" role="status">{announcedSearch}</span>
-    {(agent?.saved_launchers || Boolean(agent?.launchers?.length)) && <div ref={searchRoot} className="field" onKeyDown={(event) => {
+    {agent?.saved_launchers && <div ref={searchRoot} className="field" onKeyDown={(event) => {
       if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) { event.stopPropagation(); return; }
       if (event.key !== "Escape" || (!open && !editor)) return;
       event.preventDefault(); event.stopPropagation();
@@ -208,7 +207,7 @@ export function AgentLaunchPicker({ agent, launcher, disabled, onLauncherChange,
       else if (!busy) closeEditor();
     }}>
       <label className="field-label" htmlFor={`${id}-launcher`}>{t("Launcher")}</label>
-      {agent?.saved_launchers ? <div className="launcher-combobox" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(null); }}>
+      <div className="launcher-combobox" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(null); }}>
         <button ref={launcherField} type="button" id={`${id}-launcher`} className="input launcher-selector" role="combobox" aria-expanded={open === "launcher"} aria-controls={`${id}-choices`} aria-activedescendant={open === "launcher" && highlighted ? `${id}-choice-${highlight}` : undefined}
           disabled={disabled || busy || editor !== null} onClick={() => setOpen(open === "launcher" ? null : "launcher")}
           onKeyDown={(event) => {
@@ -233,16 +232,10 @@ export function AgentLaunchPicker({ agent, launcher, disabled, onLauncherChange,
           </div>
           <div className="launcher-footer">
             <button type="button" className="launcher-choice" onClick={() => { closePopup(); setConfirmDelete(false); setError(null); setEditor({ label: "", executable: "", args: [] }); }}>{t("Add launcher…")}</button>
-            {selected?.saved && <button type="button" className="launcher-choice" onClick={() => void edit()}>{t("Edit launcher…")}</button>}
+            {selected && <button type="button" className="launcher-choice" onClick={() => void edit()}>{t("Edit launcher…")}</button>}
           </div>
         </div>}
-      </div> : <select id={`${id}-launcher`} className="input" value={launcher} disabled={disabled || busy || editor !== null} onChange={(event) => { setConfirmDelete(false); setError(null); onLauncherChange(event.target.value); }}>
-        <option value="" disabled={agent?.installed === false}>{t("Default")}</option>
-        {agent?.launchers?.filter((choice) => !choice.saved).map((choice) => <option key={choice.id} value={choice.id}>{choice.label}</option>)}
-        {agent?.launchers?.some((choice) => choice.saved) && <optgroup label={t("Saved launchers")}>
-          {agent.launchers.filter((choice) => choice.saved).map((choice) => <option key={choice.id} value={choice.id}>{label(choice)}</option>)}
-        </optgroup>}
-      </select>}
+      </div>
       {agent?.installed === false && !launcher && <span className="field-hint">{t("Choose a launcher to start {agent} on this PC.", { agent: agent.label })}</span>}
       {agent?.saved_launchers && <>
         {editor && <fieldset className="launcher-editor" onKeyDown={(event) => {

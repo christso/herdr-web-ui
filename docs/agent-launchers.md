@@ -48,9 +48,8 @@ The bridge validates the selected definition and executable before creation and 
 checkout creation; a stale selection produces an actionable error. A failure after creation
 preserves the pane so it can be opened and inspected.
 
-Custom launchers require Linux or macOS and an available POSIX interactive shell, as discovered
-wrappers do. Windows and older bridges without saved-launcher support do not offer Add/manage;
-their ordinary agent launches remain available. No Windows launcher transport is added.
+Custom launchers require Linux or macOS and an available POSIX interactive shell. Windows and
+bridges without saved-launcher support offer ordinary agent launches.
 
 ## Agent configuration arguments
 
@@ -60,20 +59,18 @@ To use an existing Codex or Oh My Pi profile, save a launcher with **Executable*
 as one value or add shell quoting. The fictional browser demo uses the same editor and guidance.
 The CLI owns its profile configuration and validates the ID when it starts.
 
-The Web UI does not list native profiles, read their configuration to populate choices, or run
-CLI help probes. Pi and Claude Code launchers can likewise supply the arguments their own CLI
-supports; a `--profile` flag is not invented for them.
+Pi and Claude Code launchers can likewise supply the arguments their own CLI supports.
 
 Creation APIs accept ordinary `agent.args`, including `["--profile", "research"]`, when no
-launcher is selected. A stale client that sends `agent.profile` receives an actionable validation
-error before creation; it never silently launches Default. Update the client and save a launcher,
-or send the CLI arguments in `agent.args` instead.
+launcher is selected. To launch a saved definition, send its ID in `agent.launcher`; the selected
+PC resolves the executable and arguments from its saved store. Only saved definition IDs select
+launchers; executable names are entered in the editor when saving a definition.
 
-## Executable search and compatibility
+## Executable search
 
-On current Linux/macOS bridges, Launcher offers Default and saved labels. Its popup footer has
+On supported Linux/macOS PCs, Launcher offers Default and saved labels. Its popup footer has
 **Add launcher…** and, only for a selected saved definition, **Edit launcher…**. These actions are
-separate from the selectable choices. Older bridges retain their existing legacy choices.
+separate from the selectable choices.
 
 In Add/Edit, type in **Executable** to request name suggestions from the selected PC. Suggestions
 use a case-sensitive prefix of actual executable names in absolute PATH directories, then
@@ -98,10 +95,11 @@ Concurrent requests share a refresh, with at most 16 filesystem checks in flight
 by 180ms and superseded requests are canceled. Saving and launching always revalidate independently.
 No per-keystroke SSH process starts: requests use the existing PC bridge connection.
 
-The catalog advertises `launcher_search` separately from `saved_launchers`. Older bridges retain
-their existing saved/manual and legacy choices without receiving unsupported search requests.
-Current bridges still accept explicit old prefix-based shell-wrapper IDs through the creation API,
-resolving those only when requested. They never import or register those wrappers automatically.
+The catalog advertises `launcher_search` separately from `saved_launchers`. A bridge without
+executable search still supports manual executable entry when it offers saved launchers.
+A bridge without saved-launcher support offers ordinary agent launches. The browser sends
+management and search requests only when the selected PC advertises the corresponding capability.
+Save an installed script such as `codex-research` explicitly by entering its command or path.
 The editor supplies executable and argument values only, without an environment or secret editor
 and without changing the agent's global configuration.
 
@@ -109,14 +107,14 @@ Choices are read on every dialog opening and revalidated before creating a
 workspace, tab or worktree. Changing Agent or PC resets Launcher to Default. If the catalog
 cannot be read, a plain Shell remains usable. Windows retains ordinary agent launches.
 
-A wrapper may resume an existing session. Herdr therefore waits for native session
+A saved launcher may resume an existing session. Herdr therefore waits for native session
 or transcript evidence and does not assume a fresh conversation or show an empty
-conversation greeting for every wrapper. Before the first message, some fresh
-wrapper launches can consequently lack that greeting. Default launches retain ordinary
-fresh-session tracking; resumed history is never declared empty because a wrapper was selected.
+conversation greeting for every launcher. Before the first message, some fresh
+launcher starts can consequently lack that greeting. Default launches retain ordinary
+fresh-session tracking; resumed history is never declared empty because a launcher was selected.
 
-A failed or blocked wrapper startup preserves the workspace, tab or worktree and
+A failed or blocked launcher startup preserves the workspace, tab or worktree and
 its pane. Open its terminal to inspect startup. Herdr waits up to 60 seconds for
-the expected agent to become idle or done. Wrapper launch requires an available
+the expected agent to become idle or done. Launcher startup requires an available
 POSIX interactive shell; an unreadable foreground job or another running program
 is never used for launch input.

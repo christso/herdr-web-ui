@@ -501,7 +501,7 @@ export function createServer(
           const agents: AgentKind[] = [...kinds]
             // an agent's command is its kind; the pane's shell may carry another PATH, as for omo and gjc above
             .map((kind) => {
-              const launchers = saved.filter((entry) => entry.kind === kind).map(({ id, label }) => ({ id, label, saved: true }));
+              const launchers = saved.filter((entry) => entry.kind === kind).map(({ id, label }) => ({ id, label }));
               return { kind, label: AGENT_LABELS[kind] ?? kind, installed: agentExecutable(kind) !== null,
                 ...(canSaveLaunchers && SAVED_LAUNCHER_KINDS.includes(kind) ? { saved_launchers: true, launcher_search: true } : {}),
                 ...(launchers.length > 0 ? { launchers } : {}) };

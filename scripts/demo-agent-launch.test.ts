@@ -1,6 +1,6 @@
 import { expect, it } from "bun:test";
 
-it("the demo offers saved launchers without native profiles or an automatic wrapper catalog and validates every creation flow", async () => {
+it("the demo offers saved launchers and validates every creation flow", async () => {
   const saved = new Map(["window", "location", "PushManager"].map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
   try {
     const storage = new Map<string, string>();
@@ -28,11 +28,9 @@ it("the demo offers saved launchers without native profiles or an automatic wrap
     for (const route of ["workspace", "tab", "worktree"]) {
       const before = await snapshot();
       for (const agent of [
-        { kind: "codex", launcher: "unknown" }, { kind: "pi", launcher: "codex-compound" },
-        { kind: "codex", profile: "review", launcher: "codex-compound" },
-        { kind: "codex", launcher: "codex-compound", args: [] },
-        { kind: "codex", profile: "review", args: ["resume"] },
-        { kind: "pi", profile: "review" }, { kind: "codex", launcher: "/bin/sh" },
+        { kind: "codex", launcher: "unknown" }, { kind: "pi", launcher: codexLauncher },
+        { kind: "codex", launcher: codexLauncher, args: [] },
+        { kind: "codex", launcher: "/bin/sh" },
       ]) expect((await post(route, agent)).status).toBe(400);
       expect((await snapshot()).workspaces).toEqual(before.workspaces);
       expect((await snapshot()).tabs).toEqual(before.tabs);

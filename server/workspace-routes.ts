@@ -9,7 +9,7 @@ import { homedir } from "node:os";
 import { isAbsolute, resolve } from "node:path";
 import { MAX_LABEL_CHARS } from "../shared/labels.ts";
 import type { DirectoryCreated, ServerMessage, TabMoved } from "../shared/protocol.ts";
-import { discoverLegacyLaunchers, selectedLegacyLauncher, type AgentLauncher } from "./agent-launchers.ts";
+import type { AgentLauncher } from "./agent-launchers.ts";
 import { agentFault, agentLaunch, type AgentPayload } from "./agent-launch.ts";
 import { createDirectory, listDirectories } from "./directories.ts";
 import { HerdrError, tabClose, tabCreate, tabMove, tabRename, workspaceClose, workspaceCreate, workspaceMove, workspaceRename, worktreeCreate, worktreeList, worktreeOpen, worktreeRemove } from "./herdr/client.ts";
@@ -31,10 +31,7 @@ function expandedDirectory(value: string): string | null {
 export async function handleWorkspaceRequest(request: Request, url: URL, pathname: string, bunServer: Pick<Server<unknown>, "timeout">, broadcastAll: (message: ServerMessage) => void, savedLaunchers: SavedLauncherStore): Promise<Response | null> {
   const selectLaunch = (agent: AgentPayload): AgentLauncher | undefined => {
     if (agent.launcher === undefined) return undefined;
-    if (typeof agent.launcher === "string" && agent.launcher.startsWith("saved:")) {
-      return savedLaunchers.select(agent.kind as string, agent.launcher);
-    }
-    return selectedLegacyLauncher(discoverLegacyLaunchers(), agent.kind as string, agent.launcher as string);
+    return savedLaunchers.select(agent.kind as string, agent.launcher as string);
   };
   if (pathname === "/api/workspace/directories" && request.method === "POST") {
     let payload: unknown;

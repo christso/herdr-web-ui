@@ -1,4 +1,8 @@
 import { expect, it, spyOn } from "bun:test";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { SavedLauncherStore } from "./saved-launchers.ts";
 import * as herdr from "./herdr/client.ts";
 import { isGjcProcess } from "./gjc-runtime.ts";
 import { paneShell, shellAgentExecutable, shellCommandLine, startAgentLauncher } from "./shell-agent.ts";
@@ -89,7 +93,11 @@ it("only offers a shell with the native agent.start foreground ownership evidenc
 });
 
 for (const state of ["active agent", "unreadable foreground", "foreign foreground job", "shell becomes busy"] as const) {
-  it.skipIf(process.platform !== "linux" && process.platform !== "darwin")(`refuses wrapper launch with ${state} without typing into the pane`, async () => {
+  it.skipIf(process.platform !== "linux" && process.platform !== "darwin")(`refuses saved launcher startup with ${state} without typing into the pane`, async () => {
+    const stateDir = mkdtempSync(join(tmpdir(), "launcher-ownership-"));
+    const store = new SavedLauncherStore(stateDir);
+    const [entry] = store.save({ kind: "codex", label: "Review", executable: process.execPath, args: [] });
+    const launcher = store.select("codex", entry!.id);
     const ready = { pane_id: "fixture", shell_pid: 123, foreground_process_group_id: 123, foreground_processes: [{ pid: 123, name: "zsh" }] };
     const busy = { ...ready, foreground_process_group_id: 456, foreground_processes: [{ pid: 456, name: "vim" }] };
     const agent = spyOn(herdr, "agentGet").mockRejectedValue(new herdr.HerdrError("agent_not_found", "No agent"));
@@ -98,10 +106,11 @@ for (const state of ["active agent", "unreadable foreground", "foreign foregroun
     if (state === "active agent") agent.mockResolvedValue({ agent: "codex" } as never);
     if (state === "shell becomes busy") processes.mockResolvedValueOnce(ready);
     try {
-      await expect(startAgentLauncher({ id: "codex-review", kind: "codex", command: "/fixture/launcher" }, "fixture", undefined, 30)).rejects.toMatchObject({ code: "agent_pane_busy" });
+      await expect(startAgentLauncher(launcher, "fixture", undefined, 30)).rejects.toMatchObject({ code: "agent_pane_busy" });
       expect(input).not.toHaveBeenCalled();
     } finally {
       agent.mockRestore(); processes.mockRestore(); input.mockRestore();
+      rmSync(stateDir, { recursive: true, force: true });
     }
   });
 }
