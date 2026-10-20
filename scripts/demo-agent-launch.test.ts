@@ -55,11 +55,11 @@ it("saves distinct demo launchers without randomUUID on an HTTP preview", async 
   const saved = new Map(["window", "location", "PushManager", "crypto"].map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
   try {
     const storage = new Map<string, string>();
-    Object.defineProperty(globalThis, "crypto", { configurable: true, value: {} });
     (globalThis as any).location = new URL("http://demo.test/");
     (globalThis as any).window = { fetch, WebSocket, EventSource: class {}, localStorage: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value) } };
     const transport = "../site/demo/transport.ts?saved-launcher-http";
     await import(transport);
+    Object.defineProperty(globalThis, "crypto", { configurable: true, value: {} });
     const demo = (globalThis as any).window;
     const entries: any[] = [];
     for (let index = 0; index < 2; index++) {
