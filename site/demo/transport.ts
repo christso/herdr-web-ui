@@ -33,8 +33,7 @@ import terminalFixture from "./fixtures/terminal.json";
 const DEMO_VERSION = "demo";
 const demoAgents: AgentKind[] = agentsFixture.agents.map((agent) => ({ ...agent,
   ...(["codex", "omp"].includes(agent.kind) ? { profiles: [{ id: "compound-engineering", label: "compound-engineering" }, { id: "review", label: "review" }] } : {}),
-  ...(SAVED_LAUNCHER_KINDS.includes(agent.kind) ? { saved_launchers: true } : {}),
-  ...(["codex", "omp", "pi", "claude"].includes(agent.kind) ? { launchers: [{ id: `${agent.kind}-compound`, label: `${agent.kind}-compound` }] } : {}),
+  ...(SAVED_LAUNCHER_KINDS.includes(agent.kind) ? { saved_launchers: true, launcher_search: true } : {}),
 }));
 let demoSavedLaunchers: SavedAgentLauncher[] = [];
 let demoLauncherSequence = 0;
@@ -544,6 +543,10 @@ async function route(url: URL, method: string, init: RequestInit | undefined, in
   if (path === "/api/machines") return json({ machines });
   if (path === "/api/session") return json({ snapshot: snapshot() });
   if (path === "/api/agents") return json({ agents: demoAgentCatalog() });
+  if (path === "/api/agents/launchers/search") {
+    const prefix = query.get("q") ?? "";
+    return json({ names: prefix ? ["claude", "codex", "codex-compound", "omp", "pi", "research", "research.js"].filter((name) => name.startsWith(prefix)).slice(0, 20) : [] });
+  }
   if (path === "/api/agents/launchers") {
     if (method === "GET") return json({ launchers: demoSavedLaunchers });
     const id = query.get("id");

@@ -106,7 +106,8 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("keeps 
     const codex = (await catalog.json() as { agents: AgentKind[] }).agents.find((entry) => entry.kind === "codex")!;
     expect(codex.installed).toBeTrue();
     expect(codex.profiles).toContainEqual({ id: "research", label: "research" });
-    expect(codex.launchers).toContainEqual({ id: "codex-discovered", label: "codex-discovered" });
+    expect(codex.launchers).toBeUndefined();
+    expect(codex.launcher_search).toBeTrue();
     const management = await request(base, "/api/agents/launchers");
     expect((await management.json()).error.code).toBe("launcher_store_unavailable");
     for (const route of ["workspace", "tab", "worktree"]) {
@@ -245,4 +246,39 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("preser
     for (const workspace of owned) await herdr.herdrRpc("worktree.remove", { workspace_id: workspace, force: true }).catch(() => undefined);
     await herdr.workspaceClose(source.workspace.workspace_id).catch(() => undefined);
   }
+}, 30_000);
+
+it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("authorizes executable search before direct, alias and remote forwarding with accepted slashes", async () => {
+  const localDir = join(root, "search-local"), remoteDir = join(root, "search-remote"), cookie = watch(localDir);
+  const marker = join(root, "must-not-run");
+  writeFileSync(join(root, "bin/research.js"), `#!/bin/sh\ntouch '${marker}'`, { mode: 0o700 });
+  const remote = server(remoteDir, { machines: false, registerBridge: true });
+  const bridgeToken = JSON.parse(readFileSync(descriptorPath(), "utf8")).token as string;
+  const endpoint = spyOn(MachineManager.prototype, "endpoint").mockReturnValue({ url: remote, token: bridgeToken });
+  let forwarded = 0;
+  const tracking = spyOn(globalThis, "fetch").mockImplementation(Object.assign(async (url: RequestInfo | URL, init?: RequestInit) => {
+    if (String(url).startsWith(remote)) { forwarded++; expect(new Headers(init?.headers).get("authorization")).toBe(`Bearer ${bridgeToken}`); }
+    return nativeFetch(url, init);
+  }, { preconnect: nativeFetch.preconnect }));
+  const local = server(localDir);
+  try {
+    for (const route of ["/api/agents/launchers/search", "/api/machines/local/agents/launchers/search", "/api/machines/remote/agents/launchers/search"]) {
+      for (const slash of ["", "/"]) {
+        const path = `${route}${slash}?q=research`;
+        const success = await request(local, path);
+        expect(success.status).toBe(200);
+        expect(await success.json()).toEqual({ names: ["research.js"] });
+        const before = forwarded;
+        const denied = await request(local, path, "GET", undefined, { authorization: "", cookie });
+        expect(denied.status).toBe(403); expect((await denied.json()).error.code).toBe("read_only");
+        const cross = await request(local, path, "GET", undefined, { origin: "https://other.invalid" });
+        expect(cross.status).toBe(403); expect((await cross.json()).error.code).toBe("invalid_origin");
+        expect(forwarded).toBe(before);
+      }
+    }
+    expect(forwarded).toBe(2);
+    expect(existsSync(marker)).toBeFalse();
+    expect(new SavedLauncherStore(localDir).get()).toEqual([]);
+    expect(new SavedLauncherStore(remoteDir).get()).toEqual([]);
+  } finally { tracking.mockRestore(); endpoint.mockRestore(); }
 }, 30_000);

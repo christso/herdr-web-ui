@@ -6,6 +6,13 @@
  * braces keep their English names.
  */
 export const KO: Record<string, string> = {
+  "Use executable: {command}": "실행 파일 사용: {command}",
+  "Searching executables…": "실행 파일 검색 중…",
+  "Could not search this PC. Enter an executable or try again.": "이 PC를 검색할 수 없습니다. 실행 파일을 입력하거나 다시 시도하세요.",
+  "No matching executables. You can enter a command or full path.": "일치하는 실행 파일이 없습니다. 명령어나 전체 경로를 입력할 수 있습니다.",
+  "Select a launcher or use an executable, then save it.": "런처를 선택하거나 실행 파일을 지정한 뒤 저장하세요.",
+  "Executables · opens editor": "실행 파일 · 편집기 열기",
+  "Cancel search": "검색 취소",
   "Launcher name": "런처 이름",
   "Cancel launcher": "런처 취소",
   "Add launcher": "런처 추가",

@@ -34,7 +34,7 @@ export async function handleWorkspaceRequest(request: Request, url: URL, pathnam
     if (typeof agent.launcher === "string" && agent.launcher.startsWith("saved:")) {
       return savedLaunchers.select(agent.kind as string, agent.launcher);
     }
-    return selectedAgentLaunch(discoverAgentLaunches(), agent.kind as string, agent.profile as string | undefined, agent.launcher as string | undefined);
+    return selectedAgentLaunch(discoverAgentLaunches({ legacyLaunchers: agent.launcher !== undefined }), agent.kind as string, agent.profile as string | undefined, agent.launcher as string | undefined);
   };
   if (pathname === "/api/workspace/directories" && request.method === "POST") {
     let payload: unknown;

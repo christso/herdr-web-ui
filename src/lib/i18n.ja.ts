@@ -8,6 +8,13 @@
  * in English. Placeholders in braces keep their English names.
  */
 export const JA: Record<string, string> = {
+  "Use executable: {command}": "実行ファイルを使用: {command}",
+  "Searching executables…": "実行ファイルを検索中…",
+  "Could not search this PC. Enter an executable or try again.": "このPCを検索できません。実行ファイルを入力するか、再試行してください。",
+  "No matching executables. You can enter a command or full path.": "一致する実行ファイルがありません。コマンド名またはフルパスを入力できます。",
+  "Select a launcher or use an executable, then save it.": "ランチャーを選択するか、実行ファイルを指定して保存してください。",
+  "Executables · opens editor": "実行ファイル · エディターを開く",
+  "Cancel search": "検索をキャンセル",
   "Launcher name": "ランチャー名",
   "Cancel launcher": "ランチャーをキャンセル",
   "Add launcher": "ランチャーを追加",

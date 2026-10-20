@@ -35,7 +35,8 @@ it.skipIf(process.platform === "win32")("HTTP discovery only exposes exact profi
   expect(text).not.toContain("secret-fixed-argument");
   const codex = JSON.parse(text).agents.find((agent: { kind: string }) => agent.kind === "codex");
   expect(codex.profiles).toEqual([{ id: "private", label: "private" }]);
-  expect(codex.launchers).toEqual([{ id: "codex-private", label: "codex-private" }]);
+  expect(codex.launchers).toBeUndefined();
+  expect(codex.launcher_search).toBeTrue();
 });
 it.skipIf(process.platform === "win32")("keeps canonical installed availability separate from valid wrapper availability", async () => {
   const path = process.env["PATH"];
@@ -44,7 +45,7 @@ it.skipIf(process.platform === "win32")("keeps canonical installed availability 
     chmodSync(join(stateDir, "codex"), 0o644);
     const response = await fetch(`${base}/api/agents`);
     const catalog = await response.json();
-    expect(catalog.agents.find((agent: { kind: string }) => agent.kind === "codex")).toMatchObject({ installed: false, launchers: [{ id: "codex-private", label: "codex-private" }] });
+    expect(catalog.agents.find((agent: { kind: string }) => agent.kind === "codex")).toMatchObject({ installed: false, saved_launchers: true, launcher_search: true });
   } finally { chmodSync(join(stateDir, "codex"), 0o755); process.env["PATH"] = path; }
 });
 it.skipIf(process.platform === "win32")("refuses unknown, mismatched and request-argument profiles before any creation", async () => {

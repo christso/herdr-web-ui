@@ -1,3 +1,4 @@
+import { LauncherSearch, handleLauncherSearchRequest } from "./launcher-search.ts";
 import { agentExecutable, discoverAgentLaunches, launchSummaries } from "./agent-profiles.ts";
 import { SAVED_LAUNCHER_KINDS, type SavedAgentLauncher } from "../shared/agent-launchers.ts";
 import { handleSavedLaunchersRequest, SavedLauncherStore, savedLaunchersSupported } from "./saved-launchers.ts";
@@ -471,6 +472,7 @@ export function createServer(
   /** paired devices (server/devices.ts) and the PC's Tailscale login: the two ways in besides the token and this PC itself */
   const devices = new DeviceStore(options.stateDir ?? defaultStateDir());
   const preferences = new PreferenceStore(options.stateDir ?? defaultStateDir());
+  const launcherSearch = new LauncherSearch();
   const savedLaunchers = new SavedLauncherStore(options.stateDir ?? defaultStateDir());
   const cliProxy = options.cliProxy ?? new CLIProxyService(options.stateDir ?? defaultStateDir());
   const cliProxyRoutes = new CLIProxyRoutes(cliProxy);
@@ -1794,7 +1796,7 @@ export function createServer(
       const url = new URL(request.url);
       let { pathname } = url;
       const bridgeAuthorized = isAuthenticated(request, bridgeToken);
-      const bridgePath = pathname === "/api/bridge" || pathname === "/api/session" || pathname === "/api/agents" || pathname === "/api/agents/launchers" || pathname === "/api/agent/rename" || pathname === "/api/integrations" || pathname === "/api/plugins/actions" || pathname === "/api/plugin/action" || pathname.startsWith("/api/pane/") || pathname.startsWith("/api/workspace/") || pathname.startsWith("/api/worktree/") || pathname.startsWith("/api/tab/") || pathname === "/api/layout/ratio" || pathname.startsWith("/api/fs/") || pathname === "/ws";
+      const bridgePath = pathname === "/api/bridge" || pathname === "/api/session" || pathname === "/api/agents" || pathname === "/api/agents/launchers" || /^\/api\/agents\/launchers\/search\/?$/.test(pathname) || pathname === "/api/agent/rename" || pathname === "/api/integrations" || pathname === "/api/plugins/actions" || pathname === "/api/plugin/action" || pathname.startsWith("/api/pane/") || pathname.startsWith("/api/workspace/") || pathname.startsWith("/api/worktree/") || pathname.startsWith("/api/tab/") || pathname === "/api/layout/ratio" || pathname.startsWith("/api/fs/") || pathname === "/ws";
       const ip = bunServer.requestIP(request);
       const loopback = ip !== null && isLoopbackAddress(ip.address);
       const forwarded = cameThroughProxy(request.headers);
@@ -1860,7 +1862,8 @@ export function createServer(
       const repositoryDiff = /^\/api\/(?:machines\/[^/]+\/)?workspace\/diff\//.test(pathname);
       // Unlike the public catalog, management reads expose executable paths and arguments.
       // Match before local aliases or remote forwarding so neither can upgrade a watcher.
-      const launcherDefinitions = /^\/api\/(?:machines\/[^/]+\/)?agents\/launchers\/?$/.test(pathname);
+      const launcherDefinitions = /^\/api\/(?:machines\/[^/]+\/)?agents\/launchers(?:\/search)?\/?$/.test(pathname);
+      if (/^\/api\/(?:machines\/[^/]+\/)?agents\/launchers\/search\/?$/.test(pathname) && !sameOrigin(request)) return jsonResponse({ error: { code: "invalid_origin", message: "Use PC controls from this app" } }, 403);
       if (readOnly && (fileRead || directoryListing || repositoryDiff || launcherDefinitions || mutating && !ownPreferences)) {
         return jsonResponse({ error: { code: "read_only", message: "this device can only watch" } }, 403);
       }
@@ -2019,7 +2022,7 @@ export function createServer(
               const named = launchSummaries(choices.profiles, kind);
               const launchers = [...launchSummaries(choices.launchers, kind), ...saved.filter((entry) => entry.kind === kind).map(({ id, label }) => ({ id, label, saved: true }))];
               return { kind, label: AGENT_LABELS[kind] ?? kind, installed: agentExecutable(kind) !== null,
-                ...(canSaveLaunchers && SAVED_LAUNCHER_KINDS.includes(kind) ? { saved_launchers: true } : {}),
+                ...(canSaveLaunchers && SAVED_LAUNCHER_KINDS.includes(kind) ? { saved_launchers: true, launcher_search: true } : {}),
                 ...(named.length > 0 ? { profiles: named } : {}), ...(launchers.length > 0 ? { launchers } : {}) };
             })
             .sort((left, right) => left.label.localeCompare(right.label) || left.kind.localeCompare(right.kind));
@@ -2028,6 +2031,8 @@ export function createServer(
           return errorResponse(error);
         }
       }
+
+      if (/^\/api\/agents\/launchers\/search\/?$/.test(pathname)) return handleLauncherSearchRequest(request, url, launcherSearch);
 
       if (pathname === "/api/agents/launchers") return handleSavedLaunchersRequest(request, url, savedLaunchers);
 

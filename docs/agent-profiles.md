@@ -1,16 +1,16 @@
 # Native profiles and launchers
 
 New workspace, New tab and New worktree discover the selected PC's existing
-Codex and Oh My Pi profiles and installed Codex, Oh My Pi, Pi and Claude Code shell wrappers.
+Codex and Oh My Pi profiles. Launcher searches executable names on that PC as you type.
 No Herdr agent catalog is needed. SSH bridges discover on the remote PC.
 
 Choose the underlying **Agent** first. **Launcher → Default** uses the ordinary
 agent launch. With Default selected, **Profile** offers exact native profile IDs,
-without display aliases. Choosing a custom Launcher, such as `codex-compound`,
-hides Profile: the wrapper owns its own profile, environment and arguments.
+without display aliases. Choosing a custom Launcher
+hides Profile: the launcher owns its own profile, environment and arguments.
 Profile is hidden when no profiles exist. On a supported PC, Launcher and **Add launcher**
 remain available even when nothing was discovered or the ordinary agent is not installed.
-If the ordinary agent is unavailable, select a discovered or saved launcher explicitly
+If the ordinary agent is unavailable, save and select a custom launcher explicitly
 before starting; Default stays unavailable.
 
 ## Saved definitions
@@ -20,7 +20,7 @@ kind (Codex, Oh My Pi, Pi or Claude Code), an executable and optional individual
 Use a command name on the bridge's PATH, an absolute path, or a path starting with `~/`.
 Each argument field represents one argument, including any spaces; do not add shell quoting.
 Shell syntax and environment substitutions are not expanded. An interpreter or compiled
-launcher can be registered without the discovery prefixes or shell-script restriction below.
+launcher can be saved without a naming convention or shell-script restriction.
 Saving checks the executable without running it; it installs nothing and creates no wrapper.
 
 Saved choices appear in their own Launcher group, with a short ID beside the display name
@@ -34,7 +34,7 @@ beside shared preferences. The connection server uses `HERDR_WEB_STATE_DIR` when
 SSH bridges use their persistent `<bridge descriptor>.state` directory. The version-1 document
 contains `launchers`, each with `id`, `kind`, `label`, `executable` and `args`. Writes replace
 the document atomically; malformed saved state is preserved and reported rather than overwritten.
-Unreadable saved state does not hide ordinary agents, native profiles or discovered wrappers;
+Unreadable saved state does not hide ordinary agents, native profiles or executable search;
 saved management and launches still report the repair error.
 Definitions survive restart and are shared by every connected browser. Reopen a creation
 dialog to load another browser's changes. Browser storage is not the source of truth.
@@ -68,23 +68,41 @@ On Linux and macOS, native profile discovery uses:
   directory only; named profiles use their native root.
 - Pi: no native Profile field, because Pi core has no `--profile` flag.
   An installed wrapper can select its own `PI_CODING_AGENT_DIR` instead.
-- Claude Code: configuration launchers can supply `CLAUDE_CONFIG_DIR` or `--settings`.
-  They appear under Launcher, without inventing a native `--profile` option.
+- Claude Code: save a configuration launcher that supplies its own setup or `--settings` arguments,
+  without inventing a native `--profile` option.
 
 Native profile launches use the ordinary agent with fixed `--profile ID`
 arguments. Discovery reads native Codex TOML and OMP directory markers; it does
 not return configuration contents, authentication, paths or environment to the
 browser. These settings must be available to the bridge process on that PC.
 
-Launcher discovery checks absolute directories on the bridge's `PATH`, then
-`~/.local/bin`, `~/.bun/bin` and `~/bin`. It preserves executable search order
-and offers executable POSIX shell scripts named `codex-*`, `omp-*`, `pi-*` or `claude-*`.
-It skips binary helpers, other script interpreters, missing files and directories.
-Discovery never executes wrappers or interprets their bodies. The selected
-wrapper runs itself from its resolved host path, in the created pane's directory.
-Discovery is independent of saved definitions. It does not register executables automatically.
-The saved-launcher editor supplies executable and argument values only, without an environment
-or secret editor and without changing the agent's global configuration.
+On current Linux/macOS bridges, Launcher offers Default and saved labels without automatically
+cataloging wrappers. Type to filter those labels and request executable name suggestions from the
+selected PC. Suggestions use a case-sensitive prefix of actual executable names in absolute PATH
+directories, then `~/.local/bin`, `~/.bun/bin` and `~/bin`. Names are deduplicated and limited to 20.
+Shell aliases/functions and non-executable files are excluded; script format and name prefixes do
+not matter. No candidate is executed, sourced or probed for help. Full-path completion is not added.
+
+Selecting a suggestion or **Use executable: …** opens the existing editor with name and executable
+prefilled. You can enter an absolute or `~/` path even when no suggestion matches. Adjust the name
+and individual arguments and explicitly **Save launcher**; then the outer Start/Create launches it.
+Typing and selecting suggestions never saves or runs them. Uncommitted search text blocks creation;
+select a launcher or cancel search to continue. Arrow keys and Enter choose a row; Escape cancels
+search without closing the dialog. IME confirmation remains input, not a selection or submission.
+
+`GET /api/agents/launchers/search?q=prefix` returns `{ names: string[] }` to controlling devices only,
+including local aliases and remote forwarding. Each bridge owns a shared metadata cache keyed by
+home and search paths, refreshed on demand ten seconds after the previous refresh completes.
+Concurrent requests share a refresh, with at most 16 filesystem checks in flight. Typing is debounced
+by 180ms and superseded requests are canceled. Saving and launching always revalidate independently.
+No per-keystroke SSH process starts: requests use the existing PC bridge connection.
+
+The catalog advertises `launcher_search` separately from `saved_launchers`. Older bridges retain
+their existing saved/manual and legacy choices without receiving unsupported search requests.
+Current bridges still accept explicit old prefix-based shell-wrapper IDs through the creation API,
+resolving those only when requested. They never import or register those wrappers automatically.
+The editor supplies executable and argument values only, without an environment or secret editor
+and without changing the agent's global configuration.
 
 Choices are read on every dialog opening and revalidated before creating a
 workspace, tab or worktree. A native profile and custom Launcher cannot be combined.

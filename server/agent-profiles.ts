@@ -66,7 +66,7 @@ function executableShell(path: string): string | null {
   finally { if (fd !== undefined) closeSync(fd); }
 }
 
-export function discoverAgentLaunches({ home = homedir(), env = process.env, platform = process.platform }: { home?: string; env?: NodeJS.ProcessEnv; platform?: string } = {}): AgentLaunches {
+export function discoverAgentLaunches({ home = homedir(), env = process.env, platform = process.platform, legacyLaunchers = false }: { home?: string; env?: NodeJS.ProcessEnv; platform?: string; legacyLaunchers?: boolean } = {}): AgentLaunches {
   if (platform !== "linux" && platform !== "darwin") return { profiles: [], launchers: [] };
   const profiles: NativeProfile[] = [];
   const codexHome = env["CODEX_HOME"] ? resolve(env["CODEX_HOME"]) : join(home, ".codex");
@@ -87,7 +87,7 @@ export function discoverAgentLaunches({ home = homedir(), env = process.env, pla
   for (const id of names(ompProfiles)) if (ompId(id) && directory(join(ompProfiles, id, "agent"))) profiles.push({ kind: "omp", id });
   const launchers: AgentLauncher[] = [];
   const seen = new Set<string>();
-  for (const path of executableSearchPaths(home, env)) {
+  for (const path of legacyLaunchers ? executableSearchPaths(home, env) : []) {
     for (const id of names(path)) {
       const kind = KINDS.find((kind) => id.startsWith(`${kind}-`));
       if (!kind || !/^[a-z]+-[A-Za-z0-9][A-Za-z0-9._+-]*$/.test(id) || seen.has(id)) continue;

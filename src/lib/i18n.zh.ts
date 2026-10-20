@@ -10,6 +10,13 @@
  * Placeholders in braces keep their English names.
  */
 export const ZH: Record<string, string> = {
+  "Use executable: {command}": "使用可执行文件：{command}",
+  "Searching executables…": "正在搜索可执行文件…",
+  "Could not search this PC. Enter an executable or try again.": "无法搜索此电脑。请输入可执行文件或重试。",
+  "No matching executables. You can enter a command or full path.": "没有匹配的可执行文件。可以输入命令名或完整路径。",
+  "Select a launcher or use an executable, then save it.": "选择启动器，或指定可执行文件后保存。",
+  "Executables · opens editor": "可执行文件 · 打开编辑器",
+  "Cancel search": "取消搜索",
   "Launcher name": "启动器名称",
   "Cancel launcher": "取消启动器",
   "Add launcher": "添加启动器",

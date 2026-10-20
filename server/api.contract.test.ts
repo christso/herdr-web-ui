@@ -1175,7 +1175,7 @@ describe("workspace and discovery endpoints", () => {
       expect(offered).toContainEqual({ kind: "omo", label: "OmO", installed: true });
       expect(offered).toContainEqual({ kind: "gjc", label: "Gajae Code", installed: true });
       // Claude is always listed; this isolated home has neither its command nor a launcher.
-      expect(offered).toContainEqual({ kind: "claude", label: "Claude Code", installed: false, ...(process.platform === "linux" || process.platform === "darwin" ? { saved_launchers: true } : {}) });
+      expect(offered).toContainEqual({ kind: "claude", label: "Claude Code", installed: false, ...(process.platform === "linux" || process.platform === "darwin" ? { saved_launchers: true, launcher_search: true } : {}) });
     } finally {
       process.env["PATH"] = path;
       if (codexHome === undefined) delete process.env["CODEX_HOME"]; else process.env["CODEX_HOME"] = codexHome;
