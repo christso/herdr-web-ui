@@ -2,13 +2,13 @@ import { expect, it, spyOn } from "bun:test";
 import { createOmpProcessProbe, processStartTicks } from "./omp-process.ts";
 
 it.skipIf(process.platform !== "linux")("reads a live process's arguments and only the environment omp lookups need", async () => {
-  const env = { PATH: process.env["PATH"] ?? "", OMP_PROFILE: "personal", TMUX: "/tmp/tmux-1/default,1,0", TMUX_PANE: "%3", SECRET_TOKEN: "do-not-pass" };
+  const env = { PATH: process.env["PATH"] ?? "", OMP_PROFILE: "personal", PI_CONFIG_DIR: ".custom-omp", TMUX: "/tmp/tmux-1/default,1,0", TMUX_PANE: "%3", SECRET_TOKEN: "do-not-pass" };
   const target = Bun.spawn([process.execPath, "-e", "setInterval(() => {}, 1000)"], { env, stdin: "ignore", stdout: "ignore", stderr: "ignore" });
   try {
     const read = createOmpProcessProbe();
     const result = await read(target.pid, true);
     expect(result?.argv.length).toBeGreaterThan(0);
-    expect([...result?.environ ?? []].sort()).toEqual(["OMP_PROFILE=personal", "TMUX=/tmp/tmux-1/default,1,0", "TMUX_PANE=%3"]);
+    expect([...result?.environ ?? []].sort()).toEqual(["OMP_PROFILE=personal", "PI_CONFIG_DIR=.custom-omp", "TMUX=/tmp/tmux-1/default,1,0", "TMUX_PANE=%3"]);
     expect((await createOmpProcessProbe()(target.pid, false))?.argv).toEqual([]);
     expect(await read(2147483647, true)).toBeNull();
   } finally { target.kill(); await target.exited; }

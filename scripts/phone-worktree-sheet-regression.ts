@@ -67,6 +67,29 @@ try {
     assert.equal(await list.count(), 1, "the list stays open");
     console.log("PASS a stroke down on a phone sheet's open agent list scrolls the list, not the sheet");
 
+    if (process.platform !== "win32") {
+      await page.route("**/api/agents/launchers/search?*", (route) => route.fulfill({ json: { names: ["research-fixture"] } }));
+      await list.getByText("Codex", { exact: true }).click();
+      const launcher = sheet.getByRole("combobox", { name: "Launcher", exact: true });
+      await launcher.click();
+      await sheet.getByRole("button", { name: "Add launcher…", exact: true }).click();
+      const executable = sheet.getByRole("combobox", { name: "Executable", exact: true });
+      await executable.fill("research");
+      await sheet.getByRole("option", { name: "research-fixture", exact: true }).waitFor();
+      await page.keyboard.press("Tab");
+      assert.equal(await sheet.getByRole("button", { name: "Add argument", exact: true }).evaluate((node) => node === document.activeElement), true, "Tab leaves Executable on a persistent editor control, never a removed suggestion");
+      await page.keyboard.press("Shift+Tab");
+      assert.equal(await executable.evaluate((node) => node === document.activeElement), true);
+      await page.keyboard.press("Shift+Tab");
+      assert.equal(await sheet.getByLabel("Launcher name", { exact: true }).evaluate((node) => node === document.activeElement), true);
+      assert.equal(await executable.getAttribute("aria-expanded"), "false");
+      await page.keyboard.press("Escape");
+      assert.equal(await launcher.evaluate((node) => node === document.activeElement), true);
+      await page.keyboard.press("Shift+Tab");
+      assert.equal(await agent.evaluate((node) => node === document.activeElement), true);
+      assert.equal(await launcher.getAttribute("aria-expanded"), "false");
+      await agent.click();
+    }
     await page.getByRole("option", { name: "Shell", exact: true }).click();
     await sheet.getByRole("button", { name: "Create worktree", exact: true }).click();
     const opened = await (await created).json() as { workspace_id: string; pane_id: string };

@@ -1,0 +1,74 @@
+.launcher-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.launcher-editor {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.launcher-editor .input { width: 100%; min-width: 0; }
+.launcher-editor .field-hint { margin: 0; }
+
+.launcher-argument {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.launcher-argument .input { flex: 1; }
+.launcher-argument .btn { flex: none; }
+
+.launcher-error {
+  color: var(--status-blocked);
+  overflow-wrap: anywhere;
+  margin: var(--space-2) 0 0;
+}
+
+.launcher-combobox { min-width: 0; }
+.launcher-combobox > .input { width: 100%; }
+.launcher-popup {
+  position: fixed;
+  z-index: var(--z-popover);
+  box-shadow: var(--shadow-pop);
+  display: flex;
+  flex-direction: column;
+  max-height: 12rem;
+  overflow: hidden;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+}
+.launcher-choices { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.launcher-search-status { flex: none; padding: var(--space-2) var(--space-3); }
+.launcher-choice-heading { padding: var(--space-2) var(--space-3) 0; }
+.launcher-choice {
+  display: block;
+  width: 100%;
+  flex: none;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.launcher-choice.active { background: var(--bg-hover); }
+.launcher-choice[aria-selected="true"] { font-weight: 600; }
+.launcher-choice[aria-disabled="true"] { color: var(--text-dim); cursor: default; }
+
+.launcher-selector { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); text-align: start; cursor: pointer; }
+.launcher-selector span { min-width: 0; overflow-wrap: anywhere; }
+.launcher-selector svg { flex: none; width: var(--icon-size); height: var(--icon-size); }
+.launcher-footer { flex: none; border-top: var(--hairline) solid var(--border); }
+.launcher-footer .launcher-choice:hover { background: var(--bg-hover); }

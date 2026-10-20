@@ -3,7 +3,7 @@
  * Herdr deliberately omits recognized agents' argv on WSL to avoid blocking procfs reads.
  * Recover process identity outside the bridge, then use the open transcript or breadcrumb.
  */
-import { join } from "node:path";
+import nodePath, { join, type PlatformPath } from "node:path";
 
 import { paneProcessInfo } from "./herdr/client.ts";
 import { heldTranscript, runsAgent } from "./gjc-runtime.ts";
@@ -16,11 +16,15 @@ export function isOmpProcess(argv: readonly string[]): boolean {
   return runsAgent(argv, OMP_EXECUTABLE);
 }
 
+export function ompConfigRoot(home: string, configDir = process.env["PI_CONFIG_DIR"] || ".omp", paths: PlatformPath = nodePath): string {
+  return paths.join(home, configDir || ".omp");
+}
+
 /**
  * The agent directory one omp process keeps its sessions and terminal breadcrumbs in:
- * ~/.omp/agent, or ~/.omp/profiles/<name>/agent under `--profile <name>` or OMP_PROFILE (the flag
- * wins). null when `--session-dir` moved its sessions anywhere at all, or the profile name could
- * leave ~/.omp/profiles.
+ * <config root>/agent, or <config root>/profiles/<name>/agent under `--profile <name>` or
+ * OMP_PROFILE (the flag wins). PI_CONFIG_DIR chooses the native root under home, defaulting to
+ * .omp. null when `--session-dir` moved its sessions anywhere at all, or the name leaves profiles.
  */
 export function ompAgentDir(argv: readonly string[], environ: readonly string[] | null, home: string): string | null {
   let profile = environ?.find((word) => word.startsWith("OMP_PROFILE="))?.slice(12) || null;
@@ -30,8 +34,10 @@ export function ompAgentDir(argv: readonly string[], environ: readonly string[] 
     if (word === "--profile") profile = argv[at + 1] ?? "";
     else if (word.startsWith("--profile=")) profile = word.slice(10);
   }
-  if (profile === null) return join(home, ".omp", "agent");
-  return /^[\w.-]+$/.test(profile) && profile !== "." && profile !== ".." ? join(home, ".omp", "profiles", profile, "agent") : null;
+  const configDir = environ === null ? process.env["PI_CONFIG_DIR"] : environ.find((word) => word.startsWith("PI_CONFIG_DIR="))?.slice(14);
+  const root = ompConfigRoot(home, configDir || ".omp");
+  if (profile === null) return join(root, "agent");
+  return /^[\w.-]+$/.test(profile) && profile !== "." && profile !== ".." ? join(root, "profiles", profile, "agent") : null;
 }
 
 /** The transcript the pane's omp process holds open or last pointed its terminal breadcrumb at, or null. */

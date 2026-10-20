@@ -1,7 +1,8 @@
-import { describe, expect, it, beforeAll, afterAll } from "bun:test";
+import { describe, expect, it, beforeAll, afterAll, spyOn } from "bun:test";
 import { Database } from "bun:sqlite";
 import { appendFileSync, chmodSync, copyFileSync, mkdirSync, mkdtempSync, existsSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, unlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import * as os from "node:os";
 import { basename, join } from "node:path";
 import { ConversationMonitor } from "./conversation-monitor.ts";
 import { createServer } from "./index.ts";
@@ -1168,18 +1169,23 @@ describe("workspace and discovery endpoints", () => {
   it("offers omo and gjc, which herdr cannot start, exactly when they are on PATH", async () => {
     const bin = mkdtempSync(join(tmpdir(), "herdr-web-ui-shell-agents-"));
     const path = process.env["PATH"];
+    const codexHome = process.env["CODEX_HOME"];
+    const home = spyOn(os, "homedir").mockReturnValue(bin);
     const kinds = async () => ((await (await fetch(`${base()}/api/agents`)).json()) as { agents: AgentKind[] }).agents;
     try {
       process.env["PATH"] = bin;
+      process.env["CODEX_HOME"] = join(bin, "codex-home");
       expect((await kinds()).map((agent) => agent.kind)).not.toContain("gjc");
       for (const name of ["omo", "gjc"]) writeFileSync(join(bin, name), "#!/bin/sh\n", { mode: 0o755 });
       const offered = await kinds();
       expect(offered).toContainEqual({ kind: "omo", label: "OmO", installed: true });
       expect(offered).toContainEqual({ kind: "gjc", label: "Gajae Code", installed: true });
-      // claude is always listed, and said to be missing where its command is not on PATH
-      expect(offered).toContainEqual({ kind: "claude", label: "Claude Code", installed: false });
+      // Claude is always listed; this isolated home has neither its command nor a launcher.
+      expect(offered).toContainEqual({ kind: "claude", label: "Claude Code", installed: false, ...(process.platform === "linux" || process.platform === "darwin" ? { saved_launchers: true, launcher_search: true } : {}) });
     } finally {
       process.env["PATH"] = path;
+      if (codexHome === undefined) delete process.env["CODEX_HOME"]; else process.env["CODEX_HOME"] = codexHome;
+      home.mockRestore();
       rmSync(bin, { recursive: true, force: true });
     }
   });

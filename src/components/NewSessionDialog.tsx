@@ -6,6 +6,8 @@ import "./NewSessionDialog.css";
 import type { AgentKind } from "../../shared/protocol.ts";
 import { MAX_LABEL_CHARS } from "../../shared/labels.ts";
 import { ApiError } from "../lib/api.ts";
+import { withSavedLaunchers } from "../lib/agentLaunchers.ts";
+import { AgentLaunchPicker } from "./AgentLaunchPicker.tsx";
 import { AgentPicker, rememberAgent, rememberedAgent } from "./AgentPicker.tsx";
 import { DirectoryBrowser, homeRelative } from "./DirectoryBrowser.tsx";
 import { RecentFolderChips } from "./RecentFolderChips.tsx";
@@ -65,7 +67,13 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
   const { settings } = useSettings();
   const machineId = useMachineId();
   const { createTab, createWorkspace, fetchAgentKinds } = useMachineApi();
-  const [agents, setAgents] = useState<AgentKind[]>([]);
+  const [catalog, setCatalog] = useState<
+    { machineId: string; status: "ready"; agents: AgentKind[] }
+    | { machineId: string; status: "failed" }
+    | null
+  >(null);
+  const [editingLauncher, setEditingLauncher] = useState(false);
+  const [launchChoice, setLaunchChoice] = useState<{ machineId: string; kind: string; profile: string; launcher: string } | null>(null);
   const [agentKind, setAgentKind] = useState(rememberedAgent);
   const [cwd, setCwd] = useState(defaultCwd ?? "");
   const [name, setName] = useState("");
@@ -97,6 +105,9 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
 
   // The previous launch may have left disabled fields: reset them before the opening paint.
   useLayoutEffect(() => {
+    setCatalog(null);
+    setLaunchChoice(null);
+    setEditingLauncher(false);
     if (!open) return;
     const filled = prefillRef.current;
     setCwd(filled?.cwd ?? defaultCwdRef.current ?? "");
@@ -113,17 +124,17 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
     void fetchAgentKinds()
       .then((next) => {
         if (cancelled) return;
-        setAgents(next);
+        setCatalog({ machineId, status: "ready", agents: next });
         // a linked agent herdr does not offer gives way to the last one picked, as an unknown remembered one does to a shell
         if (stored && !next.some((agent) => agent.kind === stored)) setAgentKind(stored !== remembered && next.some((agent) => agent.kind === remembered) ? remembered : "");
       })
       .catch((reason: unknown) => {
-        if (!cancelled) setError(userErrorMessage(reason));
+        if (!cancelled) { setError(userErrorMessage(reason)); setAgentKind(""); setCatalog({ machineId, status: "failed" }); }
       });
     return () => {
       cancelled = true;
     };
-  }, [open]);
+  }, [open, machineId, fetchAgentKinds]);
 
   useEffect(() => {
     if (!open || !onDraft) return;
@@ -145,18 +156,25 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
 
   if (!open) return null;
 
+  const catalogReady = catalog?.machineId === machineId && catalog.status === "ready";
+  const agents = catalogReady ? catalog.agents : [];
   const selectedAgent = agents.find((agent) => agent.kind === agentKind);
+  const scopedChoice = launchChoice?.machineId === machineId && launchChoice.kind === agentKind ? launchChoice : null;
+  const launcher = selectedAgent?.launchers?.some((entry) => entry.id === scopedChoice?.launcher) ? scopedChoice!.launcher : "";
+  const profile = !launcher && selectedAgent?.profiles?.some((entry) => entry.id === scopedChoice?.profile) ? scopedChoice!.profile : "";
   const pendingLabel = selectedAgent ? t("Starting {agent}… up to 60s", { agent: selectedAgent.label }) : t("Starting shell…");
+  const loadingCatalog = catalog?.machineId !== machineId;
+  const missingLauncher = selectedAgent?.installed === false && !launcher;
   const fieldsDisabled = pending || createdPaneId !== null;
 
   const startWorkspace = async (directory: string): Promise<void> => {
-    if (pending) return;
+    if (pending || editingLauncher || loadingCatalog || missingLauncher || (agentKind !== "" && !catalogReady)) return;
     if (createdPaneId !== null) { onCreated(createdPaneId, false); return; }
     setPending(true);
     setError(null);
     try {
       rememberAgent(agentKind);
-      const agent = launchAgent(agentKind, settings);
+      const agent = profile || launcher ? { kind: agentKind, ...(profile ? { profile } : {}), ...(launcher ? { launcher } : {}) } : launchAgent(agentKind, settings);
       // a tab keeps the workspace's folder, which the dialog shows and does not ask for
       const result = tab
         ? await createTab({ workspace_id: tab.workspaceId, cwd: tab.cwd, label: name.trim() || null, agent })
@@ -198,8 +216,12 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
         <div className="modal-body">
           <div className="field">
             <span className="field-label" id="new-session-agent">{t("Agent")}</span>
-            <AgentPicker ref={firstFieldRef} agents={agents} value={agentKind} disabled={fieldsDisabled} labelledBy="new-session-agent" onChange={setAgentKind} />
+            <AgentPicker ref={firstFieldRef} agents={agents} value={agentKind} disabled={fieldsDisabled} labelledBy="new-session-agent" onChange={(kind) => { setAgentKind(kind); setLaunchChoice(null); }} />
           </div>
+          <AgentLaunchPicker key={`${machineId}:${agentKind}`} onEditingChange={setEditingLauncher} onLaunchersChange={(definitions, selected) => {
+                setCatalog((current) => current?.machineId === machineId && current.status === "ready" ? { ...current, agents: withSavedLaunchers(current.agents, definitions) } : current);
+                setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher: selected });
+              }} agent={selectedAgent} profile={profile} launcher={launcher} disabled={fieldsDisabled} onProfileChange={(profile) => setLaunchChoice({ machineId, kind: agentKind, profile, launcher: "" })} onLauncherChange={(launcher) => setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher })} />
           {tab ? (
             <div className="field">
               <span className="field-label">{t("Directory")}</span>
@@ -249,7 +271,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
         </div>
         <footer className="modal-footer">
           <button type="button" className="btn btn-ghost" disabled={pending} onClick={onClose}>{t("Cancel")}</button>
-          <button type="submit" className="btn btn-primary" disabled={pending}>{t(pending ? "Starting…" : createdPaneId !== null ? "Open" : "Start")}</button>
+          <button type="submit" className="btn btn-primary" disabled={pending || editingLauncher || ((loadingCatalog || missingLauncher) && createdPaneId === null)}>{t(pending ? "Starting…" : createdPaneId !== null ? "Open" : "Start")}</button>
         </footer>
       </form>
     </div>

@@ -831,9 +831,23 @@ export interface RepoDiffFilePatch {
 export interface AgentKind {
   kind: string;
   label: string;
-  /** whether the server finds the agent's command (its kind) on its PATH; absent from an older bridge */
+  /** whether the server finds the agent's command on PATH or in a supported client's ordinary user-bin directories; absent from an older bridge */
   installed?: boolean;
+  /** Native profile IDs discovered on this PC. */
+  profiles?: { id: string; label: string }[];
+  /** Saved definitions (and legacy bridge wrappers); command details are never catalog data. */
+  launchers?: { id: string; label: string; saved?: boolean }[];
+  /** This PC supports saving and running custom launchers; absent on older bridges. */
+  saved_launchers?: boolean;
+  /** This PC supports on-demand executable name search; independent of saved-launcher support. */
+  launcher_search?: boolean;
 }
+
+/** GET /api/agents/launchers/search?q=prefix. Control only; at most 20 executable names. */
+export interface LauncherSearchResponse { names: string[] }
+
+/** GET/POST/PUT/DELETE /api/agents/launchers (PUT/DELETE identify one with ?id=). Control only. */
+export type { SavedAgentLauncher, SavedAgentLauncherInput } from "./agent-launchers.ts";
 
 /**
  * GET /api/integrations: one of herdr's built-in agent integrations (`integration.list`, herdr
@@ -859,7 +873,7 @@ export interface IntegrationsResponse {
 export interface CreateWorkspaceRequest {
   cwd?: string | null;
   label?: string | null;
-  agent?: { kind: string; name?: string; args?: string[] } | null;
+  agent?: { kind: string; name?: string; args?: string[]; profile?: string; launcher?: string } | null;
 }
 
 /** POST /api/tab/move: the boundary is counted BEFORE removing the source tab. */
@@ -884,7 +898,7 @@ export interface CreateWorktreeRequest {
   /** an absolute checkout path; herdr's `<worktrees.directory>/<repo>/<branch>` when absent */
   path?: string | null;
   /** started in the new workspace's root pane, as /api/workspace/create starts one */
-  agent?: { kind: string; name?: string; args?: string[] } | null;
+  agent?: { kind: string; name?: string; args?: string[]; profile?: string; launcher?: string } | null;
 }
 
 /** POST /api/worktree/open: one of path or branch names the checkout. */

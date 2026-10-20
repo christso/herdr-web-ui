@@ -45,7 +45,7 @@ import { AmbiguousClaudeStore, claudeProcessSession, claudeTranscriptFile, defau
 import { forgetGjcState, gjcPidUnderShell, gjcTranscriptForPane, isGjcProcess, storeRelative } from "./gjc-runtime.ts";
 import { omoProcessIdentity, omoSessionForPane, processEnviron } from "./omo.ts";
 import { processStartedAt } from "./process-start.ts";
-import { ompHeldTranscript } from "./omp.ts";
+import { ompConfigRoot, ompHeldTranscript } from "./omp.ts";
 import { forgetOpencodeRead, forgetOpencodeState, OPENCODE_IMAGE_REF, opencodeConversation, opencodeDatabasePath, opencodeImage, opencodeReadKey, opencodeSessionId, opencodeToolOutput } from "./opencode.ts";
 import { piTranscriptInStore, piTranscriptPath, unwrittenSession } from "./pi.ts";
 import { defaultDevinDbPath, DevinHistoryUnavailable, devinConversation, forgetDevinState } from "./devin.ts";
@@ -1280,15 +1280,16 @@ export async function claudePaneSession(pane: HerdrPane): Promise<{ path: string
 
 /**
  * The store holding the omp session herdr reports, or null unless the path is a transcript
- * inside one of the user's own stores: ~/.omp/agent/sessions, or the one `omp --profile <name>`
- * keeps at ~/.omp/profiles/<name>/agent/sessions. A Windows PC reports it in its own form
- * (drive letter, backslashes).
+ * inside the configured native root's agent/sessions or profiles/<name>/agent/sessions.
+ * PI_CONFIG_DIR chooses that root under home, defaulting to .omp. A Windows PC reports it in
+ * its own form (drive letter, backslashes).
  */
 export function ompSessionStore(value: unknown, home: string, paths: PlatformPath = nodePath): string | null {
   if (typeof value !== "string" || !value.endsWith(".jsonl") || !paths.isAbsolute(value) || !paths.isAbsolute(home)) return null;
-  const store = paths.join(home, ".omp", "agent", "sessions");
+  const root = ompConfigRoot(home, undefined, paths);
+  const store = paths.join(root, "agent", "sessions");
   if (storeRelative(store, value, paths)) return store;
-  const profiles = paths.join(home, ".omp", "profiles");
+  const profiles = paths.join(root, "profiles");
   const parts = storeRelative(profiles, value, paths);
   if (!parts || parts.length < 4 || parts[1] !== "agent" || parts[2] !== "sessions") return null;
   return paths.join(profiles, parts[0]!, "agent", "sessions");

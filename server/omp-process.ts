@@ -12,7 +12,7 @@ try {
   const fields = stat.slice(stat.lastIndexOf(")") + 2).split(" ");
   if (/^[DZXx]$/.test(fields[0])) process.exit(1);
   const read = name => fs.readFileSync("/proc/" + pid + "/" + name, "utf8").split("\\0").filter(Boolean);
-  const environ = read("environ").filter(word => /^(?:OMP_PROFILE|TMUX|TMUX_PANE)=/.test(word));
+  const environ = read("environ").filter(word => /^(?:OMP_PROFILE|PI_CONFIG_DIR|TMUX|TMUX_PANE)=/.test(word));
   console.log(JSON.stringify({ start: fields[19], argv: process.argv[2] === "1" ? read("cmdline") : [], environ }));
 } catch { process.exit(1); }
 `;

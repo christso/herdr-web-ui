@@ -757,3 +757,5 @@ input regression matrix.
 | [`docs/`](.) | Remote PCs, updates, flow control, chat audit, brand assets and README media (`docs/media/`) |
 | [`site/`](../site/) | The website, built by `scripts/build-site.ts` and deployed by GitHub Pages |
 | [`DESIGN.md`](../DESIGN.md) | Design tokens and UI conventions |
+
+Native profiles and saved launchers are scoped to each PC; see [Native profiles and launchers](agent-profiles.md).

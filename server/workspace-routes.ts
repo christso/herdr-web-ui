@@ -9,12 +9,14 @@ import { homedir } from "node:os";
 import { isAbsolute, resolve } from "node:path";
 import { MAX_LABEL_CHARS } from "../shared/labels.ts";
 import type { DirectoryCreated, ServerMessage, TabMoved } from "../shared/protocol.ts";
+import { discoverAgentLaunches, selectedAgentLaunch, type AgentLaunch } from "./agent-profiles.ts";
 import { agentFault, agentLaunch, type AgentPayload } from "./agent-launch.ts";
 import { createDirectory, listDirectories } from "./directories.ts";
 import { HerdrError, tabClose, tabCreate, tabMove, tabRename, workspaceClose, workspaceCreate, workspaceMove, workspaceRename, worktreeCreate, worktreeList, worktreeOpen, worktreeRemove } from "./herdr/client.ts";
 import { badRequest, conflictResponse, errorResponse, isJsonObject, jsonResponse, readJsonObject } from "./http.ts";
 import { paneContext } from "./pane-context.ts";
 import { repoDiffResponse } from "./repo-diff.ts";
+import type { SavedLauncherStore } from "./saved-launchers.ts";
 
 function expandedDirectory(value: string): string | null {
   const expanded = value === "~" ? homedir() : value.startsWith("~/") ? resolve(homedir(), value.slice(2)) : resolve(value);
@@ -26,7 +28,14 @@ function expandedDirectory(value: string): string | null {
 }
 
 /** The answer for a workspace route, or null when the path is not one. */
-export async function handleWorkspaceRequest(request: Request, url: URL, pathname: string, bunServer: Pick<Server<unknown>, "timeout">, broadcastAll: (message: ServerMessage) => void): Promise<Response | null> {
+export async function handleWorkspaceRequest(request: Request, url: URL, pathname: string, bunServer: Pick<Server<unknown>, "timeout">, broadcastAll: (message: ServerMessage) => void, savedLaunchers: SavedLauncherStore): Promise<Response | null> {
+  const selectLaunch = (agent: AgentPayload): AgentLaunch | undefined => {
+    if (agent.profile === undefined && agent.launcher === undefined) return undefined;
+    if (typeof agent.launcher === "string" && agent.launcher.startsWith("saved:")) {
+      return savedLaunchers.select(agent.kind as string, agent.launcher);
+    }
+    return selectedAgentLaunch(discoverAgentLaunches({ legacyLaunchers: agent.launcher !== undefined }), agent.kind as string, agent.profile as string | undefined, agent.launcher as string | undefined);
+  };
   if (pathname === "/api/workspace/directories" && request.method === "POST") {
     let payload: unknown;
     try { payload = await request.json(); } catch { return badRequest("invalid_json", "request body must be JSON"); }
@@ -86,7 +95,7 @@ export async function handleWorkspaceRequest(request: Request, url: URL, pathnam
   if (pathname === "/api/workspace/create" || pathname === "/api/tab/create") {
     const inWorkspace = pathname === "/api/tab/create";
     if (request.method !== "POST") return badRequest("method_not_allowed", "use POST");
-    const payload = await readJsonObject<{ workspace_id?: unknown; cwd?: unknown; label?: unknown; agent?: { kind?: unknown; name?: unknown; args?: unknown } | null }>(request);
+    const payload = await readJsonObject<{ workspace_id?: unknown; cwd?: unknown; label?: unknown; agent?: AgentPayload | null }>(request);
     if (payload instanceof Response) return payload;
     if (inWorkspace && (typeof payload.workspace_id !== "string" || payload.workspace_id.trim() === "")) {
       return badRequest("missing_workspace_id", "workspace_id is required");
@@ -108,6 +117,8 @@ export async function handleWorkspaceRequest(request: Request, url: URL, pathnam
     }
     const fault = agentFault(payload.agent);
     if (fault !== null) return badRequest("invalid_agent", fault);
+    try { if (payload.agent && (payload.agent.profile !== undefined || payload.agent.launcher !== undefined)) selectLaunch(payload.agent); }
+    catch (error) { return badRequest(error instanceof HerdrError ? error.code : "invalid_agent_profile", error instanceof Error ? error.message : "Profile unavailable"); }
     // agent.start can legitimately take a minute; Bun's default idle timeout is shorter.
     if (payload.agent) bunServer.timeout(request, 75);
     try {
@@ -122,7 +133,7 @@ export async function handleWorkspaceRequest(request: Request, url: URL, pathnam
       if (!payload.agent) {
         return jsonResponse({ workspace_id: workspaceId, pane_id: created.root_pane.pane_id, agent_started: false });
       }
-      return jsonResponse({ workspace_id: workspaceId, pane_id: created.root_pane.pane_id, ...(await agentLaunch(created.root_pane.pane_id, payload.agent)) });
+      return jsonResponse({ workspace_id: workspaceId, pane_id: created.root_pane.pane_id, ...(await agentLaunch(created.root_pane.pane_id, payload.agent, () => selectLaunch(payload.agent!))) });
     } catch (error) {
       return errorResponse(error);
     }
@@ -195,6 +206,8 @@ export async function handleWorkspaceRequest(request: Request, url: URL, pathnam
     const agent = creating ? payload.agent ?? undefined : undefined;
     const fault = agentFault(agent);
     if (fault !== null) return badRequest("invalid_agent", fault);
+    try { if (agent && (agent.profile !== undefined || agent.launcher !== undefined)) selectLaunch(agent); }
+    catch (error) { return badRequest(error instanceof HerdrError ? error.code : "invalid_agent_profile", error instanceof Error ? error.message : "Profile unavailable"); }
     if (creating && branch === undefined) return badRequest("missing_branch", "branch is required");
     if (!creating && branch === undefined && path === undefined) return badRequest("missing_target", "path or branch is required");
     // a checkout of a large repository can take a while; Bun's default idle timeout is shorter.
@@ -220,7 +233,7 @@ export async function handleWorkspaceRequest(request: Request, url: URL, pathnam
         already_open: opened.already_open === true,
         path: opened.worktree.path,
         branch: opened.worktree.branch,
-        ...(agent ? await agentLaunch(opened.root_pane.pane_id, agent) : {}),
+        ...(agent ? await agentLaunch(opened.root_pane.pane_id, agent, () => selectLaunch(agent)) : {}),
       });
     } catch (error) {
       // git's own words for a branch that has no commit yet (a folder just `git init`ed): with no

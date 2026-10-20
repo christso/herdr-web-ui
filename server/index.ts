@@ -1,3 +1,7 @@
+import { LauncherSearch, handleLauncherSearchRequest } from "./launcher-search.ts";
+import { agentExecutable, discoverAgentLaunches, launchSummaries } from "./agent-profiles.ts";
+import { SAVED_LAUNCHER_KINDS, type SavedAgentLauncher } from "../shared/agent-launchers.ts";
+import { handleSavedLaunchersRequest, SavedLauncherStore, savedLaunchersSupported } from "./saved-launchers.ts";
 import { handleWorkspaceRequest } from "./workspace-routes.ts";
 import { connectionData, createCore, type SocketData } from "./core/index.ts";
 import { ClientConnectionLog } from "./client-connection-log.ts";
@@ -216,6 +220,8 @@ export function createServer(
   /** paired devices (server/devices.ts) and the PC's Tailscale login: the two ways in besides the token and this PC itself */
   const devices = new DeviceStore(options.stateDir ?? defaultStateDir());
   const preferences = new PreferenceStore(options.stateDir ?? defaultStateDir());
+  const launcherSearch = new LauncherSearch();
+  const savedLaunchers = new SavedLauncherStore(options.stateDir ?? defaultStateDir());
   const herdrSidebar = new HerdrSidebarConfig(options.herdrConfigPath ?? herdrConfigPath());
   const cliProxy = options.cliProxy ?? new CLIProxyService(options.stateDir ?? defaultStateDir());
   const cliProxyRoutes = new CLIProxyRoutes(cliProxy);
@@ -267,7 +273,7 @@ export function createServer(
       const url = new URL(request.url);
       let { pathname } = url;
       const bridgeAuthorized = isAuthenticated(request, bridgeToken);
-      const bridgePath = pathname === "/api/bridge" || pathname === "/api/session" || pathname === "/api/agents" || pathname === "/api/agent/rename" || pathname === "/api/integrations" || pathname === "/api/plugins/actions" || pathname === "/api/plugin/action" || pathname.startsWith("/api/pane/") || pathname.startsWith("/api/workspace/") || pathname.startsWith("/api/worktree/") || pathname.startsWith("/api/tab/") || pathname === "/api/layout/ratio" || pathname.startsWith("/api/fs/") || pathname === "/ws";
+      const bridgePath = pathname === "/api/bridge" || pathname === "/api/session" || pathname === "/api/agents" || pathname === "/api/agents/launchers" || /^\/api\/agents\/launchers\/search\/?$/.test(pathname) || pathname === "/api/agent/rename" || pathname === "/api/integrations" || pathname === "/api/plugins/actions" || pathname === "/api/plugin/action" || pathname.startsWith("/api/pane/") || pathname.startsWith("/api/workspace/") || pathname.startsWith("/api/worktree/") || pathname.startsWith("/api/tab/") || pathname === "/api/layout/ratio" || pathname.startsWith("/api/fs/") || pathname === "/ws";
       const ip = bunServer.requestIP(request);
       const loopback = ip !== null && isLoopbackAddress(ip.address);
       const forwarded = cameThroughProxy(request.headers);
@@ -332,7 +338,11 @@ export function createServer(
       const ownPreferences = pathname === "/api/auth" || pathname === "/api/push/subscribe" || pathname === "/api/connection-diagnostics";
       // a repository's changes are file contents too: the patch of a credential file is that file
       const repositoryDiff = /^\/api\/(?:machines\/[^/]+\/)?workspace\/diff\//.test(pathname);
-      if (readOnly && (fileRead || directoryListing || repositoryDiff || mutating && !ownPreferences)) {
+      // Management reads expose executable paths and arguments. Authorize before aliases
+      // or forwarding so neither can upgrade a watching device.
+      const launcherDefinitions = /^\/api\/(?:machines\/[^/]+\/)?agents\/launchers(?:\/search)?\/?$/.test(pathname);
+      if (/^\/api\/(?:machines\/[^/]+\/)?agents\/launchers\/search\/?$/.test(pathname) && !sameOrigin(request)) return jsonResponse({ error: { code: "invalid_origin", message: "Use PC controls from this app" } }, 403);
+      if (readOnly && (fileRead || directoryListing || repositoryDiff || launcherDefinitions || mutating && !ownPreferences)) {
         return jsonResponse({ error: { code: "read_only", message: "this device can only watch" } }, 403);
       }
 
@@ -478,20 +488,37 @@ export function createServer(
       if (pathname === "/api/agents") {
         if (request.method !== "GET") return badRequest("method_not_allowed", "use GET");
         try {
+          const choices = discoverAgentLaunches();
+          const canSaveLaunchers = savedLaunchersSupported();
+          let saved: SavedAgentLauncher[] = [];
+          try { if (canSaveLaunchers) saved = savedLaunchers.get(); }
+          catch (error) { if (!(error instanceof HerdrError) || error.code !== "launcher_store_unavailable") throw error; }
           const kinds = new Set((await agentManifests()).manifests.map((manifest) => manifest.agent));
+          if (canSaveLaunchers) for (const kind of SAVED_LAUNCHER_KINDS) kinds.add(kind);
           kinds.add("omp");
           kinds.add("claude");
           // not herdr kinds: offered where this server can run them (see shell-agent.ts)
           for (const kind of Object.keys(SHELL_AGENTS)) if (shellAgentExecutable(kind)) kinds.add(kind);
+          for (const choice of [...choices.profiles, ...choices.launchers]) kinds.add(choice.kind);
           const agents: AgentKind[] = [...kinds]
             // an agent's command is its kind; the pane's shell may carry another PATH, as for omo and gjc above
-            .map((kind) => ({ kind, label: AGENT_LABELS[kind] ?? kind, installed: Bun.which(kind, { PATH: process.env["PATH"] ?? "" }) !== null }))
+            .map((kind) => {
+              const named = launchSummaries(choices.profiles, kind);
+              const launchers = [...launchSummaries(choices.launchers, kind), ...saved.filter((entry) => entry.kind === kind).map(({ id, label }) => ({ id, label, saved: true }))];
+              return { kind, label: AGENT_LABELS[kind] ?? kind, installed: agentExecutable(kind) !== null,
+                ...(canSaveLaunchers && SAVED_LAUNCHER_KINDS.includes(kind) ? { saved_launchers: true, launcher_search: true } : {}),
+                ...(named.length > 0 ? { profiles: named } : {}), ...(launchers.length > 0 ? { launchers } : {}) };
+            })
             .sort((left, right) => left.label.localeCompare(right.label) || left.kind.localeCompare(right.kind));
           return jsonResponse({ agents });
         } catch (error) {
           return errorResponse(error);
         }
       }
+
+      if (/^\/api\/agents\/launchers\/search\/?$/.test(pathname)) return handleLauncherSearchRequest(request, url, launcherSearch);
+
+      if (pathname === "/api/agents/launchers") return handleSavedLaunchersRequest(request, url, savedLaunchers);
 
       // read only: installing one changes an agent's own hooks, which stays the user's call in a terminal
       if (pathname === "/api/integrations") {
@@ -537,7 +564,7 @@ export function createServer(
         return media ?? jsonResponse({ error: { code: "not_found", message: "no such page media" } }, 404);
       }
 
-      const workspaceResponse = await handleWorkspaceRequest(request, url, pathname, bunServer, broadcastAll);
+      const workspaceResponse = await handleWorkspaceRequest(request, url, pathname, bunServer, broadcastAll, savedLaunchers);
       if (workspaceResponse) return workspaceResponse;
 
       if (pathname === "/api/plugins/actions") {

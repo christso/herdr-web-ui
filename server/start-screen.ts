@@ -67,3 +67,14 @@ export function readsStartScreen(source: ConversationResponse["source"]): boolea
 export function startScreenMetadata(source: ConversationResponse["source"], screen: string): Screen {
   return SCREENS[source]?.(screen.split("\n")) ?? NOTHING;
 }
+
+/** A Codex title and untouched composer, without submitted messages or a resumed answer. */
+export function codexEmptyComposer(screen: string): boolean {
+  const header = screen.lastIndexOf("OpenAI Codex (v");
+  if (header < 0) return false;
+  const lines = screen.slice(header).split(/\r?\n/);
+  return lines.filter((line) => /^›(?:[ \t]|$)/.test(line)).length === 1
+    && !lines.some((line) => /^•(?:[ \t]|$)/.test(line)
+      && !/^• (?:Model changed|Unrecognized command|Working directory changed)(?:[ \t]|$)/.test(line))
+    && !lines.some((line) => /Worked for|Resume a previous session/.test(line));
+}

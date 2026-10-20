@@ -3,21 +3,27 @@
  * of `agent`, then the start, which retries a pane whose shell is not up yet and a name another
  * agent took. Workspace, tab and worktree creation share it.
  */
+import { codexEmptyComposer } from "./start-screen.ts";
+import { type AgentLaunch } from "./agent-profiles.ts";
 import { freeAgentName } from "./agent-name.ts";
 import { launchedAgents } from "./launched-agents.ts";
-import { isShellAgentKind, startShellAgent } from "./shell-agent.ts";
-import { agentStart, HerdrError, sessionSnapshot } from "./herdr/client.ts";
+import { isShellAgentKind, startShellAgent, startAgentLauncher } from "./shell-agent.ts";
+import { agentStart, HerdrError, paneRead, sessionSnapshot } from "./herdr/client.ts";
 
-export type AgentPayload = { kind?: unknown; name?: unknown; args?: unknown };
+export type AgentPayload = { kind?: unknown; name?: unknown; args?: unknown; profile?: unknown; launcher?: unknown };
 
 /** What is wrong with a request's `agent`, in the API's words; null when it can be started. */
 export function agentFault(agent: AgentPayload | undefined): string | null {
   if (agent === undefined) return null;
-  if (typeof agent !== "object" || typeof agent.kind !== "string" || agent.kind.length === 0) return "agent.kind is required";
+  if (agent === null || typeof agent !== "object" || typeof agent.kind !== "string" || agent.kind.length === 0) return "agent.kind is required";
   if ((agent.name !== undefined && typeof agent.name !== "string")
     || (agent.args !== undefined && (!Array.isArray(agent.args) || !agent.args.every((arg) => typeof arg === "string")))) {
     return "agent.name must be a string and agent.args must be an array of strings";
   }
+  if (agent.profile !== undefined && (typeof agent.profile !== "string" || agent.profile.length === 0)) return "agent.profile must be a nonempty string";
+  if (agent.launcher !== undefined && (typeof agent.launcher !== "string" || agent.launcher.length === 0)) return "agent.launcher must be a nonempty string";
+  if (agent.profile !== undefined && agent.launcher !== undefined) return "Choose a native profile or a launcher, not both";
+  if ((agent.profile !== undefined || agent.launcher !== undefined) && (agent.args !== undefined || Object.keys(agent).some((key) => !["kind", "name", "profile", "launcher"].includes(key)))) return "Profiles and launchers accept only kind, name and their discovered selection";
   return null;
 }
 
@@ -25,11 +31,15 @@ export function agentFault(agent: AgentPayload | undefined): string | null {
  * Starts a checked `agent` in a pane herdr just made. A failure is answered, not thrown: the
  * workspace, tab or worktree around the pane is there either way.
  */
-export async function agentLaunch(paneId: string, agent: AgentPayload): Promise<{ agent_started: true } | { agent_started: false; error: { code: string; message: string } }> {
+export async function agentLaunch(paneId: string, agent: AgentPayload, resolveLaunch?: () => AgentLaunch | undefined): Promise<{ agent_started: true } | { agent_started: false; error: { code: string; message: string } }> {
   try {
+    // Re-read a saved definition after checkout creation, before any launch input. A removal
+    // or missing executable now returns the existing partial-creation result with its pane.
+    const launch = resolveLaunch?.();
     const kind = agent.kind as string;
-    const args = agent.args as string[] | undefined;
-    if (isShellAgentKind(kind)) await startShellAgent(kind, paneId, args);
+    const args = launch && "profile" in launch ? ["--profile", launch.profile] : agent.args as string[] | undefined;
+    if (launch && "command" in launch) await startAgentLauncher(launch, paneId, typeof agent.name === "string" ? agent.name : undefined);
+    else if (isShellAgentKind(kind)) await startShellAgent(kind, paneId, args);
     else {
       const given = typeof agent.name === "string" && agent.name.length > 0 ? agent.name : null;
       // herdr refuses a name another agent holds. Two creations at once can pick the same
@@ -57,7 +67,9 @@ export async function agentLaunch(paneId: string, agent: AgentPayload): Promise<
         }
       }
     }
-    launchedAgents.launched(paneId, kind);
+    const emptyLauncher = launch && "command" in launch && kind === "codex"
+      && await paneRead({ paneId, source: "visible", format: "text" }).then((read) => codexEmptyComposer(read.text), () => false);
+    if (!launch || "profile" in launch || emptyLauncher) launchedAgents.launched(paneId, kind);
     return { agent_started: true };
   } catch (error) {
     return {

@@ -1,7 +1,7 @@
 import { afterEach, expect, it } from "bun:test";
 import { MAX_ATTACHMENT_BYTES } from "../../shared/attachments.ts";
 import { NOTICE_VERSION } from "../../shared/telemetry.ts";
-import { AttachmentTooLargeError, ApiError, changeTelemetry, fetchTelemetry, uploadPaneImage } from "./api.ts";
+import { AttachmentTooLargeError, ApiError, changeTelemetry, fetchAgentKinds, fetchTelemetry, uploadPaneImage } from "./api.ts";
 import { DEFAULT_SETTINGS, telemetrySettingsSnapshot } from "./settings.ts";
 
 const realFetch = globalThis.fetch;
@@ -84,4 +84,26 @@ it("treats a missing telemetry route as unavailable for reads and an API error f
   const error = await changeTelemetry({ enabled: true }).catch((failure: unknown) => failure);
   expect(error).toBeInstanceOf(ApiError);
   expect(error).toMatchObject({ status: 404, code: "not_found" });
+});
+
+
+it("offers a profile-only installed kind while preserving its unavailable Default and machine scope", async () => {
+  const profiles = [{ id: "review", label: "Review" }];
+  let requested = "";
+  globalThis.fetch = (async (url: string) => {
+    requested = url;
+    return Response.json({ agents: [{ kind: "codex", label: "Codex", installed: false, profiles }, { kind: "pi", label: "Pi", installed: false }, { kind: "omp", label: "OMP", installed: true }] });
+  }) as typeof fetch;
+  expect(await fetchAgentKinds("remote-fixture")).toEqual([{ kind: "codex", label: "Codex", installed: false, profiles }, { kind: "omp", label: "OMP", installed: true }]);
+  expect(requested).toBe("/api/machines/remote-fixture/agents");
+});
+
+it("offers a supported launcher-only kind without making its unavailable Default installed", async () => {
+  const launchers = [{ id: "pi-review", label: "pi-review" }];
+  globalThis.fetch = (async (_url: string) => Response.json({ agents: [
+    { kind: "pi", label: "Pi", installed: false, launchers },
+    { kind: "claude", label: "Claude Code", installed: false },
+    { kind: "unsupported", label: "Unsupported", installed: false, launchers },
+  ] })) as typeof fetch;
+  expect(await fetchAgentKinds()).toEqual([{ kind: "pi", label: "Pi", installed: false, launchers }]);
 });
