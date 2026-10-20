@@ -1,0 +1,78 @@
+{
+  "source": "8203bdf57bd935a1fe4c0c6502a27be3f292d7d8",
+  "fixture": "site/demo/transport.ts and site/demo/fixtures from same source; in-browser fictional API only",
+  "scope": "Visual walkthrough only. In-browser fictional demo transport; no backend or execution correctness claim.",
+  "artifacts": [
+    {
+      "file": "launcher-only-desktop.mp4",
+      "bytes": 1358974,
+      "sha256": "5cd43e0c723947719d3e4dad6881cb21a68d7a17ba9b14ab80febfff4b6d5b96",
+      "format": "mov,mp4,m4a,3gp,3g2,mj2",
+      "durationSeconds": 37.68,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 900,
+          "pix_fmt": "yuv420p",
+          "r_frame_rate": "25/1"
+        }
+      ],
+      "faststart": true
+    },
+    {
+      "file": "launcher-only-phone.mp4",
+      "bytes": 607332,
+      "sha256": "5c7737db79ba211b326df38558097b2079818bbe7d6d364bb2e2b4eea861990f",
+      "format": "mov,mp4,m4a,3gp,3g2,mj2",
+      "durationSeconds": 35.64,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 390,
+          "height": 844,
+          "pix_fmt": "yuv420p",
+          "r_frame_rate": "25/1"
+        }
+      ],
+      "faststart": true
+    },
+    {
+      "file": "launcher-only-preview.gif",
+      "bytes": 3591539,
+      "sha256": "281b3615edbb35027fe0d0bb729a12f368121f07ab7911d72f0703ff0571ea1d",
+      "format": "gif",
+      "durationSeconds": 15.0,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "gif",
+          "width": 960,
+          "height": 675,
+          "pix_fmt": "bgra",
+          "r_frame_rate": "10/1"
+        }
+      ]
+    },
+    {
+      "file": "encoded-frames/desktop/02-editor.jpg",
+      "atSeconds": 14.5,
+      "bytes": 97279,
+      "sha256": "bcd61e9d7d46c9cab2a0634868b7886b9a26eb636ba478997d38dbd1ba9a5771"
+    },
+    {
+      "file": "encoded-frames/phone/02-editor.jpg",
+      "atSeconds": 14.437,
+      "bytes": 39809,
+      "sha256": "593b2834d616a6a3be0f514e7c0813c370d8fbc9d2c7ebd03704e8bccc624a94"
+    },
+    {
+      "file": "encoded-frames/phone/04-delete-confirmation.jpg",
+      "atSeconds": 22.465,
+      "bytes": 40962,
+      "sha256": "85e146ddfb895475be8395f303ca9189601bd3256337d597507ca0611bd80ecc"
+    }
+  ]
+}
