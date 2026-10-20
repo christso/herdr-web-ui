@@ -86,7 +86,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
       const active = document.activeElement;
       if (active && active !== document.body && !surface.current?.contains(active)) return;
       // the agent picker's open list takes this Escape: it closes the list, not the dialog
-      if (active?.getAttribute("aria-expanded") === "true") return;
+      if (active?.getAttribute("aria-expanded") === "true" || active?.closest(".launcher-popup, .launcher-editor")) return;
       event.stopPropagation();
       event.preventDefault();
       if (!pending) onClose();
