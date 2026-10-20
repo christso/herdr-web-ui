@@ -1,0 +1,82 @@
+{
+  "source_revision": "1e670c3d52ad08a1686564ab1ac86b36156f604e",
+  "media": [
+    {
+      "file": "launcher-editor-desktop.mp4",
+      "sha256": "1683623e538b5cb20b2e08e0152dc0dd06afbb29102ac7abaf0fe1f86b042f72",
+      "bytes": 908359,
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1280,
+            "height": 900,
+            "pix_fmt": "yuv420p"
+          }
+        ],
+        "format": {
+          "duration": "38.400000",
+          "size": "908359"
+        }
+      }
+    },
+    {
+      "file": "launcher-editor-phone.mp4",
+      "sha256": "1555e4cb1e99aaebe22a0449e84dfc6b43f3a742fdb77b044ab1d5d4cceae668",
+      "bytes": 400244,
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 390,
+            "height": 844,
+            "pix_fmt": "yuv420p"
+          }
+        ],
+        "format": {
+          "duration": "36.880000",
+          "size": "400244"
+        }
+      }
+    },
+    {
+      "file": "launcher-editor-preview.gif",
+      "sha256": "e6e1830ee05c52870c394e2f8fdfb97e11ea430c29c0a81a16293766a15e7f07",
+      "bytes": 3089230,
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "gif",
+            "width": 960,
+            "height": 675,
+            "pix_fmt": "bgra"
+          }
+        ],
+        "format": {
+          "duration": "15.000000",
+          "size": "3089230"
+        }
+      }
+    }
+  ],
+  "fixture_source": [
+    "site/demo/transport.ts",
+    "site/demo/fixtures"
+  ],
+  "capture": "Headless Chromium, fictional in-browser demo transport; desktop and mobile touch emulation",
+  "preview": "15 second excerpt assembled from desktop intervals 4\u20137, 10\u201314, 17\u201322 and 24\u201327 seconds; 10 fps, 960\u00d7675",
+  "inspected_frames": [
+    "desktop/mp4-frame-12s.png",
+    "phone/mp4-frame-11s.png",
+    "preview-frame-8s.png"
+  ],
+  "no_live_user_state": true,
+  "no_model_calls": true,
+  "audio": false
+}
