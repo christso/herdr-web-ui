@@ -124,6 +124,7 @@ export const ZH: Record<string, string> = {
   "Launcher": "启动器",
   "Choose a launcher to start {agent} on this PC.": "选择用于在此电脑上启动 {agent} 的启动器。",
   "Profile": "配置",
+  "This selection uses its own configuration instead of the launch mode in Settings.": "此选项使用自身的配置，而非“设置”中的启动模式。",
   "Default": "默认",
   "Password or PIN": "密码或 PIN",
   "Enter a single-line password or PIN.": "请输入不含换行的密码或 PIN。",

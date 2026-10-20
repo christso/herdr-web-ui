@@ -102,7 +102,13 @@ export function discoverAgentLaunches({ home = homedir(), env = process.env, pla
   const launchers: AgentLauncher[] = [];
   const seen = new Set<string>();
   for (const path of legacyLaunchers ? executableSearchPaths(home, env) : []) {
-    for (const id of names(path)) {
+    let entries: string[];
+    try { entries = names(path); }
+    catch (error) {
+      if (!(error instanceof HerdrError) || error.code !== "agent_discovery_failed") throw error;
+      continue;
+    }
+    for (const id of entries) {
       const kind = KINDS.find((kind) => id.startsWith(`${kind}-`));
       if (!kind || !/^[a-z]+-[A-Za-z0-9][A-Za-z0-9._+-]*$/.test(id) || seen.has(id)) continue;
       // Executable search precedence includes binary helpers: never substitute a later same-name script.

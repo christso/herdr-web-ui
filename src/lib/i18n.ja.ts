@@ -122,6 +122,7 @@ export const JA: Record<string, string> = {
   "Launcher": "ランチャー",
   "Choose a launcher to start {agent} on this PC.": "この PC で {agent} を起動するランチャーを選択してください。",
   "Profile": "プロファイル",
+  "This selection uses its own configuration instead of the launch mode in Settings.": "この選択では、設定の起動モードではなく、選択した項目自身の設定を使用します。",
   "Default": "既定",
   "Password or PIN": "パスワードまたは PIN",
   "Enter a single-line password or PIN.": "改行を含まないパスワードまたは PIN を入力してください。",

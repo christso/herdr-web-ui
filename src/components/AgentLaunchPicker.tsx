@@ -307,5 +307,6 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
         {agent?.profiles?.map((choice) => <option key={choice.id} value={choice.id}>{choice.id}</option>)}
       </select>
     </div>}
+    {Boolean(profile || launcher) && <p className="field-hint">{t("This selection uses its own configuration instead of the launch mode in Settings.")}</p>}
   </>;
 }

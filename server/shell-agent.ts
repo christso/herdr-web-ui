@@ -104,7 +104,7 @@ export function availableLauncherShell(info: NativeProcessInfo | undefined): Pan
   const processes = info?.foreground_processes;
   if (!pid || info?.foreground_process_group_id !== pid || !processes?.length || processes.some((entry) => entry.pid !== pid)) return null;
   const name = processes[0]!.name.split(/[\\/]/).pop()!.replace(/^-+/, "").replace(/\.exe$/, "").toLowerCase();
-  if (["sh", "bash", "dash", "zsh", "fish", "ksh", "mksh"].includes(name)) return "posix";
+  if (["sh", "bash", "dash", "zsh", "ksh", "mksh"].includes(name)) return "posix";
   // Other native shells have different quoting rules; offer launchers only where we can quote safely.
   return null;
 }
