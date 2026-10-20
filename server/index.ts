@@ -1,5 +1,5 @@
 import { LauncherSearch, handleLauncherSearchRequest } from "./launcher-search.ts";
-import { agentExecutable, discoverAgentLaunches, launchSummaries } from "./agent-profiles.ts";
+import { agentExecutable } from "./agent-launchers.ts";
 import { SAVED_LAUNCHER_KINDS, type SavedAgentLauncher } from "../shared/agent-launchers.ts";
 import { handleSavedLaunchersRequest, SavedLauncherStore, savedLaunchersSupported } from "./saved-launchers.ts";
 import { handleWorkspaceRequest } from "./workspace-routes.ts";
@@ -2004,7 +2004,6 @@ export function createServer(
       if (pathname === "/api/agents") {
         if (request.method !== "GET") return badRequest("method_not_allowed", "use GET");
         try {
-          const choices = discoverAgentLaunches();
           const canSaveLaunchers = savedLaunchersSupported();
           let saved: SavedAgentLauncher[] = [];
           try { if (canSaveLaunchers) saved = savedLaunchers.get(); }
@@ -2015,15 +2014,13 @@ export function createServer(
           kinds.add("claude");
           // not herdr kinds: offered where this server can run them (see shell-agent.ts)
           for (const kind of Object.keys(SHELL_AGENTS)) if (shellAgentExecutable(kind)) kinds.add(kind);
-          for (const choice of [...choices.profiles, ...choices.launchers]) kinds.add(choice.kind);
           const agents: AgentKind[] = [...kinds]
             // an agent's command is its kind; the pane's shell may carry another PATH, as for omo and gjc above
             .map((kind) => {
-              const named = launchSummaries(choices.profiles, kind);
-              const launchers = [...launchSummaries(choices.launchers, kind), ...saved.filter((entry) => entry.kind === kind).map(({ id, label }) => ({ id, label, saved: true }))];
+              const launchers = saved.filter((entry) => entry.kind === kind).map(({ id, label }) => ({ id, label }));
               return { kind, label: AGENT_LABELS[kind] ?? kind, installed: agentExecutable(kind) !== null,
                 ...(canSaveLaunchers && SAVED_LAUNCHER_KINDS.includes(kind) ? { saved_launchers: true, launcher_search: true } : {}),
-                ...(named.length > 0 ? { profiles: named } : {}), ...(launchers.length > 0 ? { launchers } : {}) };
+                ...(launchers.length > 0 ? { launchers } : {}) };
             })
             .sort((left, right) => left.label.localeCompare(right.label) || left.kind.localeCompare(right.kind));
           return jsonResponse({ agents });

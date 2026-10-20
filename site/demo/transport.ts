@@ -32,7 +32,6 @@ import terminalFixture from "./fixtures/terminal.json";
 
 const DEMO_VERSION = "demo";
 const demoAgents: AgentKind[] = agentsFixture.agents.map((agent) => ({ ...agent,
-  ...(["codex", "omp"].includes(agent.kind) ? { profiles: [{ id: "compound-engineering", label: "compound-engineering" }, { id: "review", label: "review" }] } : {}),
   ...(SAVED_LAUNCHER_KINDS.includes(agent.kind) ? { saved_launchers: true, launcher_search: true } : {}),
 }));
 let demoSavedLaunchers: SavedAgentLauncher[] = [];
@@ -41,11 +40,11 @@ const demoLauncherId = () => `saved:${globalThis.crypto?.randomUUID?.() ?? `${Da
 const demoAgentCatalog = () => withSavedLaunchers(demoAgents, demoSavedLaunchers);
 function demoLaunchFault(value: unknown): Response | null {
   if (value === null || typeof value !== "object") return null;
-  const agent = value as { kind?: unknown; profile?: unknown; launcher?: unknown; args?: unknown };
-  if (agent.profile === undefined && agent.launcher === undefined) return null;
-  if (agent.args !== undefined || (agent.profile !== undefined && agent.launcher !== undefined) || Object.keys(agent).some((key) => !["kind", "name", "profile", "launcher"].includes(key))
-    || (agent.launcher !== undefined ? !demoAgentCatalog().find((entry) => entry.kind === agent.kind)?.launchers?.some((launcher) => launcher.id === agent.launcher) : !demoAgentCatalog().find((entry) => entry.kind === agent.kind)?.profiles?.some((profile) => profile.id === agent.profile))) {
-    return error("invalid_agent_profile", "The selected agent profile is unavailable on this PC", 400);
+  const agent = value as { kind?: unknown; launcher?: unknown; args?: unknown };
+  if (agent.launcher === undefined) return null;
+  if (agent.args !== undefined || Object.keys(agent).some((key) => !["kind", "name", "launcher"].includes(key))
+    || !demoAgentCatalog().find((entry) => entry.kind === agent.kind)?.launchers?.some((launcher) => launcher.id === agent.launcher)) {
+    return error("invalid_agent_launcher", "The selected launcher is unavailable on this PC. Choose Default or reload the agent list.", 400);
   }
   return null;
 }
@@ -642,8 +641,8 @@ async function route(url: URL, method: string, init: RequestInit | undefined, in
       || (agent.args !== undefined && (!Array.isArray(agent.args) || !agent.args.every((arg) => typeof arg === "string"))))) {
       return error("invalid_agent", "agent.kind is required; agent.name must be a string and agent.args must be an array of strings", 400);
     }
-    const profileFault = demoLaunchFault(agent);
-    if (profileFault) return profileFault;
+    const launchFault = demoLaunchFault(agent);
+    if (launchFault) return launchFault;
     let checkout: Omit<WorktreeEntry, "open_workspace_id"> | undefined;
     if (creating) {
       const targetPath = checkoutPath ?? `/home/demo/.herdr/worktrees/${repo.repoName}/${branch}`;
@@ -1028,8 +1027,8 @@ async function route(url: URL, method: string, init: RequestInit | undefined, in
   }
   if (path === "/api/workspace/create") {
     const body = await bodyOf(init, input);
-    const profileFault = demoLaunchFault(body["agent"]);
-    if (profileFault) return profileFault;
+    const launchFault = demoLaunchFault(body["agent"]);
+    if (launchFault) return launchFault;
     const agent = (body["agent"] as { kind?: string } | null | undefined)?.kind ?? null;
     const cwd = String(body["cwd"] ?? "/home/demo/new-project");
     const label = String(body["label"] ?? "") || cwd.split("/").pop() || "new";
@@ -1039,8 +1038,8 @@ async function route(url: URL, method: string, init: RequestInit | undefined, in
   }
   if (path === "/api/tab/create") {
     const body = await bodyOf(init, input);
-    const profileFault = demoLaunchFault(body["agent"]);
-    if (profileFault) return profileFault;
+    const launchFault = demoLaunchFault(body["agent"]);
+    if (launchFault) return launchFault;
     const snap = snapshot();
     const workspace = snap.workspaces.find((w) => w.workspace_id === body["workspace_id"]);
     if (!workspace) return error("not_found", "no such workspace", 404);

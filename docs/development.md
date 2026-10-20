@@ -677,4 +677,4 @@ input regression matrix.
 | [`site/`](../site/) | The website, built by `scripts/build-site.ts` and deployed by GitHub Pages |
 | [`DESIGN.md`](../DESIGN.md) | Design tokens and UI conventions |
 
-Native profiles and installed shell launchers are discovered on each PC; see [Native profiles and launchers](agent-profiles.md).
+Saved launchers are scoped to each PC; see [Saved agent launchers](agent-launchers.md).

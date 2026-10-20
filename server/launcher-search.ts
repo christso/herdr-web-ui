@@ -3,7 +3,7 @@ import { access, readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { LauncherSearchResponse } from "../shared/protocol.ts";
-import { executableSearchPaths } from "./agent-profiles.ts";
+import { executableSearchPaths } from "./agent-launchers.ts";
 import { badRequest, jsonResponse } from "./http.ts";
 
 export class LauncherSearch {

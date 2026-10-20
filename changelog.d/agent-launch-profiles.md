@@ -1,8 +1,9 @@
 ### Added
-- Discover existing Codex and Oh My Pi native profile IDs and installed Codex, Oh My Pi, Pi and
-  Claude Code shell launchers on the selected PC when creating a workspace, tab or worktree on
-  Linux and macOS.
+- Choose saved agent launchers with individual CLI arguments when creating a workspace, tab or
+  worktree on Linux and macOS. Configure Codex or Oh My Pi profiles with separate `--profile`
+  and profile ID arguments.
 
 ### Fixed
-- Keep an agent's installed launchers available when its ordinary executable is missing; Default
-  stays unavailable until that executable is installed.
+- Keep saved launchers available when the ordinary executable is missing; Default stays
+  unavailable until that executable is installed.
+- Require a supported POSIX shell for custom launchers.

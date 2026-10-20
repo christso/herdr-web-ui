@@ -3,7 +3,7 @@ import { accessSync, constants, mkdirSync, readFileSync, renameSync, statSync, w
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { savedLauncherInput, type SavedAgentLauncher, type SavedAgentLauncherInput } from "../shared/agent-launchers.ts";
-import { executableSearchPaths, type AgentLauncher } from "./agent-profiles.ts";
+import { executableSearchPaths, type AgentLauncher } from "./agent-launchers.ts";
 import { HerdrError } from "./herdr/client.ts";
 import { badRequest, errorResponse, isJsonObject, jsonResponse } from "./http.ts";
 

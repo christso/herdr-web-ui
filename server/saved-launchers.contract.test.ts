@@ -27,9 +27,8 @@ beforeEach(() => {
   previousEnv = { PATH: process.env["PATH"], CODEX_HOME: process.env["CODEX_HOME"] };
   process.env["CODEX_HOME"] = join(root, "codex-home");
   mkdirSync(process.env["CODEX_HOME"]!);
-  writeFileSync(join(process.env["CODEX_HOME"]!, "config.toml"), "[profiles.research]\n");
   mkdirSync(join(root, "bin"));
-  writeFileSync(join(root, "bin/codex"), "#!/bin/sh\nprintf '%s\\n' '--profile <CONFIG_PROFILE>'\n", { mode: 0o700 });
+  writeFileSync(join(root, "bin/codex"), "#!/bin/sh\nexit 0\n", { mode: 0o700 });
   writeFileSync(join(root, "bin/codex-discovered"), "#!/bin/sh\nexit 0\n", { mode: 0o700 });
   process.env["PATH"] = `${join(root, "bin")}:${previousEnv.PATH ?? ""}`;
 });
@@ -105,7 +104,7 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("keeps 
     expect(catalog.status).toBe(200);
     const codex = (await catalog.json() as { agents: AgentKind[] }).agents.find((entry) => entry.kind === "codex")!;
     expect(codex.installed).toBeTrue();
-    expect(codex.profiles).toContainEqual({ id: "research", label: "research" });
+    expect(codex).not.toHaveProperty("profiles");
     expect(codex.launchers).toBeUndefined();
     expect(codex.launcher_search).toBeTrue();
     const management = await request(base, "/api/agents/launchers");
