@@ -11,17 +11,15 @@ import "./AgentLaunchPicker.css";
 
 interface Props {
   agent: AgentKind | undefined;
-  profile: string;
   launcher: string;
   disabled: boolean;
-  onProfileChange: (id: string) => void;
   onLauncherChange: (id: string) => void;
   onLaunchersChange: (launchers: SavedAgentLauncher[], selected: string) => void;
   onEditingChange: (editing: boolean) => void;
   onMutationChange?: (pending: boolean) => void;
 }
 
-export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfileChange, onLauncherChange, onLaunchersChange, onEditingChange, onMutationChange }: Props) {
+export function AgentLaunchPicker({ agent, launcher, disabled, onLauncherChange, onLaunchersChange, onEditingChange, onMutationChange }: Props) {
   const t = useT();
   const id = useId();
   const { fetchSavedLaunchers, saveAgentLauncher, deleteAgentLauncher, searchLauncherExecutables } = useMachineApi();
@@ -286,6 +284,7 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
             </div>
           </div>)}
           <p className="field-hint">{t("Each argument is one value. Spaces stay inside it; shell syntax is not expanded.")}</p>
+          {["codex", "omp"].includes(agent.kind) && <p className="field-hint">{t("For Codex or Oh My Pi profiles, add --profile and the profile ID as separate arguments.")}</p>}
           {editor.id && <div className="launcher-actions">
             <button ref={deleteButton} type="button" className={confirmDelete ? "btn btn-danger" : "btn btn-ghost"} disabled={disabled || busy} onClick={() => { closePopup(); if (confirmDelete) void remove(); else setConfirmDelete(true); }}>{t(confirmDelete ? "Delete launcher?" : "Delete")}</button>
             {confirmDelete && <button type="button" className="btn btn-ghost" disabled={disabled || busy} onClick={cancelDelete}>{t("Cancel")}</button>}
@@ -300,13 +299,6 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
         {error && <p className="launcher-error" role="alert">{error}</p>}
       </>}
     </div>}
-    {!launcher && Boolean(agent?.profiles?.length) && <div className="field">
-      <label className="field-label" htmlFor={`${id}-profile`}>{t("Profile")}</label>
-      <select id={`${id}-profile`} className="input" value={profile} disabled={disabled || busy || editor !== null || agent?.installed === false} onChange={(event) => onProfileChange(event.target.value)}>
-        <option value="">{t("Default")}</option>
-        {agent?.profiles?.map((choice) => <option key={choice.id} value={choice.id}>{choice.id}</option>)}
-      </select>
-    </div>}
-    {Boolean(profile || launcher) && <p className="field-hint">{t("This selection uses its own configuration instead of the launch mode in Settings.")}</p>}
+    {Boolean(launcher) && <p className="field-hint">{t("This selection uses its own configuration instead of the launch mode in Settings.")}</p>}
   </>;
 }

@@ -9,7 +9,7 @@
  *   command is run by the Enter key;
  * - process_info names only the shell, so the shell's children say whether the agent runs.
  */
-import type { AgentLauncher } from "./agent-profiles.ts";
+import type { AgentLauncher } from "./agent-launchers.ts";
 import { isAgentName } from "../shared/agent-name.ts";
 import { freeAgentName } from "./agent-name.ts";
 import { agentGet, agentRename, HerdrError, paneProcessInfo, paneSendText, sessionSnapshot, type ProcessInfo as NativeProcessInfo } from "./herdr/client.ts";

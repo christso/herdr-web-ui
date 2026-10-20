@@ -1,17 +1,14 @@
-# Native profiles and launchers
+# Saved agent launchers
 
-New workspace, New tab and New worktree discover the selected PC's existing
-Codex and Oh My Pi profiles. The launcher editor searches executable names on that PC as you type.
-No Herdr agent catalog is needed. SSH bridges discover on the remote PC.
+New workspace, New tab and New worktree offer saved launchers on the selected PC.
+The launcher editor searches executable names on that PC as you type. No Herdr agent catalog
+is needed. SSH bridges save and resolve launchers on the remote PC.
 
-Choose the underlying **Agent** first. **Launcher → Default** uses the ordinary
-agent launch. With Default selected, **Profile** offers exact native profile IDs,
-without display aliases. Choosing a custom Launcher
-hides Profile: the launcher owns its own profile, environment and arguments.
-Profile is hidden when no profiles exist. On a supported PC, Launcher and its **Add launcher…** footer
-remain available even when nothing was discovered or the ordinary agent is not installed.
-If the ordinary agent is unavailable, save and select a custom launcher explicitly
-before starting; Default stays unavailable.
+Choose the underlying **Agent** first. **Launcher → Default** uses the ordinary agent launch,
+including the launch mode in Settings. A custom Launcher owns its executable and arguments.
+On a supported PC, Launcher and its **Add launcher…** footer remain available even when no
+launchers have been saved or the ordinary agent is not installed. If the ordinary agent is
+unavailable, save and select a custom launcher explicitly before starting; Default stays unavailable.
 
 ## Saved definitions
 
@@ -28,7 +25,7 @@ only when saved names collide. Select one, then use **Edit launcher…** in the 
 **Delete** is available only inside that Edit form and requires confirmation; **Cancel** keeps it.
 The Add form has no Delete action.
 The underlying kind is the Agent selected before adding it. A saved launcher owns its setup,
-so Profile is cleared and hidden and the ordinary agent's launch-mode arguments are not added.
+so the ordinary agent's launch-mode arguments are not added.
 Edits and deletion affect future launches only; existing panes keep running.
 
 Each PC's Web UI bridge owns `agent-launchers.json` in its server state directory,
@@ -36,7 +33,7 @@ beside shared preferences. The connection server uses `HERDR_WEB_STATE_DIR` when
 SSH bridges use their persistent `<bridge descriptor>.state` directory. The version-1 document
 contains `launchers`, each with `id`, `kind`, `label`, `executable` and `args`. Writes replace
 the document atomically; malformed saved state is preserved and reported rather than overwritten.
-Unreadable saved state does not hide ordinary agents, native profiles or executable search;
+Unreadable saved state does not hide ordinary agents or executable search;
 saved management and launches still report the repair error.
 Definitions survive restart and are shared by every connected browser. Reopen a creation
 dialog to load another browser's changes. Browser storage is not the source of truth.
@@ -55,28 +52,24 @@ Custom launchers require Linux or macOS and an available POSIX interactive shell
 wrappers do. Windows and older bridges without saved-launcher support do not offer Add/manage;
 their ordinary agent launches remain available. No Windows launcher transport is added.
 
-## Discovery
+## Agent configuration arguments
 
-On Linux and macOS, native profile discovery uses:
+To use an existing Codex or Oh My Pi profile, save a launcher with **Executable** set to
+`codex` or `omp`, **Argument 1** set to `--profile`, and **Argument 2** set to the exact profile ID
+(for example, `research`). These are two separate arguments; do not enter `--profile research`
+as one value or add shell quoting. The fictional browser demo uses the same editor and guidance.
+The CLI owns its profile configuration and validates the ID when it starts.
 
-- Codex: `$CODEX_HOME`, or `~/.codex`. Current CLIs use `<ID>.config.toml`;
-  older CLIs use `[profiles.<ID>]` in `config.toml`. Herdr checks the installed
-  Codex CLI's help to distinguish these incompatible formats. Current Codex
-  rejects an ID that still has a matching legacy table or `profile` setting,
-  so those conflicting IDs are omitted until migrated in Codex itself. If the
-  capability check fails, Profile stays hidden; Default remains available.
-- Oh My Pi: `~/.omp/profiles/<ID>/agent`, respecting its native `PI_CONFIG_DIR`
-  directory name under home. `PI_CODING_AGENT_DIR` changes Default's agent
-  directory only; named profiles use their native root.
-- Pi: no native Profile field, because Pi core has no `--profile` flag.
-  An installed wrapper can select its own `PI_CODING_AGENT_DIR` instead.
-- Claude Code: save a configuration launcher that supplies its own setup or `--settings` arguments,
-  without inventing a native `--profile` option.
+The Web UI does not list native profiles, read their configuration to populate choices, or run
+CLI help probes. Pi and Claude Code launchers can likewise supply the arguments their own CLI
+supports; a `--profile` flag is not invented for them.
 
-Native profile launches use the ordinary agent with fixed `--profile ID`
-arguments. Discovery reads native Codex TOML and OMP directory markers; it does
-not return configuration contents, authentication, paths or environment to the
-browser. These settings must be available to the bridge process on that PC.
+Creation APIs accept ordinary `agent.args`, including `["--profile", "research"]`, when no
+launcher is selected. A stale client that sends `agent.profile` receives an actionable validation
+error before creation; it never silently launches Default. Update the client and save a launcher,
+or send the CLI arguments in `agent.args` instead.
+
+## Executable search and compatibility
 
 On current Linux/macOS bridges, Launcher offers Default and saved labels. Its popup footer has
 **Add launcher…** and, only for a selected saved definition, **Edit launcher…**. These actions are
@@ -113,16 +106,14 @@ The editor supplies executable and argument values only, without an environment 
 and without changing the agent's global configuration.
 
 Choices are read on every dialog opening and revalidated before creating a
-workspace, tab or worktree. A native profile and custom Launcher cannot be combined.
-Changing Agent or PC resets these choices to Default. If discovery fails, a plain
-Shell remains usable. Windows retains ordinary agent launches.
+workspace, tab or worktree. Changing Agent or PC resets Launcher to Default. If the catalog
+cannot be read, a plain Shell remains usable. Windows retains ordinary agent launches.
 
 A wrapper may resume an existing session. Herdr therefore waits for native session
 or transcript evidence and does not assume a fresh conversation or show an empty
 conversation greeting for every wrapper. Before the first message, some fresh
-wrapper launches can consequently lack that greeting. Controlled native profile
-and Default launches retain ordinary fresh-session tracking; resumed history is
-never declared empty because a wrapper was selected.
+wrapper launches can consequently lack that greeting. Default launches retain ordinary
+fresh-session tracking; resumed history is never declared empty because a wrapper was selected.
 
 A failed or blocked wrapper startup preserves the workspace, tab or worktree and
 its pane. Open its terminal to inspect startup. Herdr waits up to 60 seconds for

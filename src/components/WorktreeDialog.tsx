@@ -51,7 +51,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
   >(null);
   const [editingLauncher, setEditingLauncher] = useState(false);
   const [mutatingLauncher, setMutatingLauncher] = useState(false);
-  const [launchChoice, setLaunchChoice] = useState<{ machineId: string; kind: string; profile: string; launcher: string } | null>(null);
+  const [launchChoice, setLaunchChoice] = useState<{ machineId: string; kind: string; launcher: string } | null>(null);
   const [agentKind, setAgentKind] = useState(rememberedAgent);
   // the checkout whose agent did not start: it is there, and the button opens it
   const [made, setMade] = useState<WorktreeOpened | null>(null);
@@ -148,7 +148,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
     const name = branch.trim();
     if (!name || editingLauncher || loadingCatalog || missingLauncher || (agentKind !== "" && !catalogReady)) return;
     void run(t("Creating the checkout…"), async () => {
-      const result = await createWorktree({ workspace_id: workspace.workspace_id, branch: name, base: base.trim() || null, label: label.trim() || null, agent: profile || launcher ? { kind: agentKind, ...(profile ? { profile } : {}), ...(launcher ? { launcher } : {}) } : launchAgent(agentKind, settings) });
+      const result = await createWorktree({ workspace_id: workspace.workspace_id, branch: name, base: base.trim() || null, label: label.trim() || null, agent: launcher ? { kind: agentKind, launcher } : launchAgent(agentKind, settings) });
       // the default follows what actually started: Shell after a plain checkout, an agent only once it runs
       if (!agentKind || result.agent_started === true) rememberAgent(agentKind);
       return result;
@@ -176,7 +176,6 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
   const selectedAgent = agents.find((agent) => agent.kind === agentKind);
   const scopedChoice = launchChoice?.machineId === machineId && launchChoice.kind === agentKind ? launchChoice : null;
   const launcher = selectedAgent?.launchers?.some((entry) => entry.id === scopedChoice?.launcher) ? scopedChoice!.launcher : "";
-  const profile = !launcher && selectedAgent?.profiles?.some((entry) => entry.id === scopedChoice?.profile) ? scopedChoice!.profile : "";
   const loadingCatalog = catalog?.machineId !== machineId;
   const missingLauncher = selectedAgent?.installed === false && !launcher;
   const locked = pending !== null || mutatingLauncher || made !== null;
@@ -218,8 +217,8 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
               </div>
               <AgentLaunchPicker key={`${machineId}:${agentKind}`} onEditingChange={setEditingLauncher} onMutationChange={setMutatingLauncher} onLaunchersChange={(definitions, selected) => {
                 setCatalog((current) => current?.machineId === machineId && current.status === "ready" ? { ...current, agents: withSavedLaunchers(current.agents, definitions) } : current);
-                setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher: selected });
-              }} agent={selectedAgent} profile={profile} launcher={launcher} disabled={locked} onProfileChange={(profile) => setLaunchChoice({ machineId, kind: agentKind, profile, launcher: "" })} onLauncherChange={(launcher) => setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher })} />
+                setLaunchChoice({ machineId, kind: agentKind, launcher: selected });
+              }} agent={selectedAgent} launcher={launcher} disabled={locked} onLauncherChange={(launcher) => setLaunchChoice({ machineId, kind: agentKind, launcher })} />
             </>
           ) : others === null && !error ? (
             <p className="field-hint" role="status">{t("Reading worktrees…")}</p>

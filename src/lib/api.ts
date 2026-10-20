@@ -574,7 +574,7 @@ export async function clearPane(paneId: string, machineId = "local"): Promise<vo
 export async function fetchAgentKinds(machineId = "local"): Promise<AgentKind[]> {
   // filtered here, not on the server: a remote PC's older bridge still answers every manifest,
   // and says nothing of what is installed, so its supported kinds are all offered
-  return (await getJson<{ agents: AgentKind[] }>(machinePath(machineId, "agents"))).agents.filter((agent) => SUPPORTED_AGENT_KINDS.has(agent.kind) && (agent.installed !== false || agent.saved_launchers === true || (agent.profiles?.length ?? 0) > 0 || (agent.launchers?.length ?? 0) > 0));
+  return (await getJson<{ agents: AgentKind[] }>(machinePath(machineId, "agents"))).agents.filter((agent) => SUPPORTED_AGENT_KINDS.has(agent.kind) && (agent.installed !== false || agent.saved_launchers === true || (agent.launchers?.length ?? 0) > 0));
 }
 
 /** Search always stays on the selected PC, and can be canceled as its query changes. */

@@ -1163,9 +1163,10 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
 - On Linux/macOS bridges with saved-launcher support, **Launcher** stays visible even with no
   choices. Default remains disabled when the ordinary command is unavailable. Saved choices form
   their own group and use their display label; a short ID disambiguates duplicate saved labels.
-  Selecting any custom launcher clears and hides Profile; returning to Default resets Profile,
-  while reselecting Default preserves an existing native Profile. Changing Agent or PC resets
-  both choices. Windows and older bridges without saved-launcher support do not show management.
+  Changing Agent or PC resets Launcher to Default. A saved launcher owns its arguments, including
+  `--profile` and an ID as separate values for Codex or Oh My Pi; the editor explains this. The UI
+  does not discover native profiles or offer a Profile field. Windows and older bridges without
+  saved-launcher support do not show management.
   Catalogs contain summaries only; executable and argument details require control.
 - Add/Edit unfolds an inline fieldset inside the existing dialog and its focus trap: Launcher name,
   Executable, then individually labelled arguments with Add/Remove controls. Executable uses the

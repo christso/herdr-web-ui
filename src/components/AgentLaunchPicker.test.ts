@@ -42,8 +42,8 @@ afterEach(async () => {
 async function editor(launchers: { id: string; label: string; saved?: boolean }[] = []) {
   await act(async () => {
     renderer = create(createElement(SettingsProvider, null, createElement(AgentLaunchPicker, {
-      agent: { kind: "codex", label: "Codex", saved_launchers: true, launchers }, profile: "", launcher: "", disabled: false,
-      onProfileChange() {}, onLauncherChange() {}, onLaunchersChange() {}, onEditingChange() {},
+      agent: { kind: "codex", label: "Codex", saved_launchers: true, launchers }, launcher: "", disabled: false,
+      onLauncherChange() {}, onLaunchersChange() {}, onEditingChange() {},
     })), { createNodeMock: () => new Input() });
   });
   await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onClick());
@@ -88,8 +88,8 @@ it("offers selection and a footer, then keeps a manually typed executable unsave
   let editing = false;
   await act(async () => {
     renderer = create(createElement(SettingsProvider, null, createElement(AgentLaunchPicker, {
-      agent: { kind: "codex", label: "Codex", installed: false, saved_launchers: true, launcher_search: true }, profile: "", launcher: "", disabled: false,
-      onProfileChange() {}, onLauncherChange() {}, onLaunchersChange() {}, onEditingChange(value: boolean) { editing = value; },
+      agent: { kind: "codex", label: "Codex", installed: false, saved_launchers: true, launcher_search: true }, launcher: "", disabled: false,
+      onLauncherChange() {}, onLaunchersChange() {}, onEditingChange(value: boolean) { editing = value; },
     })), { createNodeMock: () => new Input() });
   });
   const combo = renderer.root.findByProps({ role: "combobox" });
@@ -105,8 +105,8 @@ it("offers selection and a footer, then keeps a manually typed executable unsave
 
 async function searchable(machine = "local", onEditingChange = (_value: boolean) => {}, launchers: { id: string; label: string; saved?: boolean }[] = []) {
   const view = createElement(SettingsProvider, null, createElement(MachineContext.Provider, { value: machine }, createElement(AgentLaunchPicker, {
-    agent: { kind: "codex", label: "Codex", installed: true, saved_launchers: true, launcher_search: true, launchers }, profile: "", launcher: "", disabled: false,
-    onProfileChange() {}, onLauncherChange() {}, onLaunchersChange() {}, onEditingChange,
+    agent: { kind: "codex", label: "Codex", installed: true, saved_launchers: true, launcher_search: true, launchers }, launcher: "", disabled: false,
+    onLauncherChange() {}, onLaunchersChange() {}, onEditingChange,
   })));
   await act(async () => { if (renderer) renderer.update(view); else renderer = create(view, { createNodeMock: () => new Input() }); });
   if (!renderer.root.findAllByType("fieldset").length) {
@@ -195,21 +195,20 @@ it("consumes arrows and Enter without form submission and preserves both IME con
   expect(store.get()).toEqual([]);
 });
 
-it("preserves a native profile when reselecting Default and activates the existing launcher on open", async () => {
+it("keeps Default when reselected and activates the existing launcher on open", async () => {
   const changes: string[] = [];
-  const render = async (launcher: string, profile: string) => {
+  const render = async (launcher: string) => {
     const view = createElement(SettingsProvider, null, createElement(AgentLaunchPicker, {
-      agent: { kind: "codex", label: "Codex", saved_launchers: true, launcher_search: true, profiles: [{ id: "research", label: "research" }], launchers: [{ id: "saved:current", label: "Current", saved: true }] }, profile, launcher, disabled: false,
-      onProfileChange() {}, onLauncherChange(value: string) { changes.push(value); }, onLaunchersChange() {}, onEditingChange() {},
+      agent: { kind: "codex", label: "Codex", saved_launchers: true, launcher_search: true, launchers: [{ id: "saved:current", label: "Current", saved: true }] }, launcher, disabled: false,
+      onLauncherChange(value: string) { changes.push(value); }, onLaunchersChange() {}, onEditingChange() {},
     }));
     await act(async () => { if (renderer) renderer.update(view); else renderer = create(view, { createNodeMock: () => new Input() }); });
   };
-  await render("", "research");
+  await render("");
   await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onClick());
   await act(async () => renderer.root.findAllByProps({ role: "option" }).find((node) => node.children.includes("Default"))!.props.onClick());
   expect(changes).toEqual([]);
-  expect(renderer.root.findAllByType("select").find((node) => node.props.id.endsWith("-profile"))!.props.value).toBe("research");
-  await render("saved:current", "");
+  await render("saved:current");
   await act(async () => renderer.root.findByProps({ role: "combobox" }).props.onClick());
   const combo = renderer.root.findByProps({ role: "combobox" });
   const selected = renderer.root.findAllByProps({ role: "option" }).find((node) => node.props["aria-selected"])!;

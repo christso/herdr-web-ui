@@ -87,14 +87,14 @@ it("treats a missing telemetry route as unavailable for reads and an API error f
 });
 
 
-it("offers a profile-only installed kind while preserving its unavailable Default and machine scope", async () => {
+it("ignores stale profile choices while preserving installed kinds and machine scope", async () => {
   const profiles = [{ id: "review", label: "Review" }];
   let requested = "";
   globalThis.fetch = (async (url: string) => {
     requested = url;
     return Response.json({ agents: [{ kind: "codex", label: "Codex", installed: false, profiles }, { kind: "pi", label: "Pi", installed: false }, { kind: "omp", label: "OMP", installed: true }] });
   }) as typeof fetch;
-  expect(await fetchAgentKinds("remote-fixture")).toEqual([{ kind: "codex", label: "Codex", installed: false, profiles }, { kind: "omp", label: "OMP", installed: true }]);
+  expect(await fetchAgentKinds("remote-fixture")).toEqual([{ kind: "omp", label: "OMP", installed: true }]);
   expect(requested).toBe("/api/machines/remote-fixture/agents");
 });
 

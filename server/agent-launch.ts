@@ -4,7 +4,7 @@
  * agent took. Workspace, tab and worktree creation share it.
  */
 import { codexEmptyComposer } from "./start-screen.ts";
-import { type AgentLaunch } from "./agent-profiles.ts";
+import { type AgentLauncher } from "./agent-launchers.ts";
 import { freeAgentName } from "./agent-name.ts";
 import { launchedAgents } from "./launched-agents.ts";
 import { isShellAgentKind, startShellAgent, startAgentLauncher } from "./shell-agent.ts";
@@ -20,10 +20,9 @@ export function agentFault(agent: AgentPayload | undefined): string | null {
     || (agent.args !== undefined && (!Array.isArray(agent.args) || !agent.args.every((arg) => typeof arg === "string")))) {
     return "agent.name must be a string and agent.args must be an array of strings";
   }
-  if (agent.profile !== undefined && (typeof agent.profile !== "string" || agent.profile.length === 0)) return "agent.profile must be a nonempty string";
+  if (agent.profile !== undefined) return "agent.profile is no longer supported. Save a launcher with --profile and its ID as separate arguments, or send them in agent.args.";
   if (agent.launcher !== undefined && (typeof agent.launcher !== "string" || agent.launcher.length === 0)) return "agent.launcher must be a nonempty string";
-  if (agent.profile !== undefined && agent.launcher !== undefined) return "Choose a native profile or a launcher, not both";
-  if ((agent.profile !== undefined || agent.launcher !== undefined) && (agent.args !== undefined || Object.keys(agent).some((key) => !["kind", "name", "profile", "launcher"].includes(key)))) return "Profiles and launchers accept only kind, name and their discovered selection";
+  if (agent.launcher !== undefined && (agent.args !== undefined || Object.keys(agent).some((key) => !["kind", "name", "launcher"].includes(key)))) return "Launchers accept only kind, name and launcher";
   return null;
 }
 
@@ -31,14 +30,14 @@ export function agentFault(agent: AgentPayload | undefined): string | null {
  * Starts a checked `agent` in a pane herdr just made. A failure is answered, not thrown: the
  * workspace, tab or worktree around the pane is there either way.
  */
-export async function agentLaunch(paneId: string, agent: AgentPayload, resolveLaunch?: () => AgentLaunch | undefined): Promise<{ agent_started: true } | { agent_started: false; error: { code: string; message: string } }> {
+export async function agentLaunch(paneId: string, agent: AgentPayload, resolveLaunch?: () => AgentLauncher | undefined): Promise<{ agent_started: true } | { agent_started: false; error: { code: string; message: string } }> {
   try {
     // Re-read a saved definition after checkout creation, before any launch input. A removal
     // or missing executable now returns the existing partial-creation result with its pane.
     const launch = resolveLaunch?.();
     const kind = agent.kind as string;
-    const args = launch && "profile" in launch ? ["--profile", launch.profile] : agent.args as string[] | undefined;
-    if (launch && "command" in launch) await startAgentLauncher(launch, paneId, typeof agent.name === "string" ? agent.name : undefined);
+    const args = agent.args as string[] | undefined;
+    if (launch) await startAgentLauncher(launch, paneId, typeof agent.name === "string" ? agent.name : undefined);
     else if (isShellAgentKind(kind)) await startShellAgent(kind, paneId, args);
     else {
       const given = typeof agent.name === "string" && agent.name.length > 0 ? agent.name : null;
@@ -67,9 +66,9 @@ export async function agentLaunch(paneId: string, agent: AgentPayload, resolveLa
         }
       }
     }
-    const emptyLauncher = launch && "command" in launch && kind === "codex"
+    const emptyLauncher = launch && kind === "codex"
       && await paneRead({ paneId, source: "visible", format: "text" }).then((read) => codexEmptyComposer(read.text), () => false);
-    if (!launch || "profile" in launch || emptyLauncher) launchedAgents.launched(paneId, kind);
+    if (!launch || emptyLauncher) launchedAgents.launched(paneId, kind);
     return { agent_started: true };
   } catch (error) {
     return {
