@@ -2,6 +2,7 @@ import type { PreferencesChange, SharedPreferences } from "../../shared/preferen
 import { machinePath, type BridgeHealth, type HerdrIdentity, type Machine, type SetupAction, type SetupJob, type SetupRequest } from "../../shared/machines.ts";
 import type {
   AgentKind,
+  LauncherSearchResponse,
   SavedAgentLauncher,
   SavedAgentLauncherInput,
   AgentRenameRequest,
@@ -570,6 +571,11 @@ export async function fetchAgentKinds(machineId = "local"): Promise<AgentKind[]>
   // filtered here, not on the server: a remote PC's older bridge still answers every manifest,
   // and says nothing of what is installed, so its supported kinds are all offered
   return (await getJson<{ agents: AgentKind[] }>(machinePath(machineId, "agents"))).agents.filter((agent) => SUPPORTED_AGENT_KINDS.has(agent.kind) && (agent.installed !== false || agent.saved_launchers === true || (agent.profiles?.length ?? 0) > 0 || (agent.launchers?.length ?? 0) > 0));
+}
+
+/** Search always stays on the selected PC, and can be canceled as its query changes. */
+export async function searchLauncherExecutables(query: string, signal: AbortSignal, machineId = "local"): Promise<string[]> {
+  return (await getJson<LauncherSearchResponse>(machinePath(machineId, `agents/launchers/search?q=${encodeURIComponent(query)}`), { signal })).names;
 }
 
 /** Definition details require a controlling device, including GET. Always resolve on the selected PC. */

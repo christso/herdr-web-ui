@@ -31,3 +31,38 @@
   overflow-wrap: anywhere;
   margin: var(--space-2) 0 0;
 }
+
+.launcher-combobox { min-width: 0; }
+.launcher-combobox > .input { width: 100%; }
+.launcher-popup {
+  position: fixed;
+  z-index: var(--z-popover);
+  box-shadow: var(--shadow-pop);
+  display: flex;
+  flex-direction: column;
+  max-height: 12rem;
+  overflow: hidden;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+}
+.launcher-choices { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.launcher-search-status { flex: none; padding: var(--space-2) var(--space-3); }
+.launcher-choice-heading { padding: var(--space-2) var(--space-3) 0; }
+.launcher-choice {
+  display: block;
+  width: 100%;
+  flex: none;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.launcher-choice.active { background: var(--bg-hover); }
+.launcher-choice[aria-selected="true"] { font-weight: 600; }
+.launcher-choice[aria-disabled="true"] { color: var(--text-dim); cursor: default; }

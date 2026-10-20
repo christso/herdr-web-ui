@@ -805,11 +805,16 @@ export interface AgentKind {
   installed?: boolean;
   /** Native profile IDs discovered on this PC. */
   profiles?: { id: string; label: string }[];
-  /** Discovered wrappers and saved definitions; executable/arguments are never catalog data. */
+  /** Saved definitions (and legacy bridge wrappers); command details are never catalog data. */
   launchers?: { id: string; label: string; saved?: boolean }[];
   /** This PC supports saving and running custom launchers; absent on older bridges. */
   saved_launchers?: boolean;
+  /** This PC supports on-demand executable name search; independent of saved-launcher support. */
+  launcher_search?: boolean;
 }
+
+/** GET /api/agents/launchers/search?q=prefix. Control only; at most 20 executable names. */
+export interface LauncherSearchResponse { names: string[] }
 
 /** GET/POST/PUT/DELETE /api/agents/launchers (PUT/DELETE identify one with ?id=). Control only. */
 export type { SavedAgentLauncher, SavedAgentLauncherInput } from "./agent-launchers.ts";

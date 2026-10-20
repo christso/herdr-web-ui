@@ -41,6 +41,7 @@ export function useMachineApi() {
     renameWorkspace: (workspace: string, label: string) => api.renameWorkspace(workspace, label, id),
     moveWorkspace: (workspace: string, index: number) => api.moveWorkspace(workspace, index, id),
     fetchAgentKinds: () => api.fetchAgentKinds(id),
+    searchLauncherExecutables: (query: string, signal: AbortSignal) => api.searchLauncherExecutables(query, signal, id),
     fetchSavedLaunchers: () => api.fetchSavedLaunchers(id),
     saveAgentLauncher: (input: Parameters<typeof api.saveAgentLauncher>[0], launcherId?: string) => api.saveAgentLauncher(input, launcherId, id),
     deleteAgentLauncher: (launcherId: string) => api.deleteAgentLauncher(launcherId, id),

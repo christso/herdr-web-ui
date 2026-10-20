@@ -1,6 +1,6 @@
 import { expect, it } from "bun:test";
 
-it("the demo offers exact native profile IDs separately from wrappers and validates every creation flow", async () => {
+it("the demo offers exact native profile IDs without an automatic wrapper catalog and validates every creation flow", async () => {
   const saved = new Map(["window", "location", "PushManager"].map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
   try {
     const storage = new Map<string, string>();
@@ -15,9 +15,13 @@ it("the demo offers exact native profile IDs separately from wrappers and valida
     const agents = (await (await demo.fetch("/api/agents")).json()).agents;
     expect(agents.find((entry: any) => entry.kind === "codex").profiles).toEqual([{ id: "compound-engineering", label: "compound-engineering" }, { id: "review", label: "review" }]);
     expect(agents.find((entry: any) => entry.kind === "pi").profiles).toBeUndefined();
-    expect(agents.find((entry: any) => entry.kind === "pi").launchers).toEqual([{ id: "pi-compound", label: "pi-compound" }]);
+    expect(agents.find((entry: any) => entry.kind === "pi").launchers).toEqual([]);
     expect(agents.find((entry: any) => entry.kind === "claude").profiles).toBeUndefined();
-    expect(agents.find((entry: any) => entry.kind === "claude").launchers).toEqual([{ id: "claude-compound", label: "claude-compound" }]);
+    expect(agents.find((entry: any) => entry.kind === "claude").launchers).toEqual([]);
+    expect(agents.find((entry: any) => entry.kind === "codex").launcher_search).toBeTrue();
+    expect(await (await demo.fetch("/api/agents/launchers/search?q=research")).json()).toEqual({ names: ["research", "research.js"] });
+    const savedId = async (kind: string, executable: string) => (await (await demo.fetch("/api/agents/launchers", { method: "POST", body: JSON.stringify({ kind, executable, label: executable, args: [] }) })).json()).launchers.at(-1).id;
+    const codexLauncher = await savedId("codex", "codex-compound"), piLauncher = await savedId("pi", "research"), claudeLauncher = await savedId("claude", "research.js");
     const snapshot = async () => (await (await demo.fetch("/api/session")).json()).snapshot;
     const workspace = (await snapshot()).workspaces.find((entry: any) => entry.worktree && !entry.worktree.is_linked_worktree).workspace_id;
     const post = (route: string, agent: unknown, branch = "demo-launch") => demo.fetch(`/api/${route}/create`, { method: "POST", body: JSON.stringify({ workspace_id: workspace, branch, cwd: "/home/demo/launch", agent }) });
@@ -33,7 +37,7 @@ it("the demo offers exact native profile IDs separately from wrappers and valida
       expect((await snapshot()).workspaces).toEqual(before.workspaces);
       expect((await snapshot()).tabs).toEqual(before.tabs);
       expect((await snapshot()).panes).toEqual(before.panes);
-      for (const [index, agent] of [null, { kind: "codex" }, { kind: "codex", profile: "compound-engineering" }, { kind: "codex", launcher: "codex-compound" }, { kind: "pi", launcher: "pi-compound" }, { kind: "claude", launcher: "claude-compound" }].entries()) {
+      for (const [index, agent] of [null, { kind: "codex" }, { kind: "codex", profile: "compound-engineering" }, { kind: "codex", launcher: codexLauncher }, { kind: "pi", launcher: piLauncher }, { kind: "claude", launcher: claudeLauncher }].entries()) {
         const response = await post(route, agent, `demo-launch-${route}-${index}`);
         expect(response.status).toBe(200);
         expect((await response.json()).agent_started).toBe(agent !== null ? true : route === "worktree" ? undefined : false);

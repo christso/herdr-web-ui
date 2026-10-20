@@ -13,7 +13,7 @@ function fixture() {
   mkdirSync(env.CODEX_HOME);
   writeFileSync(join(bin, "codex"), "#!/bin/sh\nprintf '%s\\n' '-p, --profile <CONFIG_PROFILE>'\n", { mode: 0o755 });
   const wrapper = (id: string, source = "#!/bin/sh\nexit 0\n") => { const path = join(bin, id); writeFileSync(path, source, { mode: 0o755 }); return path; };
-  return { home, bin, env, wrapper, discover: () => discoverAgentLaunches({ home, env, platform: "linux" }) };
+  return { home, bin, env, wrapper, discover: (legacyLaunchers = false) => discoverAgentLaunches({ home, env, platform: "linux", legacyLaunchers }) };
 }
 it("discovers exact native IDs using native roots without exposing configuration contents", () => {
   const f = fixture();
@@ -39,7 +39,7 @@ it("discovers installed shell wrappers without a catalog, respecting precedence 
   f.wrapper("codex-bad;name"); mkdirSync(join(f.bin, "pi-directory"));
   mkdirSync(join(f.home, "bin")); writeFileSync(join(f.home, "bin/codex-compound"), "#!/bin/sh\nexit 1", { mode: 0o755 });
   symlinkSync(join(f.home, "missing"), join(f.bin, "codex-missing"));
-  const found = f.discover();
+  const found = f.discover(true);
   expect(launchSummaries(found.launchers, "codex")).toEqual([{ id: "codex-compound", label: "codex-compound" }]);
   expect(launchSummaries(found.launchers, "pi")).toEqual([{ id: "pi-compound", label: "pi-compound" }]);
   expect(launchSummaries(found.launchers, "omp")).toEqual([{ id: "omp-review", label: "omp-review" }]);
@@ -48,7 +48,7 @@ it("discovers installed shell wrappers without a catalog, respecting precedence 
   expect(() => selectedAgentLaunch(found, "codex", "review", "codex-compound")).toThrow();
   rmSync(join(f.home, "bin/codex-compound"));
   chmodSync(chosen, 0o644);
-  expect(() => selectedAgentLaunch(f.discover(), "codex", undefined, "codex-compound")).toThrow("unavailable");
+  expect(() => selectedAgentLaunch(f.discover(true), "codex", undefined, "codex-compound")).toThrow("unavailable");
   expect(discoverAgentLaunches({ home: f.home, env: f.env, platform: "win32" })).toEqual({ profiles: [], launchers: [] });
 });
 it("reads native file changes and never reads a Herdr catalog", () => {
@@ -65,7 +65,7 @@ it("reads native file changes and never reads a Herdr catalog", () => {
 it("discovers Claude configuration launchers without inventing a native profile flag", () => {
   const f = fixture();
   const command = f.wrapper("claude-work");
-  const found = f.discover();
+  const found = f.discover(true);
   expect(launchSummaries(found.launchers, "claude")).toEqual([{ id: "claude-work", label: "claude-work" }]);
   expect(launchSummaries(found.profiles, "claude")).toEqual([]);
   expect(selectedAgentLaunch(found, "claude", undefined, "claude-work")).toEqual({ kind: "claude", id: "claude-work", command });
@@ -83,7 +83,7 @@ it("selects Codex profiles compatible with installed CLI help and excludes legac
   writeFileSync(join(f.bin, "codex"), "#!/bin/sh\nexit 1\n", { mode: 0o755 });
   f.wrapper("codex-useful");
   expect(f.discover().profiles).toEqual([]);
-  expect(launchSummaries(f.discover().launchers, "codex")).toEqual([{ id: "codex-useful", label: "codex-useful" }]);
+  expect(launchSummaries(f.discover(true).launchers, "codex")).toEqual([{ id: "codex-useful", label: "codex-useful" }]);
 });
 it("finds canonical Codex in ordinary user bins on a non-login bridge PATH", () => {
   const f = fixture();
@@ -105,4 +105,10 @@ it("canonical installed availability uses the same trusted user bins for Codex, 
   chmodSync(pi, 0o644); expect(agentExecutable("pi", f.home, f.env)).toBeNull();
   writeFileSync(join(nonlogin, "codex"), "#!/bin/sh\n", { mode: 0o755 });
   expect(agentExecutable("codex", f.home, f.env)).toBe(join(nonlogin, "codex"));
+});
+
+it("keeps installed wrappers out of ordinary discovery without losing native profiles", () => {
+  const f = fixture(); f.wrapper("codex-compound");
+  writeFileSync(join(f.env.CODEX_HOME, "config.toml"), "[profiles.research]\n");
+  expect(f.discover()).toEqual({ profiles: [{ kind: "codex", id: "research" }], launchers: [] });
 });

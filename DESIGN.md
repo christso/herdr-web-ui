@@ -1043,6 +1043,16 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   are scoped to the selected PC and one recognized agent, with individual argument fields, rather
   than a terminal layout. No source or visual assets are copied. This fork feature adds no global
   agent configuration or environment editor.
+- Search follows [Warp's searchable launch-configuration palette](https://docs.warp.dev/terminal/sessions/launch-configurations)
+  and [Command Palette](https://docs.warp.dev/terminal/command-palette): typing narrows saved
+  names. Here it also requests executable name prefixes from the selected PC, without automatic
+  wrapper discovery. A suggestion or explicit typed executable opens the existing editor;
+  only Save persists it. The combobox keeps focus in its input with an anchored scrollable
+  listbox, active-descendant arrows/Enter, Escape cancellation and IME protection. Saved names and
+  executable suggestions have separate labeled groups; suggestions say they open the editor.
+  Escape dismisses active search first, then reaches the existing dialog dismissal. Touch rows are
+  44px tall. The existing dialog owns focus trapping/restoration. Search text blocks creation
+  until selected or canceled. A separate bridge capability preserves older select/manual flows.
 - On Linux/macOS bridges with saved-launcher support, **Launcher** stays visible even with no
   choices, alongside **Add launcher**. Default remains disabled when the ordinary command is
   unavailable. Saved choices form their own group and use their display label; a short ID
