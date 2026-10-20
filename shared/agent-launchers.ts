@@ -6,7 +6,7 @@ export interface SavedAgentLauncherInput {
   args?: string[];
 }
 export interface SavedAgentLauncher extends SavedAgentLauncherInput {
-  /** This namespace cannot collide with discovered shell-wrapper names. */
+  /** The selected PC assigns this stable identifier. */
   id: string;
   args: string[];
 }

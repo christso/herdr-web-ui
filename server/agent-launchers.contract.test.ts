@@ -15,26 +15,32 @@ const previousCodexHome = process.env["CODEX_HOME"];
 process.env["PATH"] = `${stateDir}:/usr/bin:/bin`;
 process.env["CODEX_HOME"] = join(stateDir, "codex-home");
 mkdirSync(process.env["CODEX_HOME"]!);
-writeFileSync(join(stateDir, "codex"), "#!/bin/sh\nprintf '%s\\n' '-p, --profile <CONFIG_PROFILE_V2>'\n", { mode: 0o755 });
+writeFileSync(join(stateDir, "codex"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
 writeFileSync(join(process.env["CODEX_HOME"]!, "private.config.toml"), 'model = "secret-fixed-argument"');
 const launcher = join(stateDir, "codex-private");
 writeFileSync(launcher, "#!/bin/sh\nexit 0\n", { mode: 0o755 });
 
 const server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir });
 const base = `http://127.0.0.1:${server.port}`;
+async function saveLauncher(kind: string, executable: string): Promise<string> {
+  const response = await fetch(`${base}/api/agents/launchers`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind, label: "Fixture", executable, args: [] }) });
+  if (!response.ok) throw new Error(await response.text());
+  return (await response.json()).launchers.at(-1).id;
+}
+const deleteLauncher = (id: string) => fetch(`${base}/api/agents/launchers?id=${encodeURIComponent(id)}`, { method: "DELETE" });
 afterAll(() => {
   home.mockRestore();
   if (previousPath === undefined) delete process.env["PATH"]; else process.env["PATH"] = previousPath;
   if (previousCodexHome === undefined) delete process.env["CODEX_HOME"]; else process.env["CODEX_HOME"] = previousCodexHome;
   server.stop(); rmSync(stateDir, { recursive: true, force: true }); });
-it.skipIf(process.platform === "win32")("HTTP discovery only exposes exact profile and launcher IDs", async () => {
+it.skipIf(process.platform === "win32")("HTTP catalog omits native profiles and automatic wrapper choices", async () => {
   const response = await fetch(`${base}/api/agents`);
   const text = await response.text();
   expect(response.status).toBe(200);
   expect(text).not.toContain(launcher);
   expect(text).not.toContain("secret-fixed-argument");
   const codex = JSON.parse(text).agents.find((agent: { kind: string }) => agent.kind === "codex");
-  expect(codex.profiles).toEqual([{ id: "private", label: "private" }]);
+  expect(codex).not.toHaveProperty("profiles");
   expect(codex.launchers).toBeUndefined();
   expect(codex.launcher_search).toBeTrue();
 });
@@ -48,23 +54,27 @@ it.skipIf(process.platform === "win32")("keeps canonical installed availability 
     expect(catalog.agents.find((agent: { kind: string }) => agent.kind === "codex")).toMatchObject({ installed: false, saved_launchers: true, launcher_search: true });
   } finally { chmodSync(join(stateDir, "codex"), 0o755); process.env["PATH"] = path; }
 });
-it.skipIf(process.platform === "win32")("refuses unknown, mismatched and request-argument profiles before any creation", async () => {
-  const before = (await sessionSnapshot()).workspaces.map((workspace) => workspace.workspace_id);
-  for (const route of ["workspace", "tab", "worktree"]) {
-    for (const agent of [{ kind: "codex", profile: "unknown" }, { kind: "pi", profile: "private" }, { kind: "codex", profile: "private", args: [] }, { kind: "codex", profile: "private", command: launcher }, { kind: "codex", launcher: "unknown" }, { kind: "pi", launcher: "codex-private" }, { kind: "codex", launcher: "codex-private", profile: "private" }, { kind: "codex", launcher: "codex-private", args: [] }, { kind: "codex", launcher: "/bin/sh" }]) {
-      const response = await fetch(`${base}/api/${route}/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ workspace_id: "fixture-must-not-be-used", branch: "must-not-be-created", agent }) });
-      expect(response.status).toBe(400);
-      expect((await response.json()).error.code).toMatch(/^invalid_agent/);
+it.skipIf(process.platform === "win32")("refuses invalid saved launcher selections before any creation", async () => {
+  const launcherId = await saveLauncher("codex", launcher);
+  try {
+    const before = (await sessionSnapshot()).workspaces.map((workspace) => workspace.workspace_id);
+    for (const route of ["workspace", "tab", "worktree"]) {
+      for (const agent of [{ kind: "codex", launcher: "unknown" }, { kind: "pi", launcher: launcherId }, { kind: "codex", launcher: launcherId, args: [] }, { kind: "codex", launcher: "/bin/sh" }]) {
+        const response = await fetch(`${base}/api/${route}/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ workspace_id: "fixture-must-not-be-used", branch: "must-not-be-created", agent }) });
+        expect(response.status).toBe(400);
+        expect((await response.json()).error.code).toMatch(/^invalid_agent/);
+      }
     }
-  }
-  expect((await sessionSnapshot()).workspaces.map((workspace) => workspace.workspace_id)).toEqual(before);
+    expect((await sessionSnapshot()).workspaces.map((workspace) => workspace.workspace_id)).toEqual(before);
+  } finally { await deleteLauncher(launcherId); }
 });
 
 
-it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("executes discovered wrappers in all creation flows without assuming an opaque launcher starts fresh", async () => {
+it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("executes saved launchers in all creation flows without assuming an opaque launcher starts fresh", async () => {
   const root = mkdtempSync(join(tmpdir(), "herdr-launcher's-"));
   const owned: string[] = [];
   let checkout: string | null = null;
+  let launcherId = "", resumeLauncherId = "";
   const marker = join(root, "executed.json");
   const recorder = join(root, "record.cjs");
   const command = join(stateDir, "codex-chosen");
@@ -81,6 +91,8 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("execut
     if (result.exitCode !== 0) throw new Error(result.stderr.toString());
   };
   try {
+    launcherId = await saveLauncher("codex", command);
+    resumeLauncherId = await saveLauncher("codex", resumeCommand);
     git("init"); git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "--allow-empty", "-m", "Fixture");
     const source = await workspaceCreate({ cwd: root, label: "herdr-web-ui-test-profile-source" });
     owned.push(source.workspace.workspace_id);
@@ -88,7 +100,7 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("execut
       rmSync(marker, { force: true });
       const label = `herdr-web-ui-test-profile-${route}`;
       const path = join(root, "checkout");
-      const request = fetch(`${base}/api/${route}/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd: root, workspace_id: source.workspace.workspace_id, label, branch: "profile-fixture", path, agent: { kind: "codex", launcher: route === "tab" ? "codex-resume" : "codex-chosen" } }) });
+      const request = fetch(`${base}/api/${route}/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd: root, workspace_id: source.workspace.workspace_id, label, branch: "profile-fixture", path, agent: { kind: "codex", launcher: route === "tab" ? resumeLauncherId : launcherId } }) });
       // The wrapper owns the marker; no real agent binary or model call is involved. Report idle
       // only after native process detection has identified the stand-in as the requested kind.
       let paneId: string | undefined;
@@ -119,6 +131,8 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("execut
     const defaultCreated = await ordinary.json() as WorkspaceCreated;
     expect(defaultCreated.agent_started).toBeTrue();
   } finally {
+    if (launcherId) await deleteLauncher(launcherId);
+    if (resumeLauncherId) await deleteLauncher(resumeLauncherId);
     rmSync(command, { force: true });
     rmSync(resumeCommand, { force: true });
     if (checkout) await herdrRpc("worktree.remove", { workspace_id: checkout, force: true }).catch(() => undefined);
@@ -127,7 +141,7 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("execut
   }
 }, 60_000);
 
-it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("runs a discovered Claude launcher with its own configuration directory", async () => {
+it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("runs a saved Claude launcher with its own configuration directory", async () => {
   const root = mkdtempSync(join(tmpdir(), "herdr-claude-launcher-"));
   const executable = join(root, "claude"), marker = join(root, "executed.json"), recorder = join(root, "record.cjs");
   const command = join(stateDir, "claude-work"), label = "herdr-web-ui-test-claude-launcher";
@@ -135,8 +149,10 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("runs a
   writeFileSync(recorder, `require("node:fs").writeFileSync(process.argv[2], JSON.stringify({config:process.env.CLAUDE_CONFIG_DIR,args:process.argv.slice(3)}));process.stdin.resume();setInterval(()=>{},1000);`);
   writeFileSync(command, `#!/bin/sh\nexport CLAUDE_CONFIG_DIR='${root}/work-config'\nexec '${executable}' '${recorder}' '${marker}'\n`, { mode: 0o755 });
   let workspaceId: string | undefined;
+  let launcherId = "";
   try {
-    const request = fetch(`${base}/api/workspace/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd: root, label, agent: { kind: "claude", launcher: "claude-work" } }) });
+    launcherId = await saveLauncher("claude", command);
+    const request = fetch(`${base}/api/workspace/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd: root, label, agent: { kind: "claude", launcher: launcherId } }) });
     let paneId: string | undefined;
     for (const deadline = Date.now() + 15_000;;) {
       const snapshot = await sessionSnapshot();
@@ -155,6 +171,7 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("runs a
     expect(JSON.parse(readFileSync(marker, "utf8"))).toEqual({ config: join(root, "work-config"), args: [] });
     expect(launchedAgents.notBegun(created.pane_id, "idle")).toBeNull();
   } finally {
+    if (launcherId) await deleteLauncher(launcherId);
     rmSync(command, { force: true });
     if (workspaceId) await workspaceClose(workspaceId).catch(() => undefined);
     rmSync(root, { recursive: true, force: true });
@@ -173,8 +190,10 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("preser
 
   const label = "herdr-web-ui-test-profile-blocked";
   let workspaceId: string | undefined;
+  let launcherId = "";
   try {
-    const request = fetch(`${base}/api/workspace/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd: root, label, agent: { kind: "codex", launcher: "codex-blocked" } }) });
+    launcherId = await saveLauncher("codex", command);
+    const request = fetch(`${base}/api/workspace/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd: root, label, agent: { kind: "codex", launcher: launcherId } }) });
     let paneId: string | undefined;
     for (const deadline = Date.now() + 15_000;;) {
       const snapshot = await sessionSnapshot();
@@ -193,34 +212,12 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("preser
     expect((await sessionSnapshot()).panes.some((entry) => entry.pane_id === created.pane_id)).toBeTrue();
     expect(launchedAgents.notBegun(created.pane_id, "blocked")).toBeNull();
   } finally {
+    if (launcherId) await deleteLauncher(launcherId);
     rmSync(command, { force: true });
     if (workspaceId) await workspaceClose(workspaceId).catch(() => undefined);
     rmSync(root, { recursive: true, force: true });
   }
 }, 25_000);
-
-it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("native profiles use fixed native agent.start arguments and retain controlled freshness", async () => {
-  const herdr = await import("./herdr/client.ts");
-  const start = spyOn(herdr, "agentStart").mockResolvedValue({} as never);
-  let workspaceId: string | undefined;
-  try {
-    const response = await fetch(`${base}/api/workspace/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd: stateDir, agent: { kind: "codex", profile: "private" } }) });
-    const created = await response.json() as WorkspaceCreated;
-    workspaceId = created.workspace_id;
-    expect(response.status).toBe(200);
-    expect(created.agent_started).toBeTrue();
-    expect(start).toHaveBeenCalledWith(expect.objectContaining({ kind: "codex", paneId: created.pane_id, args: ["--profile", "private"] }));
-    expect(launchedAgents.notBegun(created.pane_id, "idle")).not.toBeNull();
-    rmSync(join(process.env["CODEX_HOME"]!, "private.config.toml"));
-    const before = (await sessionSnapshot()).workspaces.map((entry) => entry.workspace_id);
-    const unavailable = await fetch(`${base}/api/workspace/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd: stateDir, agent: { kind: "codex", profile: "private" } }) });
-    expect(unavailable.status).toBe(400);
-    expect((await sessionSnapshot()).workspaces.map((entry) => entry.workspace_id)).toEqual(before);
-  } finally {
-    start.mockRestore();
-    if (workspaceId) await workspaceClose(workspaceId).catch(() => undefined);
-  }
-});
 
 it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("shows an empty Codex conversation for a web-started launcher at its untouched composer", async () => {
   const root = mkdtempSync(join(tmpdir(), "herdr-fresh-codex-launcher-"));
@@ -230,8 +227,10 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("shows 
   writeFileSync(recorder, `process.stdout.write("OpenAI Codex (v0.163.0)\\n› Ask Codex to do anything\\n");require("node:fs").writeFileSync(process.argv[2],"ready");process.stdin.resume();`);
   writeFileSync(command, `#!/bin/sh\nexec '${executable}' '${recorder}' '${marker}'\n`, { mode: 0o755 });
   let workspaceId: string | undefined;
+  let launcherId = "";
   try {
-    const request = fetch(`${base}/api/workspace/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd: root, label: "herdr-web-ui-test-empty-codex-launcher", agent: { kind: "codex", launcher: "codex-empty" } }) });
+    launcherId = await saveLauncher("codex", command);
+    const request = fetch(`${base}/api/workspace/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd: root, label: "herdr-web-ui-test-empty-codex-launcher", agent: { kind: "codex", launcher: launcherId } }) });
     let paneId: string | undefined;
     for (const deadline = Date.now() + 15_000;;) {
       const snapshot = await sessionSnapshot();
@@ -251,6 +250,7 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("shows 
     expect(conversation.source).toBe("codex-transcript");
     expect(conversation.turns).toEqual([]);
   } finally {
+    if (launcherId) await deleteLauncher(launcherId);
     rmSync(command, { force: true });
     if (workspaceId) await workspaceClose(workspaceId).catch(() => undefined);
     rmSync(root, { recursive: true, force: true });

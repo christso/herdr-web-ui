@@ -1,6 +1,6 @@
 import { expect, it } from "bun:test";
 
-it("the demo offers exact native profile IDs without an automatic wrapper catalog and validates every creation flow", async () => {
+it("the demo offers saved launchers and validates every creation flow", async () => {
   const saved = new Map(["window", "location", "PushManager"].map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
   try {
     const storage = new Map<string, string>();
@@ -13,7 +13,7 @@ it("the demo offers exact native profile IDs without an automatic wrapper catalo
     await import(transport);
     const demo = (globalThis as any).window;
     const agents = (await (await demo.fetch("/api/agents")).json()).agents;
-    expect(agents.find((entry: any) => entry.kind === "codex").profiles).toEqual([{ id: "compound-engineering", label: "compound-engineering" }, { id: "review", label: "review" }]);
+    expect(agents.find((entry: any) => entry.kind === "codex").profiles).toBeUndefined();
     expect(agents.find((entry: any) => entry.kind === "pi").profiles).toBeUndefined();
     expect(agents.find((entry: any) => entry.kind === "pi").launchers).toEqual([]);
     expect(agents.find((entry: any) => entry.kind === "claude").profiles).toBeUndefined();
@@ -28,16 +28,14 @@ it("the demo offers exact native profile IDs without an automatic wrapper catalo
     for (const route of ["workspace", "tab", "worktree"]) {
       const before = await snapshot();
       for (const agent of [
-        { kind: "codex", launcher: "unknown" }, { kind: "pi", launcher: "codex-compound" },
-        { kind: "codex", profile: "review", launcher: "codex-compound" },
-        { kind: "codex", launcher: "codex-compound", args: [] },
-        { kind: "codex", profile: "review", args: ["resume"] },
-        { kind: "pi", profile: "review" }, { kind: "codex", launcher: "/bin/sh" },
+        { kind: "codex", launcher: "unknown" }, { kind: "pi", launcher: codexLauncher },
+        { kind: "codex", launcher: codexLauncher, args: [] },
+        { kind: "codex", launcher: "/bin/sh" },
       ]) expect((await post(route, agent)).status).toBe(400);
       expect((await snapshot()).workspaces).toEqual(before.workspaces);
       expect((await snapshot()).tabs).toEqual(before.tabs);
       expect((await snapshot()).panes).toEqual(before.panes);
-      for (const [index, agent] of [null, { kind: "codex" }, { kind: "codex", profile: "compound-engineering" }, { kind: "codex", launcher: codexLauncher }, { kind: "pi", launcher: piLauncher }, { kind: "claude", launcher: claudeLauncher }].entries()) {
+      for (const [index, agent] of [null, { kind: "codex" }, { kind: "codex", args: ["--profile", "compound-engineering"] }, { kind: "codex", launcher: codexLauncher }, { kind: "pi", launcher: piLauncher }, { kind: "claude", launcher: claudeLauncher }].entries()) {
         const response = await post(route, agent, `demo-launch-${route}-${index}`);
         expect(response.status).toBe(200);
         expect((await response.json()).agent_started).toBe(agent !== null ? true : route === "worktree" ? undefined : false);

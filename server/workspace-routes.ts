@@ -9,7 +9,7 @@ import { homedir } from "node:os";
 import { isAbsolute, resolve } from "node:path";
 import { MAX_LABEL_CHARS } from "../shared/labels.ts";
 import type { DirectoryCreated, ServerMessage, TabMoved } from "../shared/protocol.ts";
-import { discoverAgentLaunches, selectedAgentLaunch, type AgentLaunch } from "./agent-profiles.ts";
+import type { AgentLauncher } from "./agent-launchers.ts";
 import { agentFault, agentLaunch, type AgentPayload } from "./agent-launch.ts";
 import { createDirectory, listDirectories } from "./directories.ts";
 import { HerdrError, tabClose, tabCreate, tabMove, tabRename, workspaceClose, workspaceCreate, workspaceMove, workspaceRename, worktreeCreate, worktreeList, worktreeOpen, worktreeRemove } from "./herdr/client.ts";
@@ -29,12 +29,9 @@ function expandedDirectory(value: string): string | null {
 
 /** The answer for a workspace route, or null when the path is not one. */
 export async function handleWorkspaceRequest(request: Request, url: URL, pathname: string, bunServer: Pick<Server<unknown>, "timeout">, broadcastAll: (message: ServerMessage) => void, savedLaunchers: SavedLauncherStore): Promise<Response | null> {
-  const selectLaunch = (agent: AgentPayload): AgentLaunch | undefined => {
-    if (agent.profile === undefined && agent.launcher === undefined) return undefined;
-    if (typeof agent.launcher === "string" && agent.launcher.startsWith("saved:")) {
-      return savedLaunchers.select(agent.kind as string, agent.launcher);
-    }
-    return selectedAgentLaunch(discoverAgentLaunches({ legacyLaunchers: agent.launcher !== undefined }), agent.kind as string, agent.profile as string | undefined, agent.launcher as string | undefined);
+  const selectLaunch = (agent: AgentPayload): AgentLauncher | undefined => {
+    if (agent.launcher === undefined) return undefined;
+    return savedLaunchers.select(agent.kind as string, agent.launcher as string);
   };
   if (pathname === "/api/workspace/directories" && request.method === "POST") {
     let payload: unknown;
@@ -117,8 +114,8 @@ export async function handleWorkspaceRequest(request: Request, url: URL, pathnam
     }
     const fault = agentFault(payload.agent);
     if (fault !== null) return badRequest("invalid_agent", fault);
-    try { if (payload.agent && (payload.agent.profile !== undefined || payload.agent.launcher !== undefined)) selectLaunch(payload.agent); }
-    catch (error) { return badRequest(error instanceof HerdrError ? error.code : "invalid_agent_profile", error instanceof Error ? error.message : "Profile unavailable"); }
+    try { if (payload.agent && payload.agent.launcher !== undefined) selectLaunch(payload.agent); }
+    catch (error) { return badRequest(error instanceof HerdrError ? error.code : "invalid_agent_launcher", error instanceof Error ? error.message : "Launcher unavailable"); }
     // agent.start can legitimately take a minute; Bun's default idle timeout is shorter.
     if (payload.agent) bunServer.timeout(request, 75);
     try {
@@ -206,8 +203,8 @@ export async function handleWorkspaceRequest(request: Request, url: URL, pathnam
     const agent = creating ? payload.agent ?? undefined : undefined;
     const fault = agentFault(agent);
     if (fault !== null) return badRequest("invalid_agent", fault);
-    try { if (agent && (agent.profile !== undefined || agent.launcher !== undefined)) selectLaunch(agent); }
-    catch (error) { return badRequest(error instanceof HerdrError ? error.code : "invalid_agent_profile", error instanceof Error ? error.message : "Profile unavailable"); }
+    try { if (agent && agent.launcher !== undefined) selectLaunch(agent); }
+    catch (error) { return badRequest(error instanceof HerdrError ? error.code : "invalid_agent_launcher", error instanceof Error ? error.message : "Launcher unavailable"); }
     if (creating && branch === undefined) return badRequest("missing_branch", "branch is required");
     if (!creating && branch === undefined && path === undefined) return badRequest("missing_target", "path or branch is required");
     // a checkout of a large repository can take a while; Bun's default idle timeout is shorter.

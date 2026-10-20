@@ -87,23 +87,22 @@ it("treats a missing telemetry route as unavailable for reads and an API error f
 });
 
 
-it("offers a profile-only installed kind while preserving its unavailable Default and machine scope", async () => {
-  const profiles = [{ id: "review", label: "Review" }];
+it("preserves installed availability and machine scope", async () => {
   let requested = "";
   globalThis.fetch = (async (url: string) => {
     requested = url;
-    return Response.json({ agents: [{ kind: "codex", label: "Codex", installed: false, profiles }, { kind: "pi", label: "Pi", installed: false }, { kind: "omp", label: "OMP", installed: true }] });
+    return Response.json({ agents: [{ kind: "codex", label: "Codex", installed: false }, { kind: "pi", label: "Pi", installed: false }, { kind: "omp", label: "OMP", installed: true }] });
   }) as typeof fetch;
-  expect(await fetchAgentKinds("remote-fixture")).toEqual([{ kind: "codex", label: "Codex", installed: false, profiles }, { kind: "omp", label: "OMP", installed: true }]);
+  expect(await fetchAgentKinds("remote-fixture")).toEqual([{ kind: "omp", label: "OMP", installed: true }]);
   expect(requested).toBe("/api/machines/remote-fixture/agents");
 });
 
 it("offers a supported launcher-only kind without making its unavailable Default installed", async () => {
-  const launchers = [{ id: "pi-review", label: "pi-review" }];
+  const launchers = [{ id: "saved:00000000-0000-4000-8000-000000000001", label: "Review" }];
   globalThis.fetch = (async (_url: string) => Response.json({ agents: [
-    { kind: "pi", label: "Pi", installed: false, launchers },
+    { kind: "pi", label: "Pi", installed: false, saved_launchers: true, launchers },
     { kind: "claude", label: "Claude Code", installed: false },
-    { kind: "unsupported", label: "Unsupported", installed: false, launchers },
+    { kind: "unsupported", label: "Unsupported", installed: false, saved_launchers: true, launchers },
   ] })) as typeof fetch;
-  expect(await fetchAgentKinds()).toEqual([{ kind: "pi", label: "Pi", installed: false, launchers }]);
+  expect(await fetchAgentKinds()).toEqual([{ kind: "pi", label: "Pi", installed: false, saved_launchers: true, launchers }]);
 });

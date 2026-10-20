@@ -11,16 +11,14 @@ import "./AgentLaunchPicker.css";
 
 interface Props {
   agent: AgentKind | undefined;
-  profile: string;
   launcher: string;
   disabled: boolean;
-  onProfileChange: (id: string) => void;
   onLauncherChange: (id: string) => void;
   onLaunchersChange: (launchers: SavedAgentLauncher[], selected: string) => void;
   onEditingChange: (editing: boolean) => void;
 }
 
-export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfileChange, onLauncherChange, onLaunchersChange, onEditingChange }: Props) {
+export function AgentLaunchPicker({ agent, launcher, disabled, onLauncherChange, onLaunchersChange, onEditingChange }: Props) {
   const t = useT();
   const id = useId();
   const { fetchSavedLaunchers, saveAgentLauncher, deleteAgentLauncher, searchLauncherExecutables } = useMachineApi();
@@ -103,11 +101,10 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
     return () => { document.removeEventListener("pointerdown", outside); };
   }, [open]);
 
-  const label = (choice: NonNullable<AgentKind["launchers"]>[number]): string => choice.label + (choice.saved && agent?.launchers?.some((other) => other.saved && other.id !== choice.id && other.label === choice.label) ? ` · ${choice.id.slice(-8)}` : "");
+  const label = (choice: NonNullable<AgentKind["launchers"]>[number]): string => choice.label + (agent?.launchers?.some((other) => other.id !== choice.id && other.label === choice.label) ? ` · ${choice.id.slice(-8)}` : "");
   const optionGroups = [
     { key: "default", label: null, options: [{ key: "default", text: t("Default"), selected: !launcher, disabled: agent?.installed === false, choose: () => { if (launcher) onLauncherChange(""); } }] },
-    { key: "legacy", label: null, options: (agent?.launchers ?? []).filter((choice) => !choice.saved).map((choice) => ({ key: choice.id, text: label(choice), selected: launcher === choice.id, disabled: false, choose: () => { if (launcher !== choice.id) onLauncherChange(choice.id); } })) },
-    { key: "saved", label: t("Saved launchers"), options: (agent?.launchers ?? []).filter((choice) => choice.saved).map((choice) => ({ key: choice.id, text: label(choice), selected: launcher === choice.id, disabled: false, choose: () => { if (launcher !== choice.id) onLauncherChange(choice.id); } })) },
+    { key: "saved", label: t("Saved launchers"), options: (agent?.launchers ?? []).map((choice) => ({ key: choice.id, text: label(choice), selected: launcher === choice.id, disabled: false, choose: () => { if (launcher !== choice.id) onLauncherChange(choice.id); } })) },
   ];
   const options = optionGroups.flatMap((group) => group.options);
   const choices = open === "executable" ? suggestions.map((name) => ({ key: name })) : options;
@@ -195,7 +192,7 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
   };
   return <>
     <span className="visually-hidden launcher-search-announcement" role="status">{announcedSearch}</span>
-    {(agent?.saved_launchers || Boolean(agent?.launchers?.length)) && <div ref={searchRoot} className="field" onKeyDown={(event) => {
+    {agent?.saved_launchers && <div ref={searchRoot} className="field" onKeyDown={(event) => {
       if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) { event.stopPropagation(); return; }
       if (event.key !== "Escape" || (!open && !editor)) return;
       event.preventDefault(); event.stopPropagation();
@@ -206,7 +203,7 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
       else if (!busy) closeEditor();
     }}>
       <label className="field-label" htmlFor={`${id}-launcher`}>{t("Launcher")}</label>
-      {agent?.saved_launchers ? <div className="launcher-combobox" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(null); }}>
+      <div className="launcher-combobox" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(null); }}>
         <button ref={launcherField} type="button" id={`${id}-launcher`} className="input launcher-selector" role="combobox" aria-expanded={open === "launcher"} aria-controls={`${id}-choices`} aria-activedescendant={open === "launcher" && highlighted ? `${id}-choice-${highlight}` : undefined}
           disabled={disabled || busy || editor !== null} onClick={() => setOpen(open === "launcher" ? null : "launcher")}
           onKeyDown={(event) => {
@@ -231,16 +228,10 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
           </div>
           <div className="launcher-footer">
             <button type="button" className="launcher-choice" onClick={() => { closePopup(); setConfirmDelete(false); setError(null); setEditor({ label: "", executable: "", args: [] }); }}>{t("Add launcher…")}</button>
-            {selected?.saved && <button type="button" className="launcher-choice" onClick={() => void edit()}>{t("Edit launcher…")}</button>}
+            {selected && <button type="button" className="launcher-choice" onClick={() => void edit()}>{t("Edit launcher…")}</button>}
           </div>
         </div>}
-      </div> : <select id={`${id}-launcher`} className="input" value={launcher} disabled={disabled || busy || editor !== null} onChange={(event) => { setConfirmDelete(false); setError(null); onLauncherChange(event.target.value); }}>
-        <option value="" disabled={agent?.installed === false}>{t("Default")}</option>
-        {agent?.launchers?.filter((choice) => !choice.saved).map((choice) => <option key={choice.id} value={choice.id}>{choice.label}</option>)}
-        {agent?.launchers?.some((choice) => choice.saved) && <optgroup label={t("Saved launchers")}>
-          {agent.launchers.filter((choice) => choice.saved).map((choice) => <option key={choice.id} value={choice.id}>{label(choice)}</option>)}
-        </optgroup>}
-      </select>}
+      </div>
       {agent?.installed === false && !launcher && <span className="field-hint">{t("Choose a launcher to start {agent} on this PC.", { agent: agent.label })}</span>}
       {agent?.saved_launchers && <>
         {editor && <fieldset className="launcher-editor" onKeyDown={(event) => {
@@ -282,6 +273,7 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
             </div>
           </div>)}
           <p className="field-hint">{t("Each argument is one value. Spaces stay inside it; shell syntax is not expanded.")}</p>
+          {["codex", "omp"].includes(agent.kind) && <p className="field-hint">{t("For Codex or Oh My Pi profiles, add --profile and the profile ID as separate arguments.")}</p>}
           {editor.id && <div className="launcher-actions">
             <button ref={deleteButton} type="button" className={confirmDelete ? "btn btn-danger" : "btn btn-ghost"} disabled={disabled || busy} onClick={() => { closePopup(); if (confirmDelete) void remove(); else setConfirmDelete(true); }}>{t(confirmDelete ? "Delete launcher?" : "Delete")}</button>
             {confirmDelete && <button type="button" className="btn btn-ghost" disabled={disabled || busy} onClick={cancelDelete}>{t("Cancel")}</button>}
@@ -295,13 +287,6 @@ export function AgentLaunchPicker({ agent, profile, launcher, disabled, onProfil
         {busy && <span className="field-hint" role="status">{t("Updating launchers…")}</span>}
         {error && <p className="launcher-error" role="alert">{error}</p>}
       </>}
-    </div>}
-    {!launcher && Boolean(agent?.profiles?.length) && <div className="field">
-      <label className="field-label" htmlFor={`${id}-profile`}>{t("Profile")}</label>
-      <select id={`${id}-profile`} className="input" value={profile} disabled={disabled || busy || editor !== null || agent?.installed === false} onChange={(event) => onProfileChange(event.target.value)}>
-        <option value="">{t("Default")}</option>
-        {agent?.profiles?.map((choice) => <option key={choice.id} value={choice.id}>{choice.id}</option>)}
-      </select>
     </div>}
   </>;
 }

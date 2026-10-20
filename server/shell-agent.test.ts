@@ -98,7 +98,7 @@ for (const state of ["active agent", "unreadable foreground", "foreign foregroun
     if (state === "active agent") agent.mockResolvedValue({ agent: "codex" } as never);
     if (state === "shell becomes busy") processes.mockResolvedValueOnce(ready);
     try {
-      await expect(startAgentLauncher({ id: "codex-review", kind: "codex", command: "/fixture/launcher" }, "fixture", undefined, 30)).rejects.toMatchObject({ code: "agent_pane_busy" });
+      await expect(startAgentLauncher({ id: "saved:00000000-0000-4000-8000-000000000001", kind: "codex", command: "/fixture/launcher" }, "fixture", undefined, 30)).rejects.toMatchObject({ code: "agent_pane_busy" });
       expect(input).not.toHaveBeenCalled();
     } finally {
       agent.mockRestore(); processes.mockRestore(); input.mockRestore();

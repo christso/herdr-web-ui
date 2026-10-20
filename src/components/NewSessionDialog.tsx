@@ -73,7 +73,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
     | null
   >(null);
   const [editingLauncher, setEditingLauncher] = useState(false);
-  const [launchChoice, setLaunchChoice] = useState<{ machineId: string; kind: string; profile: string; launcher: string } | null>(null);
+  const [launchChoice, setLaunchChoice] = useState<{ machineId: string; kind: string; launcher: string } | null>(null);
   const [agentKind, setAgentKind] = useState(rememberedAgent);
   const [cwd, setCwd] = useState(defaultCwd ?? "");
   const [name, setName] = useState("");
@@ -160,8 +160,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
   const agents = catalogReady ? catalog.agents : [];
   const selectedAgent = agents.find((agent) => agent.kind === agentKind);
   const scopedChoice = launchChoice?.machineId === machineId && launchChoice.kind === agentKind ? launchChoice : null;
-  const launcher = selectedAgent?.launchers?.some((entry) => entry.id === scopedChoice?.launcher) ? scopedChoice!.launcher : "";
-  const profile = !launcher && selectedAgent?.profiles?.some((entry) => entry.id === scopedChoice?.profile) ? scopedChoice!.profile : "";
+  const launcher = selectedAgent?.saved_launchers && selectedAgent.launchers?.some((entry) => entry.id === scopedChoice?.launcher) ? scopedChoice!.launcher : "";
   const pendingLabel = selectedAgent ? t("Starting {agent}… up to 60s", { agent: selectedAgent.label }) : t("Starting shell…");
   const loadingCatalog = catalog?.machineId !== machineId;
   const missingLauncher = selectedAgent?.installed === false && !launcher;
@@ -174,7 +173,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
     setError(null);
     try {
       rememberAgent(agentKind);
-      const agent = profile || launcher ? { kind: agentKind, ...(profile ? { profile } : {}), ...(launcher ? { launcher } : {}) } : launchAgent(agentKind, settings);
+      const agent = launcher ? { kind: agentKind, launcher } : launchAgent(agentKind, settings);
       // a tab keeps the workspace's folder, which the dialog shows and does not ask for
       const result = tab
         ? await createTab({ workspace_id: tab.workspaceId, cwd: tab.cwd, label: name.trim() || null, agent })
@@ -220,8 +219,8 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
           </div>
           <AgentLaunchPicker key={`${machineId}:${agentKind}`} onEditingChange={setEditingLauncher} onLaunchersChange={(definitions, selected) => {
                 setCatalog((current) => current?.machineId === machineId && current.status === "ready" ? { ...current, agents: withSavedLaunchers(current.agents, definitions) } : current);
-                setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher: selected });
-              }} agent={selectedAgent} profile={profile} launcher={launcher} disabled={fieldsDisabled} onProfileChange={(profile) => setLaunchChoice({ machineId, kind: agentKind, profile, launcher: "" })} onLauncherChange={(launcher) => setLaunchChoice({ machineId, kind: agentKind, profile: "", launcher })} />
+                setLaunchChoice({ machineId, kind: agentKind, launcher: selected });
+              }} agent={selectedAgent} launcher={launcher} disabled={fieldsDisabled} onLauncherChange={(launcher) => setLaunchChoice({ machineId, kind: agentKind, launcher })} />
           {tab ? (
             <div className="field">
               <span className="field-label">{t("Directory")}</span>
