@@ -3,12 +3,12 @@
  * of `agent`, then the start, which retries a pane whose shell is not up yet and a name another
  * agent took. Workspace, tab and worktree creation share it.
  */
-import { codexEmptyComposer } from "./start-screen.ts";
 import { type AgentLauncher } from "./agent-launchers.ts";
 import { freeAgentName } from "./agent-name.ts";
 import { launchedAgents } from "./launched-agents.ts";
-import { isShellAgentKind, startShellAgent, startAgentLauncher } from "./shell-agent.ts";
-import { agentStart, HerdrError, paneRead, sessionSnapshot } from "./herdr/client.ts";
+import { savedLauncherIsFresh, startAgentLauncher } from "./saved-launcher-start.ts";
+import { isShellAgentKind, startShellAgent } from "./shell-agent.ts";
+import { agentStart, HerdrError, sessionSnapshot } from "./herdr/client.ts";
 
 export type AgentPayload = { kind?: unknown; name?: unknown; args?: unknown; launcher?: unknown };
 
@@ -65,8 +65,7 @@ export async function agentLaunch(paneId: string, agent: AgentPayload, resolveLa
         }
       }
     }
-    const emptyLauncher = launch && kind === "codex"
-      && await paneRead({ paneId, source: "visible", format: "text" }).then((read) => codexEmptyComposer(read.text), () => false);
+    const emptyLauncher = launch && await savedLauncherIsFresh(kind, paneId);
     if (!launch || emptyLauncher) launchedAgents.launched(paneId, kind);
     return { agent_started: true };
   } catch (error) {

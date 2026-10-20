@@ -5,7 +5,8 @@ import { join } from "node:path";
 import { SavedLauncherStore } from "./saved-launchers.ts";
 import * as herdr from "./herdr/client.ts";
 import { isGjcProcess } from "./gjc-runtime.ts";
-import { paneShell, shellAgentExecutable, shellCommandLine, startAgentLauncher } from "./shell-agent.ts";
+import { startAgentLauncher } from "./saved-launcher-start.ts";
+import { paneShell, shellAgentExecutable, shellCommandLine } from "./shell-agent.ts";
 import { descendantArgv, descendantProcesses, parseProcessTable, windowsArgv, windowsProcessTable } from "./windows-processes.ts";
 
 it("tells a pane's shell from the program herdr reports in front", () => {
@@ -81,7 +82,7 @@ it("offers OmO on Windows when its launcher is on PATH", () => {
 });
 
 it("only offers a shell with the native agent.start foreground ownership evidence", async () => {
-  const { availableLauncherShell } = await import("./shell-agent.ts");
+  const { availableLauncherShell } = await import("./saved-launcher-start.ts");
   const info = { pane_id: "fixture", shell_pid: 123, foreground_process_group_id: 123, foreground_processes: [{ pid: 123, name: "-zsh" }] };
   expect(availableLauncherShell(info)).toBe("posix");
   expect(availableLauncherShell({ ...info, foreground_process_group_id: 456 })).toBeNull();
