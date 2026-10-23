@@ -247,7 +247,7 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("preser
   }
 }, 30_000);
 
-it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("authorizes executable search before direct, alias and remote forwarding with accepted slashes", async () => {
+it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("authorizes executable search before direct, alias and remote forwarding and rejects noncanonical paths", async () => {
   const localDir = join(root, "search-local"), remoteDir = join(root, "search-remote"), cookie = watch(localDir);
   const marker = join(root, "must-not-run");
   writeFileSync(join(root, "bin/research.js"), `#!/bin/sh\ntouch '${marker}'`, { mode: 0o700 });
@@ -264,6 +264,15 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("author
     for (const route of ["/api/agents/launchers/search", "/api/machines/local/agents/launchers/search", "/api/machines/remote/agents/launchers/search"]) {
       for (const slash of ["", "/"]) {
         const path = `${route}${slash}?q=research`;
+        if (slash) {
+          const before = forwarded;
+          const refusedHeaders: Record<string, string>[] = [{}, { authorization: "", cookie }, { origin: "https://other.invalid" }];
+          for (const headers of refusedHeaders) {
+            expect((await request(local, path, "GET", undefined, headers)).status).toBe(404);
+          }
+          expect(forwarded).toBe(before);
+          continue;
+        }
         const success = await request(local, path);
         expect(success.status).toBe(200);
         expect(await success.json()).toEqual({ names: ["research.js"] });
@@ -275,7 +284,7 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("author
         expect(forwarded).toBe(before);
       }
     }
-    expect(forwarded).toBe(2);
+    expect(forwarded).toBe(1);
     expect(existsSync(marker)).toBeFalse();
     expect(new SavedLauncherStore(localDir).get()).toEqual([]);
     expect(new SavedLauncherStore(remoteDir).get()).toEqual([]);

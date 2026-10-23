@@ -373,19 +373,21 @@ try {
         assert.equal(await dialog.getByLabel("Model").inputValue(), "", "dropped, not kept for later");
         assert.equal(await dialog.getByLabel("Effort").inputValue(), "");
         assert.equal(await start.isEnabled(), true);
-        // Tab from the agent picker reaches the name, the model, the effort, the message, each chip (once the
+        // Tab from the agent picker reaches the launcher, the name, the model, the effort, the message, each chip (once the
         // agent's skills are listed again), Cancel, Start and the X, and stays inside the dialog
         await dialog.locator(".new-session-skill-chip").first().waitFor();
+        const launcherId = await dialog.getByLabel("Launcher", { exact: true }).getAttribute("id");
+        assert.ok(launcherId);
         await dialog.locator(".agent-picker-trigger").focus();
         const order: string[] = [];
-        for (let step = 0; step < 10; step += 1) {
+        for (let step = 0; step < 11; step += 1) {
           await page.keyboard.press("Tab");
           order.push(await page.evaluate(() => {
             const active = document.activeElement as HTMLElement | null;
             return active?.getAttribute("aria-label") || active?.id || active?.textContent?.trim() || "";
           }));
         }
-        assert.deepEqual(order, ["", "new-session-model", "new-session-effort", "new-session-prompt", "Add /review-pr to the message", "Add /changelog to the message", "Cancel", "Start", "Close dialog", "Claude Code"], `the tab order: ${JSON.stringify(order)}`);
+        assert.deepEqual(order, [launcherId, "", "new-session-model", "new-session-effort", "new-session-prompt", "Add /review-pr to the message", "Add /changelog to the message", "Cancel", "Start", "Close dialog", "Claude Code"], `the tab order: ${JSON.stringify(order)}`);
         // a model names one agent's models: Claude Code's is not carried to Codex, which also offers the field
         await dialog.getByLabel("Model").fill("opus");
         await pickAgent(page, dialog, "Codex");
