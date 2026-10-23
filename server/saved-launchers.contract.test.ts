@@ -54,7 +54,7 @@ function request(base: string, path: string, method = "GET", body?: unknown, hea
   return nativeFetch(base + path, { method, headers: { ...header, authorization: "Bearer fixture-controller", origin: base, ...headers }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
 }
 
-it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("denies watch definition paths before forwarding, including accepted remote trailing slashes", async () => {
+it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("denies watch definition paths before forwarding, and refuses noncanonical paths before forwarding", async () => {
   const localDir = join(root, "local"), remoteDir = join(root, "remote"), cookie = watch(localDir);
   mkdirSync(remoteDir);
   writeFileSync(join(remoteDir, "agent-launchers.json"), JSON.stringify({ version: 1, launchers: [{ ...input, id, label: "Remote only" }] }));
@@ -66,7 +66,7 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("denies
   const tracking = spyOn(globalThis, "fetch").mockImplementation(Object.assign(trackedFetch, { preconnect: nativeFetch.preconnect }));
   const local = server(localDir);
   try {
-    for (const path of ["/api/agents/launchers", "/api/machines/local/agents/launchers", "/api/machines/remote/agents/launchers", "/api/machines/remote/agents/launchers/"]) {
+    for (const path of ["/api/agents/launchers", "/api/machines/local/agents/launchers", "/api/machines/remote/agents/launchers"]) {
       const control = await request(local, path);
       expect(control.status).toBe(200);
       const before = forwarded;
@@ -81,10 +81,10 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("denies
         expect(forwarded).toBe(before);
       }
     }
-    for (const path of ["/api/agents/launchers/", "/api/machines/local/agents/launchers/"]) {
+    for (const path of ["/api/agents/launchers/", "/api/machines/local/agents/launchers/", "/api/machines/remote/agents/launchers/"]) {
       const denied = await request(local, path, "GET", undefined, { authorization: "", cookie });
-      expect(denied.status).toBe(403);
-      expect((await denied.json()).error.code).toBe("read_only");
+      expect(denied.status).toBe(404);
+      expect((await denied.json()).error.code).toBe("not_found");
     }
     const catalog = await request(local, "/api/machines/remote/agents", "GET", undefined, { authorization: "", cookie });
     expect(catalog.status).toBe(200);
@@ -247,7 +247,7 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("preser
   }
 }, 30_000);
 
-it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("authorizes executable search before direct, alias and remote forwarding with accepted slashes", async () => {
+it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("authorizes executable search before direct, alias and remote forwarding and rejects noncanonical paths", async () => {
   const localDir = join(root, "search-local"), remoteDir = join(root, "search-remote"), cookie = watch(localDir);
   const marker = join(root, "must-not-run");
   writeFileSync(join(root, "bin/research.js"), `#!/bin/sh\ntouch '${marker}'`, { mode: 0o700 });
@@ -264,6 +264,15 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("author
     for (const route of ["/api/agents/launchers/search", "/api/machines/local/agents/launchers/search", "/api/machines/remote/agents/launchers/search"]) {
       for (const slash of ["", "/"]) {
         const path = `${route}${slash}?q=research`;
+        if (slash) {
+          const before = forwarded;
+          const refusedHeaders: Record<string, string>[] = [{}, { authorization: "", cookie }, { origin: "https://other.invalid" }];
+          for (const headers of refusedHeaders) {
+            expect((await request(local, path, "GET", undefined, headers)).status).toBe(404);
+          }
+          expect(forwarded).toBe(before);
+          continue;
+        }
         const success = await request(local, path);
         expect(success.status).toBe(200);
         expect(await success.json()).toEqual({ names: ["research.js"] });
@@ -275,7 +284,7 @@ it.skipIf(process.platform !== "linux" && process.platform !== "darwin")("author
         expect(forwarded).toBe(before);
       }
     }
-    expect(forwarded).toBe(2);
+    expect(forwarded).toBe(1);
     expect(existsSync(marker)).toBeFalse();
     expect(new SavedLauncherStore(localDir).get()).toEqual([]);
     expect(new SavedLauncherStore(remoteDir).get()).toEqual([]);

@@ -16,9 +16,9 @@ let restoreFetch: () => void;
 const saved = new Map<string, PropertyDescriptor | undefined>();
 class Input { focus() {} getBoundingClientRect() { return { top: 100, bottom: 140, left: 100, width: 400 }; } }
 beforeEach(() => {
-  for (const key of ["window", "document", "navigator", "HTMLInputElement", "IS_REACT_ACT_ENVIRONMENT"]) saved.set(key, Object.getOwnPropertyDescriptor(globalThis, key));
+  for (const key of ["window", "document", "navigator", "getComputedStyle", "HTMLInputElement", "IS_REACT_ACT_ENVIRONMENT"]) saved.set(key, Object.getOwnPropertyDescriptor(globalThis, key));
   const globals: Record<string, unknown> = {
-    IS_REACT_ACT_ENVIRONMENT: true, HTMLInputElement: Input,
+    IS_REACT_ACT_ENVIRONMENT: true, HTMLInputElement: Input, getComputedStyle: () => ({ getPropertyValue: () => "" }),
     navigator: { languages: ["en-US"] },
     window: { innerHeight: 900, requestAnimationFrame: (callback: FrameRequestCallback) => { queueMicrotask(() => callback(0)); return 1; }, cancelAnimationFrame() {}, localStorage: { getItem: () => null }, addEventListener() {}, removeEventListener() {} },
     document: { addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {}, removeProperty() {} } }, querySelector: () => null },

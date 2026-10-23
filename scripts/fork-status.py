@@ -44,8 +44,8 @@ GROUPS = [
      ["server/agent-launch.ts", "server/agent-profiles.contract.test.ts", "server/agent-profiles.test.ts", "server/agent-profiles.ts", "server/shell-agent.test.ts", "server/shell-agent.ts", "server/start-screen.test.ts", "server/start-screen.ts", "server/workspace-routes.ts", "server/index.ts", "server/api.contract.test.ts", "shared/protocol.ts", "src/components/AgentLaunchPicker.tsx", "src/components/NewSessionDialog.tsx", "src/components/WorktreeDialog.tsx", "src/lib/api.test.ts", "src/lib/api.ts", "src/lib/i18n.ja.ts", "src/lib/i18n.ko.ts", "src/lib/i18n.zh.ts", "site/demo/transport.ts", "scripts/demo-agent-launch.test.ts", "scripts/ui-regression.ts", "docs/agent-profiles.md", "docs/development.md", "changelog.d/agent-launch-profiles.md"], []),
 ]
 PR_SCOPES = [
-    {"repository": "devswha/herdr-web-ui", "author": "christso"},
-    {"repository": "christso/herdr-web-ui", "author": None},
+    {"repository": "devswha/ovis", "author": "christso"},
+    {"repository": "christso/ovis", "author": None},
 ]
 
 
@@ -119,8 +119,8 @@ def refresh(repo, fork_ref, upstream_ref, fetch, github):
     unclassified = [entry["path"] for entry in files if entry["group"] == "unclassified"]
     return {
         "schema_version": 1, "generated_at": now(),
-        "fork": {"repository": "christso/herdr-web-ui", "ref": fork_ref, "sha": fork_sha},
-        "upstream": {"repository": "devswha/herdr-web-ui", "ref": upstream_ref, "sha": upstream_sha},
+        "fork": {"repository": "christso/ovis", "ref": fork_ref, "sha": fork_sha},
+        "upstream": {"repository": "devswha/ovis", "ref": upstream_ref, "sha": upstream_sha},
         "scope": {"method": "Git tree diff, no renames; binary numstats are null",
                   "excluded_paths": EXCLUDED_PATHS, "reason": SCOPE_REASON, "excluded_changed_files": excluded},
         "comparison": {"fork_only_commits": counts[0], "upstream_only_commits": counts[1],
@@ -156,8 +156,8 @@ def render(data):
     for group in data["groups"]:
         if not group["files"]:
             continue
-        links = [f"PR [#{number}](https://github.com/devswha/herdr-web-ui/pull/{number})" for number in group["related_upstream_prs"]]
-        links += [f"Issue [#{number}](https://github.com/devswha/herdr-web-ui/issues/{number})" for number in group["related_upstream_issues"]]
+        links = [f"PR [#{number}](https://github.com/devswha/ovis/pull/{number})" for number in group["related_upstream_prs"]]
+        links += [f"Issue [#{number}](https://github.com/devswha/ovis/issues/{number})" for number in group["related_upstream_issues"]]
         lines.append(f"| {cell(group['title'])} | {cell(group['kind'])} | {cell(group['summary'])} | {len(group['files'])} | {', '.join(links) or '—'} |")
     unmatched = comparison["unclassified_paths"]
     if unmatched:

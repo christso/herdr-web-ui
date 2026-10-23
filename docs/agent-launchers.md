@@ -29,7 +29,7 @@ so the ordinary agent's launch-mode arguments are not added.
 Edits and deletion affect future launches only; existing panes keep running.
 
 Each PC's Web UI bridge owns `agent-launchers.json` in its server state directory,
-beside shared preferences. The connection server uses `HERDR_WEB_STATE_DIR` when configured;
+beside shared preferences. The connection server uses `OVIS_STATE_DIR` when configured;
 SSH bridges use their persistent `<bridge descriptor>.state` directory. The version-1 document
 contains `launchers`, each with `id`, `kind`, `label`, `executable` and `args`. Writes replace
 the document atomically; malformed saved state is preserved and reported rather than overwritten.

@@ -7,8 +7,9 @@ import { type AgentLauncher } from "./agent-launchers.ts";
 import { freeAgentName } from "./agent-name.ts";
 import { launchedAgents } from "./launched-agents.ts";
 import { savedLauncherIsFresh, startAgentLauncher } from "./saved-launcher-start.ts";
-import { isShellAgentKind, startShellAgent } from "./shell-agent.ts";
+import { isShellAgentKind, startShellAgent, type ShellAgentLocator } from "./shell-agent.ts";
 import { agentStart, HerdrError, sessionSnapshot } from "./herdr/client.ts";
+import { launchArgsFault } from "../shared/launch-rules.ts";
 
 export type AgentPayload = { kind?: unknown; name?: unknown; args?: unknown; launcher?: unknown };
 
@@ -22,14 +23,17 @@ export function agentFault(agent: AgentPayload | undefined): string | null {
   }
   if (agent.launcher !== undefined && (typeof agent.launcher !== "string" || agent.launcher.length === 0)) return "agent.launcher must be a nonempty string";
   if (agent.launcher !== undefined && (agent.args !== undefined || Object.keys(agent).some((key) => !["kind", "name", "launcher"].includes(key)))) return "Launchers accept only kind, name and launcher";
-  return null;
+  // the dialog's model, effort and Codex prompt, checked as the dialog checks them: a client is not trusted to
+  return agent.args === undefined ? null : launchArgsFault(agent.kind, agent.args as string[]);
 }
 
 /**
  * Starts a checked `agent` in a pane herdr just made. A failure is answered, not thrown: the
- * workspace, tab or worktree around the pane is there either way.
+ * workspace, tab or worktree around the pane is there either way. `launched` is told the pid of
+ * the process a shell-started agent came up as, when one is seen in front of the pane; `locator`
+ * is the one `/api/agents` offered it from.
  */
-export async function agentLaunch(paneId: string, agent: AgentPayload, resolveLaunch?: () => AgentLauncher | undefined): Promise<{ agent_started: true } | { agent_started: false; error: { code: string; message: string } }> {
+export async function agentLaunch(paneId: string, agent: AgentPayload, launched?: (pid: number) => void, locator?: ShellAgentLocator, resolveLaunch?: () => AgentLauncher | undefined): Promise<{ agent_started: true } | { agent_started: false; error: { code: string; message: string } }> {
   try {
     // Re-read a saved definition after checkout creation, before any launch input. A removal
     // or missing executable now returns the existing partial-creation result with its pane.
@@ -37,7 +41,10 @@ export async function agentLaunch(paneId: string, agent: AgentPayload, resolveLa
     const kind = agent.kind as string;
     const args = agent.args as string[] | undefined;
     if (launch) await startAgentLauncher(launch, paneId, typeof agent.name === "string" ? agent.name : undefined);
-    else if (isShellAgentKind(kind)) await startShellAgent(kind, paneId, args);
+    else if (isShellAgentKind(kind)) {
+      const pid = await startShellAgent(kind, paneId, args, locator ? { locator } : {});
+      if (pid !== null) launched?.(pid);
+    }
     else {
       const given = typeof agent.name === "string" && agent.name.length > 0 ? agent.name : null;
       // herdr refuses a name another agent holds. Two creations at once can pick the same
